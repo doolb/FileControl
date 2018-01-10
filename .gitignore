@@ -36,3 +36,4 @@ Thumbs.db
 # include meta files
 *.meta
 !*.*.meta
+*.sdf
