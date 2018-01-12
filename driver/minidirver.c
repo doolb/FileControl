@@ -2,17 +2,20 @@
 
 #pragma region Object
 
+ULONG gLogFlag = ERROR|WARNING;
+
 //
 // global filter handler
 //
 PFLT_FILTER gFilter;
 
+
 //
 // filter callbacks
 //
 const FLT_OPERATION_REGISTRATION gMiniCallbacks[] = {
-	{ IRP_MJ_CREATE, 0, NULL, NULL },
-
+	{ IRP_MJ_CREATE, 0, miniPreCreate, miniPostCreate },
+	{ IRP_MJ_WRITE, 0, miniPreWrite, miniPostWrite },
 	{ IRP_MJ_OPERATION_END }	// END
 };
 //
@@ -24,7 +27,7 @@ const FLT_REGISTRATION gMiniRegistration = {
 	0,								// flag
 
 	NULL,							// context
-	NULL,							// callback
+	gMiniCallbacks,						// callback
 
 	miniDriverUnload,					//  MiniFilterUnload
 
@@ -43,8 +46,8 @@ const FLT_REGISTRATION gMiniRegistration = {
 #pragma region Function
 
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath){
+	loge((NAME"%wZ", RegistryPath));
 
-	KdPrint((NAME"driver started. %wZ", RegistryPath));
 	NTSTATUS status;
 
 	//
@@ -58,7 +61,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 		status = FltStartFiltering(gFilter);
 		if (!NT_SUCCESS(status)){
 			FltUnregisterFilter(gFilter);
-			KdPrint((NAME"start filter failed. %x", status));
+			KdPrint((NAME"%x", status));
 			return status;
 		}
 	}
@@ -69,7 +72,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 NTSTATUS miniDriverUnload(_In_ FLT_FILTER_UNLOAD_FLAGS flags){
 	UNREFERENCED_PARAMETER(flags);
 
-	KdPrint((NAME"driver unload. %x\n", flags));
+	loge((NAME"%x\n", flags));
 	FltUnregisterFilter(gFilter);
 	return STATUS_SUCCESS;
 }

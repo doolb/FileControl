@@ -51,7 +51,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="create.c" />
     <ClCompile Include="minidirver.c" />
+    <ClCompile Include="write.c" />
     <ResourceCompile Include="FileControl.rc" />
     <Inf Include="FileControl.inf" />
   </ItemGroup>

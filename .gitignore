@@ -37,3 +37,4 @@ Thumbs.db
 *.meta
 !*.*.meta
 *.sdf
+*.opensdf
