@@ -9,7 +9,7 @@ ExportedObj/
 *.csproj
 *.pidb
 *.suo
-*.sln
+*.aps
 *.user
 *.unityproj
 *.booproj
