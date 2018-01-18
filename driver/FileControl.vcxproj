@@ -53,6 +53,7 @@
   <ItemGroup>
     <ClCompile Include="client.c" />
     <ClCompile Include="create.c" />
+    <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
     <ClCompile Include="write.c" />
     <ResourceCompile Include="FileControl.rc" />

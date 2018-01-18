@@ -31,10 +31,10 @@ const FLT_REGISTRATION gMiniRegistration = {
 
 	miniDriverUnload,					//  MiniFilterUnload
 
-	NULL,							//  InstanceSetup
-	NULL,							//  InstanceQueryTeardown
-	NULL,							//  InstanceTeardownStart
-	NULL,							//  InstanceTeardownComplete
+	miniInsSteup,							//  InstanceSetup
+	miniInsQeuryTeardown,					//  InstanceQueryTeardown
+	miniInsTeardownStart,					//  InstanceTeardownStart
+	miniInsTeardownComplete,					//  InstanceTeardownComplete
 
 	NULL,                           //  GenerateFileName
 	NULL,                           //  GenerateDestinationFileName
@@ -44,7 +44,7 @@ const FLT_REGISTRATION gMiniRegistration = {
 #pragma endregion
 
 #pragma region Function
-
+#pragma code_seg("INIT")
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath){
 	logw((NAME"%wZ", RegistryPath));
 
@@ -93,8 +93,10 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 
 	return status;
 }
-
+#pragma code_seg("PAGE")
 NTSTATUS miniDriverUnload(_In_ FLT_FILTER_UNLOAD_FLAGS flags){
+	PAGED_CODE();
+
 	FltCloseCommunicationPort(gPort);
 	FltUnregisterFilter(gFilter);
 	logw((NAME"%x\n", flags));

@@ -34,6 +34,9 @@
     <ClCompile Include="client.c">
       <Filter>Source Files\op</Filter>
     </ClCompile>
+    <ClCompile Include="instance.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">
