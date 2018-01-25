@@ -1,7 +1,6 @@
 #include "minidriver.h"
 
-FLT_PREOP_CALLBACK_STATUS
-miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext){
+FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext){
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
@@ -18,31 +17,18 @@ miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltO
 		status = FltParseFileNameInformation(nameInfo);
 		if (NT_SUCCESS(status)){
 			RtlCopyMemory(name, nameInfo->Name.Buffer, nameInfo->Name.MaximumLength);
-			log((NAME"create file:%ws", name));
-			if (wcsstr(name, L"1.txt")){
-				loge((NAME"file blocked."));
-
-				FltReleaseFileNameInformation(nameInfo);
-				_data->IoStatus.Status = STATUS_ACCESS_DENIED;
-				_data->IoStatus.Information = 0;
-				return FLT_PREOP_COMPLETE;
-			}
+			log((NAME"read file:%ws", name));
 		}
 		FltReleaseFileNameInformation(nameInfo);
 	}
 
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }
-
-FLT_POSTOP_CALLBACK_STATUS
-miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags){
-
+FLT_POSTOP_CALLBACK_STATUS miniPostRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags){
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
-
-
 
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

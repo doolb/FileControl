@@ -2,13 +2,12 @@
 
 #pragma region Object
 
-ULONG gLogFlag = ERROR|WARNING;
+ULONG gLogFlag = ERROR | WARNING;
 
-//
-// global filter handler
-//
-PFLT_FILTER gFilter;
-PFLT_PORT gPort;
+PFLT_FILTER gFilter;		// global filter handler
+PFLT_PORT	gPort;		// comminication port created for client login
+
+NPAGED_LOOKASIDE_LIST gPre2PostContexList;	//  This is a lookAside list used to allocate our pre-2-post structure.
 
 //
 // filter callbacks
@@ -16,8 +15,26 @@ PFLT_PORT gPort;
 const FLT_OPERATION_REGISTRATION gMiniCallbacks[] = {
 	{ IRP_MJ_CREATE, 0, miniPreCreate, miniPostCreate },
 	{ IRP_MJ_WRITE, 0, miniPreWrite, miniPostWrite },
+	{ IRP_MJ_READ, 0, miniPreRead, miniPostRead },
+	{ IRP_MJ_PNP, 0, miniPrePnp, NULL },
 	{ IRP_MJ_OPERATION_END }	// END
 };
+
+//
+// Context definitions 
+//
+const FLT_CONTEXT_REGISTRATION gMiniContexts[] = {
+	{
+		FLT_VOLUME_CONTEXT,
+		0,
+		CleanupVolumeContext,
+		sizeof(VolumeContext),
+		CONTEXT_TAG
+	},
+
+	{ FLT_CONTEXT_END }
+};
+
 //
 // filter registion
 //
@@ -26,7 +43,7 @@ const FLT_REGISTRATION gMiniRegistration = {
 	FLT_REGISTRATION_VERSION,		// version
 	0,								// flag
 
-	NULL,							// context
+	gMiniContexts,						// context
 	gMiniCallbacks,						// callback
 
 	miniDriverUnload,					//  MiniFilterUnload

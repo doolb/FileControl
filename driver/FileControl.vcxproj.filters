@@ -37,6 +37,15 @@
     <ClCompile Include="instance.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="read.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
+    <ClCompile Include="pnp.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
+    <ClCompile Include="context.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

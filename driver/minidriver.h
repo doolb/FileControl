@@ -9,6 +9,11 @@
 #define WARNING 0x010
 #define ERROR 0x100
 
+#define BUFFER_SWAP_TAG     'bfBS'
+#define CONTEXT_TAG         'xaBS'
+#define NAME_TAG            'mbBS'
+#define PRE_2_POST_TAG      'paBS'
+
 #define logd KdPrint	
 extern ULONG gLogFlag;
 
@@ -19,6 +24,35 @@ extern ULONG gLogFlag;
 
 #define TAG "MNFL"
 #define NAME "[Mini Filter]@"__FUNCTION__": "
+
+
+
+//
+// context registion
+//
+typedef struct _VolumeContext
+{
+	UNICODE_STRING	Name;				// volume name
+	ULONG			SectorSize;			// the sector size for this volume.
+	PUNICODE_STRING WorkName;			// work name for device (this will be FileSystemDeviceName , RealDeviceName or null)
+	UNICODE_STRING GUID;					// volume GUID
+
+	//
+	// save the volume context so you can get more information
+	//
+	PFLT_VOLUME_PROPERTIES prop;
+	UCHAR _prop_buffer[sizeof(FLT_VOLUME_PROPERTIES) + 512]; // volume property buffer
+
+}VolumeContext, *PVolumeContext;
+#define MIN_SECTOR_SIZE 0x200
+//
+// context struct pass to post callback from pre callback
+//
+typedef struct _Pre2PostContext
+{
+	PVolumeContext	Context;		// volume context alloc from pre callback
+	PVOID			SwapBuffer;	// the new buffer for file data
+}Pre2PostContext, *PPre2PostContext;
 
 
 //
@@ -41,19 +75,34 @@ FLT_POSTOP_CALLBACK_STATUS miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_
 //
 FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext);
 FLT_POSTOP_CALLBACK_STATUS miniPostWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags);
+//
+// read
+//
+FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext);
+FLT_POSTOP_CALLBACK_STATUS miniPostRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags);
+
+//
+// pnp
+//
+FLT_PREOP_CALLBACK_STATUS miniPrePnp(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext);
+
+//
+// volume context cleanup
+//
+VOID CleanupVolumeContext(_In_ PFLT_CONTEXT Context, _In_ FLT_CONTEXT_TYPE ContextType);
 
 //
 // client message
 //
-NTSTATUS miniMessage(_In_opt_ PVOID PortCookie,_In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,_In_ ULONG InputBufferLength,_Out_writes_bytes_to_opt_(OutputBufferLength, *ReturnOutputBufferLength) PVOID OutputBuffer,_In_ ULONG OutputBufferLength,_Out_ PULONG ReturnOutputBufferLength);
-NTSTATUS miniConnect(_In_ PFLT_PORT ClientPort,_In_opt_ PVOID ServerPortCookie,_In_reads_bytes_opt_(SizeOfContext) PVOID ConnectionContext,_In_ ULONG SizeOfContext,_Outptr_result_maybenull_ PVOID *ConnectionPortCookie);
+NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer, _In_ ULONG InputBufferLength, _Out_writes_bytes_to_opt_(OutputBufferLength, *ReturnOutputBufferLength) PVOID OutputBuffer, _In_ ULONG OutputBufferLength, _Out_ PULONG ReturnOutputBufferLength);
+NTSTATUS miniConnect(_In_ PFLT_PORT ClientPort, _In_opt_ PVOID ServerPortCookie, _In_reads_bytes_opt_(SizeOfContext) PVOID ConnectionContext, _In_ ULONG SizeOfContext, _Outptr_result_maybenull_ PVOID *ConnectionPortCookie);
 VOID miniDisconnect(_In_opt_ PVOID ConnectionCookie);
 
 //
 // instance
 //
-NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects,_In_ FLT_INSTANCE_SETUP_FLAGS Flags,_In_ DEVICE_TYPE VolumeDeviceType,_In_ FLT_FILESYSTEM_TYPE VolumeFilesystemType);
-NTSTATUS	 miniInsQeuryTeardown(_In_ PCFLT_RELATED_OBJECTS FltObjects,_In_ FLT_INSTANCE_QUERY_TEARDOWN_FLAGS Flags);
+NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_SETUP_FLAGS Flags, _In_ DEVICE_TYPE VolumeDeviceType, _In_ FLT_FILESYSTEM_TYPE VolumeFilesystemType);
+NTSTATUS	 miniInsQeuryTeardown(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_QUERY_TEARDOWN_FLAGS Flags);
 VOID	 miniInsTeardownStart(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
-VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects,_In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
+VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
 #pragma endregion

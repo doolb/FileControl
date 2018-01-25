@@ -52,9 +52,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client.c" />
+    <ClCompile Include="context.c" />
     <ClCompile Include="create.c" />
     <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
+    <ClCompile Include="pnp.c" />
+    <ClCompile Include="read.c" />
     <ClCompile Include="write.c" />
     <ResourceCompile Include="FileControl.rc" />
     <Inf Include="FileControl.inf" />
