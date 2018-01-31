@@ -54,7 +54,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 			//  Try and get the DOS name.  If it succeeds we will have
 			//  an allocated name buffer.  If not, it will be NULL
 			//
-			status = RtlVolumeDeviceToDosName(devobj, &ctx->Name);
+			status = IoVolumeDeviceToDosName(devobj, &ctx->Name);
 		}
 
 		//
@@ -145,6 +145,8 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		}
 #pragma endregion
 
+		status = onstart(ctx);
+		if (!NT_SUCCESS(status)){ status = STATUS_FLT_DO_NOT_ATTACH; leave; }
 
 		//
 		// setup volume context
@@ -190,6 +192,8 @@ VOID CleanupVolumeContext(_In_ PFLT_CONTEXT Context, _In_ FLT_CONTEXT_TYPE Conte
 	//  Log debug info
 	//
 	logw((NAME"clear volume context: Name=\"%wZ\", Device:%02x.%08x, Guid:%wZ, SectSize=0x%04x\n", &ctx->Name, ctx->prop->DeviceType, ctx->prop->DeviceCharacteristics, &ctx->GUID, ctx->SectorSize));
+
+	onstop();
 
 	//
 	// clear buffer

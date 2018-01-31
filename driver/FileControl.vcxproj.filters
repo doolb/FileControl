@@ -46,6 +46,12 @@
     <ClCompile Include="context.c">
       <Filter>Source Files\op</Filter>
     </ClCompile>
+    <ClCompile Include="filter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="permission.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

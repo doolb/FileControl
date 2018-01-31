@@ -5,22 +5,6 @@ FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCF
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
 
-	NTSTATUS status;
-
-	WCHAR name[260] = { 0 };
-	//
-	// get file name information
-	//
-	PFLT_FILE_NAME_INFORMATION nameInfo;
-	status = FltGetFileNameInformation(_data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &nameInfo);
-	if (NT_SUCCESS(status)){
-		status = FltParseFileNameInformation(nameInfo);
-		if (NT_SUCCESS(status)){
-			RtlCopyMemory(name, nameInfo->Name.Buffer, nameInfo->Name.MaximumLength);
-			log((NAME"read file:%ws", name));
-		}
-		FltReleaseFileNameInformation(nameInfo);
-	}
 
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }

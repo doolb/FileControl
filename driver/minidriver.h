@@ -8,6 +8,7 @@
 #define LOG 0x001
 #define WARNING 0x010
 #define ERROR 0x100
+#define INFO 0x1000
 
 #define BUFFER_SWAP_TAG     'bfBS'
 #define CONTEXT_TAG         'xaBS'
@@ -21,11 +22,13 @@ extern ULONG gLogFlag;
 #define logw(_x_) (FlagOn(gLogFlag,(WARNING)) ? DbgPrint _x_  : ((int)(0)))
 #define loge(_x_) (FlagOn(gLogFlag,(ERROR)) ? DbgPrint _x_  : ((int)(0)))
 #define logf(flag,_x_) (FlagOn(gLogFlag,(flag)) ? DbgPrint _x_  : ((int)(0)))
+#define logi(_x_) logf(INFO,_x_)
 
 #define TAG "MNFL"
 #define NAME "[Mini Filter]@"__FUNCTION__": "
 
-
+// the root path for dirver work
+extern UNICODE_STRING gWorkRoot;	
 
 //
 // context registion
@@ -105,4 +108,20 @@ NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_S
 NTSTATUS	 miniInsQeuryTeardown(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_QUERY_TEARDOWN_FLAGS Flags);
 VOID	 miniInsTeardownStart(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
 VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
+
+
+//
+// user filter interface 
+//
+NTSTATUS oninit();	// call when dirver start
+void onexit();		// call when dirver unload
+NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
+void onstop();		// call when stop filter on volme
+NTSTATUS onfilter();// call when filter data on volme
+NTSTATUS onmsg();	// call when user application message in
+
+//
+// permission
+//
+NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite);
 #pragma endregion
