@@ -1,29 +1,5 @@
 #include "minidriver.h"
-
-typedef enum _PermissionCode{
-	PC_User_Read = 0x00000001,
-	PC_User_Write = 0x00000002,
-	PC_Group_Read = 0x00000004,
-	PC_Group_Write = 0x00000008,
-	PC_Other_Read = 0x00000010,
-	PC_Other_Write = 0x00000020,
-
-	PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
-}PermissionCode, *PPermissionCode;
-
-
-#define PADDING 24
-//
-// нд╪Ч
-//
-typedef struct _Permission
-{
-	unsigned long  _head;
-	PermissionCode code;
-	GUID uid;
-	GUID gid;
-	char  _pad[PADDING]; // padding  (size 64)
-}Permission, *PPermission;
+#include "permission.h"
 
 
 // {5F1E1BC3-4AD5-49D5-A6EE-0A2F86029A64}
@@ -41,7 +17,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	ULONG retlen;
 	LARGE_INTEGER offset = { 0 };
 
-	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, sizeof(Permission), pm,FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, sizeof(Permission), pm, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x", status)); }
 
@@ -61,6 +37,10 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	ULONG retlen;
 
 	FILE_STANDARD_INFORMATION fileInfo;
+	LARGE_INTEGER offset = null;
+	PVOID buff = NULL;
+	ULONG len = 0;
+
 	//
 	// save the origin data
 	//
@@ -68,20 +48,26 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
 	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x", status)); return status; }
 	logi((NAME"file size : %d(%d)", fileInfo.EndOfFile, fileInfo.AllocationSize));
-	
+
 	// is file largest than 4gb
 	if (fileInfo.AllocationSize.HighPart > 0){ loge((NAME"file is too large.")); return status; }
 
-	// allocate buffer
-	ULONG len = fileInfo.AllocationSize.LowPart;
-	PVOID buff = FltAllocatePoolAlignedWithTag(obj->Instance, NonPagedPool, len, NAME_TAG);
-	if (!buff){ loge((NAME"allocate buffer failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
 
-	// read file
-	LARGE_INTEGER offset = null;
-	status = FltReadFile(obj->Instance, obj->FileObject, &offset, len, buff,
-		FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
-	if (!NT_SUCCESS(status)){ loge((NAME"read file failed. %x", status)); goto _set_default_pem_end_; }
+	// !!!!!!
+	// this will cause memory overflower when read large file,
+	// fix it later
+	if (fileInfo.EndOfFile.QuadPart > 0){
+		// allocate buffer
+		len = fileInfo.AllocationSize.LowPart;
+		buff = FltAllocatePoolAlignedWithTag(obj->Instance, NonPagedPool, len, NAME_TAG);
+		if (!buff){ loge((NAME"allocate buffer failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
+
+		// read file
+		status = FltReadFile(obj->Instance, obj->FileObject, &offset, len, buff,
+			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+		if (!NT_SUCCESS(status)){ loge((NAME"read file failed. %x", status)); goto _set_default_pem_end_; }
+
+	}
 
 	//
 	// write permission information
@@ -92,15 +78,17 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	//
 	// write the origin data
 	//
-	offset.LowPart = sizeof(Permission);
-	status = FltWriteFile(obj->Instance, obj->FileObject, &offset, fileInfo.EndOfFile.LowPart, buff,FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	if (fileInfo.EndOfFile.QuadPart > 0){
+		offset.LowPart = sizeof(Permission);
+		status = FltWriteFile(obj->Instance, obj->FileObject, &offset, fileInfo.EndOfFile.LowPart, buff, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
-	//
-	// get the new information
-	//
-	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
-	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x", status)); return status; }
-	logi((NAME"file size : %d(%d)", fileInfo.EndOfFile, fileInfo.AllocationSize));
+		//
+		// get the new information
+		//
+		status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
+		if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x", status)); return status; }
+		logi((NAME"file size : %d(%d)", fileInfo.EndOfFile, fileInfo.AllocationSize));
+	}
 
 _set_default_pem_end_:
 	if (buff) { FltFreePoolAlignedWithTag(obj->Instance, buff, NAME_TAG); }
@@ -118,8 +106,8 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 	//
 	// read file information
 	//
-	status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, sizeof(Permission), &pm, 
-		FLTFL_IO_OPERATION_NON_CACHED|FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, sizeof(Permission), &pm,
+		FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 	if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x", status)); }
 
 	//
@@ -179,18 +167,16 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		status = FltGetVolumeGuidName(_obj->Volume, &guid, NULL);
 		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x", status)); leave; }
 
-		//
 		// is the volume for work
+		if (!wcsstr(gWorkRoot.Buffer, guid.Buffer)) return FLT_NO_NEED;
+
+		// is dir
+		if (nameInfo->FinalComponent.Length == 0) return FLT_ON_DIR;
+
 		//
-		if (nameInfo->Name.Length > nameInfo->Volume.Length + sizeof(WCHAR) && // is the root path
-			wcsstr(gWorkRoot.Buffer, guid.Buffer)){
-
-			//
-			// get user permisssion
-			//
-			status = getPermission(_obj, iswrite);
-		}
-
+		// get user permisssion
+		//
+		status = getPermission(_obj, iswrite);
 	}
 	finally{
 		if (nameInfo) FltReleaseFileNameInformation(nameInfo);

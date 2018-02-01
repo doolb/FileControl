@@ -17,6 +17,8 @@ const FLT_OPERATION_REGISTRATION gMiniCallbacks[] = {
 	{ IRP_MJ_WRITE, 0, miniPreWrite, miniPostWrite },
 	{ IRP_MJ_READ, 0, miniPreRead, miniPostRead },
 	{ IRP_MJ_PNP, 0, miniPrePnp, NULL },
+	{ IRP_MJ_QUERY_INFORMATION, 0, miniPreQueryInfo, miniPostQueryInfo },
+	{ IRP_MJ_DIRECTORY_CONTROL, 0, miniPreDirCtrl, miniPostDirCtrl },
 	{ IRP_MJ_OPERATION_END }	// END
 };
 

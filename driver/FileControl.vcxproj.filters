@@ -52,9 +52,18 @@
     <ClCompile Include="permission.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qeuryInfo.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
+    <ClCompile Include="dirctl.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="permission.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

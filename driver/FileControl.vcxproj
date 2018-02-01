@@ -54,11 +54,13 @@
     <ClCompile Include="client.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="create.c" />
+    <ClCompile Include="dirctl.c" />
     <ClCompile Include="filter.c" />
     <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
     <ClCompile Include="permission.c" />
     <ClCompile Include="pnp.c" />
+    <ClCompile Include="qeuryInfo.c" />
     <ClCompile Include="read.c" />
     <ClCompile Include="write.c" />
     <ResourceCompile Include="FileControl.rc" />
@@ -272,6 +274,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h" />
+    <ClInclude Include="permission.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
