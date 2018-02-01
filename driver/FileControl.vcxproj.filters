@@ -20,6 +20,9 @@
     <Filter Include="Source Files\op">
       <UniqueIdentifier>{1fddbfe8-1f91-4c31-9775-9baa585ccbb2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libcrc">
+      <UniqueIdentifier>{307ff6aa-2693-46ff-8fe9-8192dcdb6804}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="minidirver.c">
@@ -58,12 +61,36 @@
     <ClCompile Include="dirctl.c">
       <Filter>Source Files\op</Filter>
     </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crc8.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crc16.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crc32.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crcccitt.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crcdnp.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crckrmit.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\libcrc\src\crcsick.c">
+      <Filter>Source Files\libcrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="permission.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils\libcrc\include\checksum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
