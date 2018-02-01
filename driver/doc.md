@@ -9,6 +9,9 @@ ref
 * file general
   * `FileBothDirectoryInformation (0n3)`
 
+## libcrc
+https://github.com/lammertb/libcrc.git
+
 windbg fitler
 =============
 #Include:
