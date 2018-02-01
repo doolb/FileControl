@@ -1,4 +1,5 @@
 #include "minidriver.h"
+#include "permission.h"
 
 UNICODE_STRING gWorkRoot;	// the root path for dirver work
 UNICODE_STRING gKeyRoot;		// the root path for key file
