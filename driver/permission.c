@@ -1,6 +1,6 @@
 #include "minidriver.h"
 #include "permission.h"
-
+#include "checksum.h"
 
 // {5F1E1BC3-4AD5-49D5-A6EE-0A2F86029A64}
 static GUID gUserId =
@@ -17,6 +17,14 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	ULONG retlen;
 	LARGE_INTEGER offset = { 0 };
 
+	//
+	// calc checksum,use crc32
+	//
+	pm->crc32 = crc_32((PUCHAR)pm, HEAD_LENGTH);
+
+	//
+	// write data
+	//
 	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, sizeof(Permission), pm, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x", status)); }
@@ -25,12 +33,12 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 
 }
 
-NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
+NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN rewrite){
 	pm->_head = 'FCHD';
 	pm->code = PC_Default;
 	pm->uid = gUserId;
 	pm->gid = gGroupId;
-	memset(pm->_pad, 'Pd', PADDING);
+	memset(pm->_pad, 0, PADDING);
 
 	NTSTATUS status = STATUS_SUCCESS;
 	//LARGE_INTEGER offset = { 0 };
@@ -52,6 +60,10 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	// is file largest than 4gb
 	if (fileInfo.AllocationSize.HighPart > 0){ loge((NAME"file is too large.")); return status; }
 
+	//
+	// is rewrite the permission data
+	//
+	if (rewrite) fileInfo.EndOfFile.QuadPart -= sizeof(Permission);
 
 	// !!!!!!
 	// this will cause memory overflower when read large file,
@@ -116,9 +128,21 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 	if (!retlen || retlen != sizeof(Permission) || pm._head != 'FCHD') {
 		logw((NAME"no control information in file, write the default permission"));
 
-		status = setDefaultPermission(_obj, &pm);
+		status = setDefaultPermission(_obj, &pm, FALSE);
 		if (!NT_SUCCESS(status)){ return status; }
 	}
+
+	//
+	// checksum
+	//
+	UINT32 crc32 = crc_32((PUCHAR)&pm, HEAD_LENGTH);
+	if (crc32 != pm.crc32){
+		logw((NAME"checksum failed, write the default permission"));
+
+		status = setDefaultPermission(_obj, &pm, TRUE);
+		if (!NT_SUCCESS(status)){ return status; }
+	}
+
 
 	//
 	// is current user

@@ -11,7 +11,8 @@ typedef enum _PermissionCode{
 }PermissionCode, *PPermissionCode;
 
 
-#define PADDING 24
+#define HEAD_LENGTH 60
+#define PADDING 20
 //
 // нд╪Ч
 //
@@ -22,4 +23,5 @@ typedef struct _Permission
 	GUID uid;
 	GUID gid;
 	char  _pad[PADDING]; // padding  (size 64)
+	UINT32 crc32;
 }Permission, *PPermission;
