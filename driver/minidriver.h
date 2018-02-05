@@ -2,6 +2,7 @@
 #include <fltKernel.h>
 #include <dontuse.h>
 #include <suppress.h>
+#include <minwindef.h>
 
 #define null { 0 }
 
@@ -50,8 +51,14 @@ typedef struct _VolumeContext
 	PFLT_VOLUME_PROPERTIES prop;
 	UCHAR _prop_buffer[sizeof(FLT_VOLUME_PROPERTIES) + 512]; // volume property buffer
 
+	//
+	// permission head size
+	//
+	ULONG PmHeadSize;
 }VolumeContext, *PVolumeContext;
 #define MIN_SECTOR_SIZE 0x200
+#define DEFAULT_SECTOR_SIZE 4096
+
 //
 // context struct pass to post callback from pre callback
 //

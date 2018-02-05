@@ -11,17 +11,18 @@ typedef enum _PermissionCode{
 }PermissionCode, *PPermissionCode;
 
 
-#define HEAD_LENGTH 60
-#define PADDING 20
+#define PM_ALL_SIZE  44		// the size of all permission data 
+#define PM_DATA_SIZE 40		// the size of all permission data without the checksum
+
 //
-// нд╪Ч
+// the permission data of file
 //
 typedef struct _Permission
 {
-	unsigned long  _head;
-	PermissionCode code;
-	GUID uid;
-	GUID gid;
-	char  _pad[PADDING]; // padding  (size 64)
-	UINT32 crc32;
+	unsigned long  _head;	// 4 byte
+	PermissionCode code;		// 4 byte
+	GUID uid;				// 16 byte
+	GUID gid;				// 16 byte
+	UINT32 crc32;			// 4 byte
+	ULONG  sizeOnDisk;		// the size of data on disk, only avaliable in runtime
 }Permission, *PPermission;
