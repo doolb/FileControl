@@ -26,10 +26,19 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	if (!NT_SUCCESS(status)) return status;
 
 	//
+	// get volume context, because we need the head size
+	//
+	PVolumeContext ctx;
+	status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
+	if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x", status)); return status; }
+
+	//
 	// modify the file size 
 	//
+	BOOL ismod = FALSE;
 	PFLT_PARAMETERS param = &_data->Iopb->Parameters;
 	if (param->DirectoryControl.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation &&
+		param->DirectoryControl.QueryDirectory.Length >= sizeof(FILE_ID_BOTH_DIR_INFORMATION) &&
 		param->DirectoryControl.QueryDirectory.DirectoryBuffer != NULL){
 		PFILE_ID_BOTH_DIR_INFORMATION info = (PFILE_ID_BOTH_DIR_INFORMATION)param->DirectoryControl.QueryDirectory.DirectoryBuffer;
 
@@ -37,25 +46,33 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 #pragma warning(disable:4127)
 			while (TRUE){
 				// is file name valid
-				if (info->FileNameLength == 0) continue;
-
+				if (info->FileNameLength == 0) goto _next_file_;
 				// large file ,we skip it now
-				if (info->AllocationSize.HighPart > 0) continue;
+				if (info->AllocationSize.HighPart > 0) goto _next_file_;
+				// is size valid 
+				if (info->EndOfFile.QuadPart < ctx->PmHeadSize) goto _next_file_;
 
 				// hide the header size
-				info->EndOfFile.QuadPart -= sizeof(Permission);
+				info->EndOfFile.QuadPart -= ctx->PmHeadSize;
+				ismod = TRUE;
 
 				// goto next file
+			_next_file_:
 				if (info->NextEntryOffset == 0) break;
 				ULONG ptr = ((ULONG)info) + info->NextEntryOffset;
+
 				info = (PFILE_ID_BOTH_DIR_INFORMATION)ptr;
 			}
-			FltSetCallbackDataDirty(_data);
+			if (ismod){
+				FltSetCallbackDataDirty(_data);
+				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d", ctx->PmHeadSize));
+			}			
 		}
 	}
-
+	ismod = FALSE;
 	//PFLT_PARAMETERS param = &_data->Iopb->Parameters;
 	if (param->DirectoryControl.QueryDirectory.FileInformationClass == FileBothDirectoryInformation &&
+		param->DirectoryControl.QueryDirectory.Length >= sizeof(FILE_BOTH_DIR_INFORMATION) &&
 		param->DirectoryControl.QueryDirectory.DirectoryBuffer != NULL){
 		PFILE_BOTH_DIR_INFORMATION info = (PFILE_BOTH_DIR_INFORMATION)param->DirectoryControl.QueryDirectory.DirectoryBuffer;
 
@@ -63,22 +80,31 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 #pragma warning(disable:4127)
 			while (TRUE){
 				// is file name valid
-				if (info->FileNameLength == 0) continue;
-
+				if (info->FileNameLength == 0) goto _next_file_b_;
 				// large file ,we skip it now
-				if (info->AllocationSize.HighPart > 0) continue;
+				if (info->AllocationSize.HighPart > 0) goto _next_file_b_;
+				// is size valid 
+				if (info->EndOfFile.QuadPart < ctx->PmHeadSize) goto _next_file_b_;
 
 				// hide the header size
-				info->EndOfFile.QuadPart -= sizeof(Permission);
+				info->EndOfFile.QuadPart -= ctx->PmHeadSize;
+				ismod = TRUE;
 
 				// goto next file
+			_next_file_b_:
 				if (info->NextEntryOffset == 0) break;
 				ULONG ptr = ((ULONG)info) + info->NextEntryOffset;
+
 				info = (PFILE_BOTH_DIR_INFORMATION)ptr;
 			}
-			FltSetCallbackDataDirty(_data);
+			if (ismod){
+				FltSetCallbackDataDirty(_data);
+				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d", ctx->PmHeadSize));
+			}
 		}
 	}
+
+	if (ctx) FltReleaseContext(ctx);
 
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }
