@@ -234,7 +234,7 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 	}
 	finally{
 		if (nameInfo) {
-			log((NAME"check file:%wZ \n", &nameInfo->Name));
+			logi((NAME"check file:%wZ \n", &nameInfo->Name));
 			FltReleaseFileNameInformation(nameInfo);
 		}
 	}

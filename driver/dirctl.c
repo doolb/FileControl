@@ -99,7 +99,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 			}
 			if (ismod){
 				FltSetCallbackDataDirty(_data);
-				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
+				logi((NAME"dir FileBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
 			}
 		}
 	}
