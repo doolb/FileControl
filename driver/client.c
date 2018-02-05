@@ -12,13 +12,13 @@ NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBuffer
 	UNREFERENCED_PARAMETER(ReturnOutputBufferLength);
 
 	if (wcsstr(InputBuffer, L"fail")){
-		loge((NAME"client blocked. (%x)",PortCookie));
+		loge((NAME"client blocked. (%x) \n",PortCookie));
 		return STATUS_ACCESS_DENIED;
 	}
 
 	RtlCopyMemory(OutputBuffer, L"Hello client", OutputBufferLength);
 	*ReturnOutputBufferLength = sizeof(L"Hello client");
-	logw((NAME"client message in. (%x) %ws[%d] %x[%d,%x]", PortCookie, (PWCH)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));
+	logw((NAME"client message in. (%x) %ws[%d] %x[%d,%x] \n", PortCookie, (PWCH)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));
 	return STATUS_SUCCESS;
 }
 
@@ -30,11 +30,11 @@ NTSTATUS miniConnect(_In_ PFLT_PORT ClientPort, _In_opt_ PVOID ServerPortCookie,
 	UNREFERENCED_PARAMETER(ConnectionPortCookie);
 
 	gClient = ClientPort;
-	logw((NAME"client connect. %x", ServerPortCookie));
+	logw((NAME"client connect. %x \n", ServerPortCookie));
 	return STATUS_SUCCESS;
 }
 
 VOID miniDisconnect(_In_opt_ PVOID ConnectionCookie){
 	FltCloseClientPort(gFilter, &gClient);
-	logw((NAME"client disconnect. %x", ConnectionCookie));
+	logw((NAME"client disconnect. %x \n", ConnectionCookie));
 }

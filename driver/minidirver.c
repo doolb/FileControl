@@ -2,7 +2,7 @@
 
 #pragma region Object
 
-ULONG gLogFlag = ERROR | WARNING | LOG;
+ULONG gLogFlag = ERROR | WARNING | LOG | INFO;
 
 PFLT_FILTER gFilter;		// global filter handler
 PFLT_PORT	gPort;		// comminication port created for client login
@@ -63,6 +63,32 @@ const FLT_REGISTRATION gMiniRegistration = {
 #pragma endregion
 
 #pragma region Function
+
+void stop(){
+
+	//
+	// notify exit
+	//
+	onexit();
+
+	//
+	// delete lookaside list
+	//
+	ExDeleteNPagedLookasideList(&gPre2PostContexList);
+
+	//
+	// close port
+	//
+	FltCloseCommunicationPort(gPort);
+	//
+	// unregistry driver
+	//
+	FltUnregisterFilter(gFilter);
+
+	logw((NAME"driver stoped\n"));
+}
+
+
 #pragma code_seg("INIT")
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath){
 	logw((NAME"%wZ", RegistryPath));
@@ -74,45 +100,43 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 		// registry filter driver
 		//
 		status = FltRegisterFilter(DriverObject, &gMiniRegistration, &gFilter);
-		if (!NT_SUCCESS(status)) { loge((NAME"registry driver failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"registry driver failed. %x \n", status)); leave; }
 
 		//
 		// create a communication port for user application
 		//
 		PSECURITY_DESCRIPTOR sd;
 		status = FltBuildDefaultSecurityDescriptor(&sd, FLT_PORT_ALL_ACCESS);
-		if (!NT_SUCCESS(status)) { loge((NAME"FltBuildDefaultSecurityDescriptor failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"FltBuildDefaultSecurityDescriptor failed. %x \n", status)); leave; }
 
 		OBJECT_ATTRIBUTES oa = null;
 		UNICODE_STRING name = RTL_CONSTANT_STRING(L"\\fc");
 		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, sd);
 		status = FltCreateCommunicationPort(gFilter, &gPort, &oa, NULL, miniConnect, miniDisconnect, miniMessage, 1);
 		FltFreeSecurityDescriptor(sd);
-		if (!NT_SUCCESS(status)) { loge((NAME"create communication port  failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"create communication port  failed. %x \n", status)); leave; }
 
-		//
-		// start filter i/o
-		//
-		status = FltStartFiltering(gFilter);
-		if (!NT_SUCCESS(status)) { loge((NAME"start filter driver failed. %x", status)); leave; }
+
+		// init lookaside list
+		ExInitializeNPagedLookasideList(&gPre2PostContexList, NULL, NULL, 0, sizeof(Pre2PostContext), PRE_2_POST_TAG, 0);
 
 		//
 		// call user inteface
 		//
 		status = oninit();
-		if (!NT_SUCCESS(status)) { loge((NAME"oninit failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"oninit failed. %x \n", status)); leave; }
 
+
+		//
+		// start filter i/o
+		//
+		status = FltStartFiltering(gFilter);
+		if (!NT_SUCCESS(status)) { loge((NAME"start filter driver failed. %x \n", status)); leave; }
 	}
 	finally{
 		if (!NT_SUCCESS(status)){
-			//
-			// failed,close port
-			//
-			FltCloseCommunicationPort(gPort);
-			//
-			// failed, unregistry driver
-			//
-			FltUnregisterFilter(gFilter);
+
+			stop();
 		}
 	}
 
@@ -123,11 +147,9 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 NTSTATUS miniDriverUnload(_In_ FLT_FILTER_UNLOAD_FLAGS flags){
 	PAGED_CODE();
 
-	onexit();
+	stop();
 
-	FltCloseCommunicationPort(gPort);
-	FltUnregisterFilter(gFilter);
-	logw((NAME"%x\n", flags));
+	logw((NAME"%x\n \n", flags));
 	return STATUS_SUCCESS;
 }
 #pragma endregion

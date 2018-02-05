@@ -29,7 +29,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	//
 	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, pm->sizeOnDisk, pm, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
-	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x", status)); }
+	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x \n", status)); }
 
 	return status;
 
@@ -59,11 +59,11 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	//
 	// get file size
 	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
-	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x", status)); return status; }
+	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x \n", status)); return status; }
 	logi((NAME"file size : %d(%d)", fileInfo.EndOfFile, fileInfo.AllocationSize));
 
 	// is file largest than 4gb
-	if (fileInfo.AllocationSize.HighPart > 0){ loge((NAME"file is too large.")); return status; }
+	if (fileInfo.AllocationSize.HighPart > 0){ loge((NAME"file is too large. \n")); return status; }
 
 	//
 	// is rewrite the permission data
@@ -77,12 +77,12 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 		// allocate buffer
 		len = fileInfo.AllocationSize.LowPart;
 		buff = FltAllocatePoolAlignedWithTag(obj->Instance, NonPagedPool, len, NAME_TAG);
-		if (!buff){ loge((NAME"allocate buffer failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
+		if (!buff){ loge((NAME"allocate buffer failed. \n")); return STATUS_INSUFFICIENT_RESOURCES; }
 
 		// read file
 		status = FltReadFile(obj->Instance, obj->FileObject, &offset, len, buff,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
-		if (!NT_SUCCESS(status)){ loge((NAME"read file failed. %x", status)); goto _set_default_pem_end_; }
+		if (!NT_SUCCESS(status)){ loge((NAME"read file failed. %x \n", status)); goto _set_default_pem_end_; }
 
 	}
 
@@ -90,7 +90,7 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	// write permission information
 	//
 	status = setPermission(obj, pm);
-	if (!NT_SUCCESS(status)){ loge((NAME"set file permission failed. %x", status)); goto _set_default_pem_end_; }
+	if (!NT_SUCCESS(status)){ loge((NAME"set file permission failed. %x \n", status)); goto _set_default_pem_end_; }
 
 	//
 	// write the origin data
@@ -105,7 +105,7 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	// get the new information
 	//
 	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
-	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x", status)); return status; }
+	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x \n", status)); return status; }
 	logi((NAME"file size : %d(%d) \n", fileInfo.EndOfFile, fileInfo.AllocationSize));
 
 _set_default_pem_end_:
@@ -127,14 +127,14 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 		// get volume context, so we can get the permission data size on disk
 		//
 		status = FltGetVolumeContext(_obj->Filter, _obj->Volume, &ctx);
-		if (!NT_SUCCESS(status)) { loge((NAME"FltGetVolumeContext failed. %x", status)); leave; }
-		if (ctx->PmHeadSize == 0){ loge((NAME"permission data size invalid.")); status = STATUS_INVALID_PARAMETER; leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"FltGetVolumeContext failed. %x \n", status)); leave; }
+		if (ctx->PmHeadSize == 0){ loge((NAME"permission data size invalid. \n")); status = STATUS_INVALID_PARAMETER; leave; }
 
 		//
 		// allocate memory
 		//
 		pm = FltAllocatePoolAlignedWithTag(_obj->Instance, NonPagedPool, ctx->PmHeadSize, NAME_TAG);
-		if (!pm){ loge((NAME"FltAllocatePoolAlignedWithTag failed.")); status = STATUS_INVALID_PARAMETER; leave; }
+		if (!pm){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); status = STATUS_INVALID_PARAMETER; leave; }
 		memset(pm, 0, ctx->PmHeadSize);
 		pm->sizeOnDisk = ctx->PmHeadSize;
 
@@ -143,16 +143,16 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 		//
 		status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, pm->sizeOnDisk, pm,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
-		if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x", status)); }
+		if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x \n", status)); }
 
 		//
 		// is this controled by ourself
 		//
 		if (!retlen || retlen < pm->sizeOnDisk || pm->_head != 'FCHD') {
-			logw((NAME"no control information in file, write the default permission"));
+			logw((NAME"no control information in file, write the default permission \n"));
 
 			status = setDefaultPermission(_obj, pm, FALSE);
-			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x", status)); leave; }
+			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
 		}
 
 		//
@@ -160,10 +160,10 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 		//
 		UINT32 crc32 = crc_32((PUCHAR)pm, PM_DATA_SIZE);
 		if (crc32 != pm->crc32){
-			logw((NAME"checksum failed, write the default permission"));
+			logw((NAME"checksum failed, write the default permission \n"));
 
 			status = setDefaultPermission(_obj, pm, TRUE);
-			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x", status)); leave; }
+			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
 		}
 
 		//
@@ -213,13 +213,13 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		status = FltGetFileNameInformation(_data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &nameInfo);
 		// get file name failed when file is in creating
 		if (status == STATUS_FLT_INVALID_NAME_REQUEST) { status = FLT_NO_NEED; leave; }
-		if (!NT_SUCCESS(status)) { loge((NAME"get file name info failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"get file name info failed. %x \n", status)); leave; }
 
 		status = FltParseFileNameInformation(nameInfo);
-		if (!NT_SUCCESS(status)) { loge((NAME"parse file name info failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"parse file name info failed. %x \n", status)); leave; }
 
 		status = FltGetVolumeGuidName(_obj->Volume, &guid, NULL);
-		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x", status)); leave; }
+		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x \n", status)); leave; }
 
 		// is the volume for work
 		if (!wcsstr(gWorkRoot.Buffer, guid.Buffer)) return FLT_NO_NEED;
@@ -234,7 +234,7 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 	}
 	finally{
 		if (nameInfo) {
-			log((NAME"check file:%wZ", &nameInfo->Name));
+			log((NAME"check file:%wZ \n", &nameInfo->Name));
 			FltReleaseFileNameInformation(nameInfo);
 		}
 	}

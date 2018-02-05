@@ -24,7 +24,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		//
 		status = FltAllocateContext(FltObjects->Filter, FLT_VOLUME_CONTEXT, sizeof(VolumeContext), NonPagedPool, &ctx);
 		if (!NT_SUCCESS(status)){
-			loge((NAME"create context failed. %x", status));
+			loge((NAME"create context failed. %x \n", status));
 			leave;
 		}
 
@@ -34,7 +34,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		ctx->prop = (PFLT_VOLUME_PROPERTIES)ctx->_prop_buffer;
 		status = FltGetVolumeProperties(FltObjects->Volume, ctx->prop, sizeof(ctx->_prop_buffer), &retLen);
 		if (!NT_SUCCESS(status)){
-			loge((NAME"get volume properties failed. %x", status));
+			loge((NAME"get volume properties failed. %x \n", status));
 			leave;
 		}
 

@@ -30,7 +30,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	//
 	PVolumeContext ctx;
 	status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
-	if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x", status)); return status; }
+	if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x \n", status)); return status; }
 
 	//
 	// modify the file size 
@@ -65,7 +65,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 			}
 			if (ismod){
 				FltSetCallbackDataDirty(_data);
-				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d", ctx->PmHeadSize));
+				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
 			}			
 		}
 	}
@@ -99,7 +99,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 			}
 			if (ismod){
 				FltSetCallbackDataDirty(_data);
-				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d", ctx->PmHeadSize));
+				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
 			}
 		}
 	}
