@@ -1,10 +1,22 @@
 #include "minidriver.h"
 
+#define OVERWRITE (FILE_OVERWRITE << 24)
+
 FLT_PREOP_CALLBACK_STATUS
 miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext){
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
+
+	PFLT_IO_PARAMETER_BLOCK iopb = _data->Iopb;
+
+	//
+	// overwrite will clean all data in file, so we remove it
+	//
+	if (iopb->Parameters.Create.Options & OVERWRITE){
+		iopb->Parameters.Create.Options &= ~OVERWRITE;
+		FltSetCallbackDataDirty(_data);
+	}
 
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }

@@ -160,7 +160,7 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 		//
 		UINT32 crc32 = crc_32((PUCHAR)pm, PM_DATA_SIZE);
 		if (crc32 != pm->crc32){
-			logw((NAME"checksum failed, write the default permission \n"));
+			logw((NAME"check-sum failed, write the default permission \n"));
 
 			status = setDefaultPermission(_obj, pm, TRUE);
 			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
