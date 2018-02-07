@@ -65,6 +65,7 @@
     <ClCompile Include="filter.c" />
     <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
+    <ClCompile Include="pageio.c" />
     <ClCompile Include="permission.c" />
     <ClCompile Include="pnp.c" />
     <ClCompile Include="qeuryInfo.c" />

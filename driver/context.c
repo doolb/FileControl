@@ -1,4 +1,5 @@
 #include "minidriver.h"
+#include "permission.h"
 
 //
 // detech volume name and set in to context
@@ -23,7 +24,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		//
 		status = FltAllocateContext(FltObjects->Filter, FLT_VOLUME_CONTEXT, sizeof(VolumeContext), NonPagedPool, &ctx);
 		if (!NT_SUCCESS(status)){
-			loge((NAME"create context failed. %x", status));
+			loge((NAME"create context failed. %x \n", status));
 			leave;
 		}
 
@@ -33,7 +34,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		ctx->prop = (PFLT_VOLUME_PROPERTIES)ctx->_prop_buffer;
 		status = FltGetVolumeProperties(FltObjects->Volume, ctx->prop, sizeof(ctx->_prop_buffer), &retLen);
 		if (!NT_SUCCESS(status)){
-			loge((NAME"get volume properties failed. %x", status));
+			loge((NAME"get volume properties failed. %x \n", status));
 			leave;
 		}
 
@@ -41,8 +42,17 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		// save volume sector size
 		//
 		FLT_ASSERT((ctx->prop->SectorSize == 0) || (ctx->prop->SectorSize >= MIN_SECTOR_SIZE));
-		ctx->SectorSize = max(ctx->prop->SectorSize, MIN_SECTOR_SIZE);
+		if (ctx->prop->SectorSize == 0)
+			ctx->SectorSize = DEFAULT_SECTOR_SIZE;
+		else
+			ctx->SectorSize = max(ctx->prop->SectorSize, MIN_SECTOR_SIZE);
+
 		ctx->Name.Buffer = NULL;
+
+		//
+		// and the permission head size
+		//
+		ctx->PmHeadSize = max(ctx->SectorSize, PM_ALL_SIZE);
 
 #pragma region get volume name
 		//
