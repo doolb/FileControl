@@ -23,7 +23,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 
 	if (status == FLT_NO_NEED) return FLT_POSTOP_FINISHED_PROCESSING;
 
-	if (!NT_SUCCESS(status)) return status;
+	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
 	//
 	// get volume context, because we need the head size

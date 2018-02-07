@@ -82,6 +82,9 @@
     <ClCompile Include="..\utils\libcrc\src\crcsick.c">
       <Filter>Source Files\libcrc</Filter>
     </ClCompile>
+    <ClCompile Include="pageio.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

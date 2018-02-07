@@ -30,7 +30,7 @@ miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _flt
 	UNREFERENCED_PARAMETER(_completionContext);
 
 	NTSTATUS status = checkPermission(_data, _fltObjects, FALSE);
-	if (!NT_SUCCESS(status)) return STATUS_ACCESS_DENIED;
+	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }
