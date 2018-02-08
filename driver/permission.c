@@ -10,6 +10,13 @@ static GUID gUserId =
 static GUID gGroupId =
 { 0x76577a6, 0xc4d9, 0x41d2, { 0x97, 0xf, 0x1e, 0xc9, 0xf, 0x49, 0x3d, 0xb3 } };
 
+//
+// free the memory of permission data
+//
+void freePermission(PCFLT_RELATED_OBJECTS _obj,PPermission pm){
+	FLT_ASSERT(_obj);
+	if (pm)  FltFreePoolAlignedWithTag(_obj->Instance, pm, NAME_TAG); pm = NULL;
+}
 
 NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 
@@ -17,7 +24,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	ULONG retlen;
 	LARGE_INTEGER offset = { 0 };
 
-	ASSERT(pm != NULL && pm->sizeOnDisk > 0);
+	ASSERT(obj && pm && pm->sizeOnDisk > 0);
 
 	//
 	// calc checksum,use crc32
@@ -113,14 +120,19 @@ _set_default_pem_end_:
 	return status;
 }
 
-NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
+//
+// get the permission of current user, the caller must support the buffer
+//
+NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
 
+	FLT_ASSERT(_obj);
 
 	NTSTATUS status = STATUS_SUCCESS;
 	LARGE_INTEGER offset = { 0 };
 	PVolumeContext ctx = NULL;
 	PPermission pm = NULL;
 	ULONG retlen;
+	*_pm = NULL;
 
 	try{
 		//
@@ -165,6 +177,42 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 			status = setDefaultPermission(_obj, pm, TRUE);
 			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
 		}
+	}
+	finally{
+		if (ctx) FltReleaseContext(ctx); ctx = NULL;
+
+		// if failed, free the buffer
+		if (!NT_SUCCESS(status)) freePermission(_obj, pm);
+		else *_pm = pm;
+	}
+
+	return status;
+}
+
+//
+// check user permission, the file must be opened
+// iswrite: is user want to write file
+//
+NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
+
+	NTSTATUS status = STATUS_SUCCESS;
+	PPermission pm = NULL;
+
+	try{
+		//
+		// check file status
+		//
+		status = checkFltStatus(_data, _obj);
+		if (!NT_SUCCESS(status)) { loge((NAME"checkFltStatus failed. %x \n", status)); leave; }
+		// is need filter
+		if (status == FLT_NO_NEED || status == FLT_ON_DIR) leave;
+
+		//
+		// get file permission data
+		//
+		status = getPermission(_obj, &pm);
+		if (!NT_SUCCESS(status)) { loge((NAME"getPermission failed. %x \n", status)); leave; }
+
 
 		//
 		// is current user
@@ -189,18 +237,17 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
 		}
 	}
 	finally{
-		if (ctx) FltReleaseContext(ctx); ctx = NULL;
-		if (pm)  FltFreePoolAlignedWithTag(_obj->Instance, pm, NAME_TAG); pm = NULL;
+		freePermission(_obj, pm);
 	}
-	return NT_SUCCESS(status) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+	return status;
 }
 
 //
-// check user permission,the function can't be called in pre-create or post-cleanup
+// check the file status, is it is a dir and is need be filter
 //
-NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite){
+NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 
-	NTSTATUS status = STATUS_SUCCESS;
+	NTSTATUS status = FLT_NO_NEED;
 
 	// save volume guid
 	UNICODE_STRING guid; WCHAR _guid_buffer[256];	RtlInitEmptyUnicodeString(&guid, _guid_buffer, sizeof(_guid_buffer));
@@ -222,23 +269,19 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x \n", status)); leave; }
 
 		// is the volume for work
-		if (!wcsstr(gWorkRoot.Buffer, guid.Buffer)) return FLT_NO_NEED;
+		if (!wcsstr(gWorkRoot.Buffer, guid.Buffer)) { status = FLT_NO_NEED; leave; }
 
 		// is dir
-		if (nameInfo->FinalComponent.Length == 0) return FLT_ON_DIR;
+		if (nameInfo->FinalComponent.Length == 0) { status = FLT_ON_DIR; leave; }
 
-		//
-		// get user permisssion
-		//
-		status = getPermission(_obj, iswrite);
+		// we need filter it
+		status = FLT_NEED;
 	}
 	finally{
 		if (nameInfo) {
-			logi((NAME"check file:%wZ \n", &nameInfo->Name));
+			logi((NAME"get file status: %wZ, %x \n", &nameInfo->Name, status));
 			FltReleaseFileNameInformation(nameInfo);
 		}
 	}
 	return status;
 }
-
-#undef PADDING

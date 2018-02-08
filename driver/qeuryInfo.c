@@ -19,7 +19,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostQueryInfo(_Inout_ PFLT_CALLBACK_DATA _data,
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_completionContext);
 
-	NTSTATUS status = checkPermission(_data, _fltObjects, FALSE);
+	NTSTATUS status = checkFltStatus(_data, _fltObjects);
 
 	if (status == FLT_NO_NEED || status == FLT_ON_DIR) return FLT_POSTOP_FINISHED_PROCESSING;
 

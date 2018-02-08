@@ -1,4 +1,5 @@
 #include "minidriver.h"
+#include "permission.h"
 
 #define OVERWRITE (FILE_OVERWRITE << 24)
 

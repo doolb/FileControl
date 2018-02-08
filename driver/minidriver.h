@@ -31,6 +31,7 @@ extern ULONG gLogFlag;
 // file no need to filter
 #define FLT_NO_NEED ((NTSTATUS)0x01000001L)
 #define FLT_ON_DIR  ((NTSTATUS)0x01000002L)
+#define FLT_NEED		((NTSTATUS)0x01000003L)
 
 // the root path for dirver work
 extern UNICODE_STRING gWorkRoot;	
@@ -149,8 +150,4 @@ void onstop();		// call when stop filter on volme
 NTSTATUS onfilter();// call when filter data on volme
 NTSTATUS onmsg();	// call when user application message in
 
-//
-// permission
-//
-NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite);
 #pragma endregion

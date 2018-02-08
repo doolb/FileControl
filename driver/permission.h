@@ -1,5 +1,6 @@
 #include <guiddef.h>
 typedef enum _PermissionCode{
+	PC_Invalid  = 0,
 	PC_User_Read = 0x00000001,
 	PC_User_Write = 0x00000002,
 	PC_Group_Read = 0x00000004,
@@ -26,3 +27,16 @@ typedef struct _Permission
 	UINT32 crc32;			// 4 byte
 	ULONG  sizeOnDisk;		// the size of data on disk, only avaliable in runtime
 }Permission, *PPermission;
+
+
+
+//
+// permission
+//
+NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj);
+// check the file status, is it is a dir and is need be filter
+NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite);
+
+NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm);
+NTSTATUS setPermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
+void freePermission(PCFLT_RELATED_OBJECTS _obj,PPermission pm);

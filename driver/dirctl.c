@@ -19,10 +19,8 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	UNREFERENCED_PARAMETER(_completionContext);
 
 
-	NTSTATUS status = checkPermission(_data, _fltObjects, FALSE);
-
+	NTSTATUS status = checkFltStatus(_data, _fltObjects);
 	if (status == FLT_NO_NEED) return FLT_POSTOP_FINISHED_PROCESSING;
-
 	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
 	//
