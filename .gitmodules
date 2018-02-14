@@ -1,3 +1,6 @@
 [submodule "utils/libcrc"]
 	path = utils/libcrc
 	url = https://github.com/lammertb/libcrc.git
+[submodule "utils/crypto"]
+	path = utils/crypto
+	url = https://github.com/xue-blood/crypto-algorithms.git
