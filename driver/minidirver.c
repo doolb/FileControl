@@ -1,5 +1,5 @@
 #include "minidriver.h"
-
+#include "op.h"
 #pragma region Object
 
 ULONG gLogFlag = ERROR | WARNING | LOG | INFO;
