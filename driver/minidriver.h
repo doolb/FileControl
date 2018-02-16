@@ -105,7 +105,7 @@ VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_IN
 //
 // user filter interface 
 //
-NTSTATUS oninit();	// call when dirver start
+NTSTATUS oninit(PUNICODE_STRING _regPath);	// call when dirver start
 void onexit();		// call when dirver unload
 NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
 void onstop();		// call when stop filter on volme

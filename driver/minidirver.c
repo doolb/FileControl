@@ -124,7 +124,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 		//
 		// call user inteface
 		//
-		status = oninit();
+		status = oninit(RegistryPath);
 		if (!NT_SUCCESS(status)) { loge((NAME"oninit failed. %x \n", status)); leave; }
 
 
