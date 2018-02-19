@@ -36,6 +36,8 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		status = IUtil->getConfig(hand, L"Pause", (PVOID)&gPause, &retlen);
 		log((NAME"driver pause : %x \n", gPause));
 
+		gPause = FALSE;
+		IUtil->setConfig(hand, L"Pause", &gPause, sizeof(BOOL), REG_DWORD);
 	}
 	finally{
 		if (hand) ZwClose(hand); hand = NULL; 

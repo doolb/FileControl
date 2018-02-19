@@ -91,6 +91,12 @@
     <ClCompile Include="util.c">
       <Filter>Source Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\utils\crypto\sha256.c">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\crypto\aes.c">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

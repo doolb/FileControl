@@ -51,6 +51,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\utils\crypto\aes.c" />
+    <ClCompile Include="..\utils\crypto\sha256.c" />
     <ClCompile Include="..\utils\libcrc\src\crc16.c" />
     <ClCompile Include="..\utils\libcrc\src\crc32.c" />
     <ClCompile Include="..\utils\libcrc\src\crc8.c" />

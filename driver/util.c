@@ -74,17 +74,84 @@ NTSTATUS getConfig(HANDLE hand, PWCHAR _name, PVOID * _value, PULONG _len){
 	return status;
 }
 
-NTSTATUS setConfig(HANDLE hand, PWCHAR _name, PVOID * _value, PULONG _len){
+NTSTATUS setConfig(HANDLE hand, PWCHAR _name, PVOID _value, ULONG _len, ULONG type){
 
 	ASSERT(hand);
 	ASSERT(_name);
 	ASSERT(_value);
 	ASSERT(_len);
 
-	return STATUS_ACCESS_DENIED;
+	//
+	// value name
+	//
+	UNICODE_STRING name;
+	RtlInitUnicodeString(&name, _name);
+
+	//
+	// set value
+	//
+	NTSTATUS status = ZwSetValueKey(hand, &name, 0, type, _value, _len);
+
+
+	return status;
+}
+
+
+PVOID aes(const uint8_t in[], PULONG len, bool isencrypt){
+
+	ASSERT(in);
+	ASSERT(len);
+
+	// key
+	uint32_t key[AES_KEY_DATA_SIZE];
+	aes_key_setup((uint8_t*)AES_KEY, key, AES_KEY_SIZE);
+
+	//
+	// allocate result memory
+	//
+	size_t ilen = *len;
+	size_t size = ROUND_TO_SIZE(ilen, AES_SIZE);
+	uint8_t *out = ExAllocatePoolWithTag(NonPagedPool, size, UTIL_TAG);
+	if (!out){ KdPrint(("allocate memory failed. \n")); return NULL; }
+
+	//
+	// do aes
+	//
+	uint8_t buff[AES_SIZE];
+	for (size_t i = 0; i < size; i += AES_SIZE){
+
+		// prepare input
+		memset(buff, 0, AES_SIZE);
+		memcpy_s(buff, AES_SIZE, in + i, ilen >= i ? AES_SIZE : ilen % AES_SIZE);
+
+		// encrypt 
+		if (isencrypt)
+			aes_encrypt(in + i, out + i, key, AES_KEY_SIZE);
+		else
+			aes_decrypt(in + i, out + i, key, AES_KEY_SIZE);
+	}
+
+	if (isencrypt)
+		*len = size;
+	else
+		*len = (ULONG)strnlen((char*)out, size);
+	return out;
+}
+
+PVOID encrypt(const uint8_t in[], PULONG len){
+	return aes(in, len, true);
+}
+
+PVOID decrypt(const uint8_t in[], PULONG len){
+	return aes(in, len, false);
 }
 
 struct _IUtil IUtil[1] = {
 	getConfig,
 	setConfig,
+
+	sha256,
+
+	encrypt,
+	decrypt
 };
