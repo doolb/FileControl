@@ -92,7 +92,7 @@ void stop(){
 
 #pragma code_seg("INIT")
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath){
-	logw((NAME"%wZ", RegistryPath));
+	logw((NAME"%wZ \n", RegistryPath));
 
 	NTSTATUS status = STATUS_SUCCESS;
 

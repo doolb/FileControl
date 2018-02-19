@@ -1,6 +1,8 @@
 #include "minidriver.h"
 #include "permission.h"
+#include "util.h"
 
+BOOL gPause = FALSE;
 UNICODE_STRING gWorkRoot;	// the root path for dirver work
 UNICODE_STRING gKeyRoot;		// the root path for key file
 
@@ -9,44 +11,34 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 	HANDLE hand = NULL;
 	OBJECT_ATTRIBUTES oa;
-	UNICODE_STRING name;
-	PUCHAR buff = NULL;
 	ULONG retlen = 0;
 
 	try{
-		//
-		// work root path
-		//
 		// open registry
 		InitializeObjectAttributes(&oa, _regPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 		status = ZwOpenKey(&hand, KEY_READ, &oa);
-		if (!NT_SUCCESS(status)){ loge((NAME"open registry failed. %x:%wZ", status, _regPath)); leave; }
+		if (!NT_SUCCESS(status)){ loge((NAME"open registry failed. %x:%wZ \n", status, _regPath)); leave; }
 
-		// value name
-		RtlInitUnicodeString(&name, L"WorkRoot");	
 
-		// get the value date len
-		status = ZwQueryValueKey(hand, &name, KeyValuePartialInformation, NULL, 0, &retlen);
-		if (retlen == 0){ loge((NAME"value length invalid. %x:%wZ", status, &name)); leave; }
-
-		// allocate memory
-		buff = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + retlen, NAME_TAG);
-		if (!buff){ loge((NAME"ExAllocatePoolWithTag failed.")); leave; }
-		gWorkRoot.Buffer = ExAllocatePoolWithTag(NonPagedPool, retlen, NAME_TAG);
-		if (!gWorkRoot.Buffer){ loge((NAME"ExAllocatePoolWithTag failed.")); leave; }
-
-		// get the value date
-		status = ZwQueryValueKey(hand, &name, KeyValuePartialInformation, buff, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + retlen, &retlen);
-		if (!NT_SUCCESS(status)){ loge((NAME"open registry failed. %x:%wZ", status, _regPath)); leave; }
-
-		// save value
-		memcpy_s(gWorkRoot.Buffer, retlen, ((PKEY_VALUE_PARTIAL_INFORMATION)buff)->Data, retlen);
+		//
+		// work root path
+		//
+		retlen = 0; // we dont know the size
+		status = IUtil->getConfig(hand, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
+		if (!NT_SUCCESS(status)){ loge((NAME"get config: WorkRoot failed. %x \n", status)); leave; }
 		gWorkRoot.Length = gWorkRoot.MaximumLength = (USHORT)retlen;
-		log((NAME"work root dir: %wZ", &gWorkRoot));
+		log((NAME"work root dir: %wZ \n", &gWorkRoot));
+
+		//
+		// driver status
+		//
+		retlen = sizeof(BOOL); // dont need allocate buffer
+		status = IUtil->getConfig(hand, L"Pause", (PVOID)&gPause, &retlen);
+		log((NAME"driver pause : %x \n", gPause));
+
 	}
 	finally{
 		if (hand) ZwClose(hand); hand = NULL; 
-		if (buff) ExFreePoolWithTag(buff, NAME_TAG); buff = NULL;
 	}
 
 	return status;

@@ -23,6 +23,9 @@
     <Filter Include="Source Files\libcrc">
       <UniqueIdentifier>{307ff6aa-2693-46ff-8fe9-8192dcdb6804}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{8f635c2f-8cfe-4aca-a34f-b48d00d36e7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="minidirver.c">
@@ -85,6 +88,9 @@
     <ClCompile Include="pageio.c">
       <Filter>Source Files\op</Filter>
     </ClCompile>
+    <ClCompile Include="util.c">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">
@@ -97,6 +103,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="op.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
