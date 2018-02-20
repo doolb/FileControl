@@ -1,4 +1,7 @@
+#pragma once
 #include <guiddef.h>
+#include "util.h"
+
 typedef enum _PermissionCode{
 	PC_Invalid = 0,
 	PC_User_Read = 0x00000001,
@@ -60,3 +63,21 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm);
 NTSTATUS setPermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
 void freePermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
+
+#pragma region User Key define
+
+typedef struct _UserKey{
+	User	user;				// user identify data
+	UINT8	passwd[HASH_SIZE];	// user password hash
+	UINT32	crc;				// check sum
+}UserKey, *PUserKey;
+
+struct _IUserKey
+{
+	NTSTATUS(*getAllUser)();	// get all user can login
+	NTSTATUS(*login)();			// login a user 
+	NTSTATUS(*signup)();		// signup a user
+};
+
+extern struct _IUserKey IUserKey[1];
+#pragma endregion

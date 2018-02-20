@@ -2,9 +2,9 @@
 #include "permission.h"
 #include "util.h"
 
-BOOL gPause = FALSE;
-UNICODE_STRING gWorkRoot;	// the root path for dirver work
-UNICODE_STRING gKeyRoot;		// the root path for key file
+static BOOL gPause = FALSE;
+static UNICODE_STRING gWorkRoot;	// the root path for dirver work
+static UNICODE_STRING gKeyRoot;		// the root path for key file
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
@@ -40,7 +40,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		IUtil->setConfig(hand, L"Pause", &gPause, sizeof(BOOL), REG_DWORD);
 	}
 	finally{
-		if (hand) ZwClose(hand); hand = NULL; 
+		if (hand) ZwClose(hand); hand = NULL;
 	}
 
 	return status;
@@ -48,6 +48,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 void onexit(){
 	if (gWorkRoot.Buffer){ ExFreePoolWithTag(gWorkRoot.Buffer, NAME_TAG); gWorkRoot.Buffer = NULL; }
+
 }
 
 NTSTATUS onstart(PVolumeContext ctx){
@@ -60,14 +61,27 @@ NTSTATUS onstart(PVolumeContext ctx){
 	return status;
 }
 
-void onstop(){
-
+void onstop(PVolumeContext ctx){
+	UNREFERENCED_PARAMETER(ctx);
 }
-NTSTATUS onfilter(){
-	NTSTATUS status = STATUS_SUCCESS;
+NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
+	ASSERT(info);
+	ASSERT(guid);
 
-	return status;
+	// is pause
+	if (gPause)
+		return FLT_NO_NEED;
+
+	// is the volume for work
+	if (!wcsstr(gWorkRoot.Buffer, guid->Buffer))
+		return FLT_NO_NEED;
+
+	// is user login
+	if (gKeyRoot.Length == 0)
+		return STATUS_ACCESS_DENIED;
+
+	return STATUS_SUCCESS;
 }
 NTSTATUS onmsg(){
 	NTSTATUS status = STATUS_SUCCESS;

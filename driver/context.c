@@ -203,7 +203,7 @@ VOID CleanupVolumeContext(_In_ PFLT_CONTEXT Context, _In_ FLT_CONTEXT_TYPE Conte
 	//
 	logw((NAME"clear volume context: Name=\"%wZ\", Device:%02x.%08x, Guid:%wZ, SectSize=0x%04x\n", &ctx->Name, ctx->prop->DeviceType, ctx->prop->DeviceCharacteristics, &ctx->GUID, ctx->SectorSize));
 
-	onstop();
+	onstop(ctx);
 
 	//
 	// clear buffer

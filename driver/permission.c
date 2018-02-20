@@ -219,14 +219,14 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		// is current user
 		//
 		//memcmp(&pm->user.uid, &gUser.uid, sizeof(GUID)) == 0;
-		if (pmIsUser(pm,&gUser)) {
+		if (pmIsUser(pm, &gUser)) {
 			if (iswrite)		status = pm->code & PC_User_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
 			else				status = pm->code & PC_User_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
 		}
 		//
 		// is the same group
 		//
-		else if (pmIsGroup(pm,&gUser)) {
+		else if (pmIsGroup(pm, &gUser)) {
 			if (iswrite)		status = pm->code & PC_Group_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
 			else				status = pm->code & PC_Group_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
 		}
@@ -270,11 +270,14 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 		status = FltGetVolumeGuidName(_obj->Volume, &guid, NULL);
 		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x \n", status)); leave; }
 
-		// is the volume for work
-		if (!wcsstr(gWorkRoot.Buffer, guid.Buffer)) { status = FLT_NO_NEED; leave; }
-
 		// is dir
 		if (nameInfo->FinalComponent.Length == 0) { status = FLT_ON_DIR; leave; }
+
+		//
+		// is need filter now
+		//
+		status = onfilter(nameInfo, &guid);
+		if (status != STATUS_SUCCESS) leave;
 
 		// we need filter it
 		status = FLT_NEED;

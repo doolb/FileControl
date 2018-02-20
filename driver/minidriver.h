@@ -33,9 +33,6 @@ extern ULONG gLogFlag;
 #define FLT_ON_DIR  ((NTSTATUS)0x01000002L)
 #define FLT_NEED		((NTSTATUS)0x01000003L)
 
-// the root path for dirver work
-extern UNICODE_STRING gWorkRoot;	
-
 //
 // context registion
 //
@@ -108,8 +105,8 @@ VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_IN
 NTSTATUS oninit(PUNICODE_STRING _regPath);	// call when dirver start
 void onexit();		// call when dirver unload
 NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
-void onstop();		// call when stop filter on volme
-NTSTATUS onfilter();// call when filter data on volme
+void onstop(PVolumeContext ctx);		// call when stop filter on volme
+NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
 NTSTATUS onmsg();	// call when user application message in
 
 #pragma endregion
