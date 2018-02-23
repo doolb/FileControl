@@ -117,12 +117,7 @@ PVOID aes(const uint8_t in[], PULONG len, bool isencrypt){
 	//
 	// do aes
 	//
-	uint8_t buff[AES_SIZE];
 	for (size_t i = 0; i < size; i += AES_SIZE){
-
-		// prepare input
-		memset(buff, 0, AES_SIZE);
-		memcpy_s(buff, AES_SIZE, in + i, ilen >= i ? AES_SIZE : ilen % AES_SIZE);
 
 		// encrypt 
 		if (isencrypt)
@@ -131,19 +126,16 @@ PVOID aes(const uint8_t in[], PULONG len, bool isencrypt){
 			aes_decrypt(in + i, out + i, key, AES_KEY_SIZE);
 	}
 
-	if (isencrypt)
-		*len = size;
-	else
-		*len = (ULONG)strnlen((char*)out, size);
+	*len = size;
 	return out;
 }
 
-PVOID encrypt(const uint8_t in[], PULONG len){
-	return aes(in, len, true);
+PVOID encrypt(const PVOID in[], PULONG len){
+	return aes((uint8_t*)in, len, true);
 }
 
-PVOID decrypt(const uint8_t in[], PULONG len){
-	return aes(in, len, false);
+PVOID decrypt(const PVOID in[], PULONG len){
+	return aes((uint8_t*)in, len, false);
 }
 
 struct _IUtil IUtil[1] = {

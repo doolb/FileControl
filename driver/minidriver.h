@@ -29,9 +29,19 @@ extern ULONG gLogFlag;
 #define NAME "[Mini Filter]@"__FUNCTION__": "
 
 // file no need to filter
+//
+// nt_success
+//
 #define FLT_NO_NEED ((NTSTATUS)0x01000001L)
 #define FLT_ON_DIR  ((NTSTATUS)0x01000002L)
 #define FLT_NEED		((NTSTATUS)0x01000003L)
+
+//
+// nt_success will failed
+//
+#define FLT_INVALID_HEAD ((NTSTATUS)0xC1000003L)
+
+#define GUID_SIZE	64 // the length for volume guid string
 
 //
 // context registion
@@ -40,7 +50,7 @@ typedef struct _VolumeContext
 {
 	UNICODE_STRING	Name;				// volume name
 	ULONG			SectorSize;			// the sector size for this volume.
-	PUNICODE_STRING WorkName;			// work name for device (this will be FileSystemDeviceName , RealDeviceName or null)
+	PUNICODE_STRING WorkName;			// work name for device (this is a refer of FileSystemDeviceName , RealDeviceName or null; we needn't free it )
 	UNICODE_STRING GUID;					// volume GUID
 
 	//
@@ -48,11 +58,6 @@ typedef struct _VolumeContext
 	//
 	PFLT_VOLUME_PROPERTIES prop;
 	UCHAR _prop_buffer[sizeof(FLT_VOLUME_PROPERTIES) + 512]; // volume property buffer
-
-	//
-	// permission head size
-	//
-	ULONG PmHeadSize;
 }VolumeContext, *PVolumeContext;
 #define MIN_SECTOR_SIZE 0x200
 #define DEFAULT_SECTOR_SIZE 4096
@@ -98,15 +103,5 @@ NTSTATUS	 miniInsQeuryTeardown(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_I
 VOID	 miniInsTeardownStart(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
 VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags);
 
-
-//
-// user filter interface 
-//
-NTSTATUS oninit(PUNICODE_STRING _regPath);	// call when dirver start
-void onexit();		// call when dirver unload
-NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
-void onstop(PVolumeContext ctx);		// call when stop filter on volme
-NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
-NTSTATUS onmsg();	// call when user application message in
 
 #pragma endregion

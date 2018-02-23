@@ -23,12 +23,6 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	if (status == FLT_NO_NEED) return FLT_POSTOP_FINISHED_PROCESSING;
 	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
-	//
-	// get volume context, because we need the head size
-	//
-	PVolumeContext ctx;
-	status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
-	if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x \n", status)); return status; }
 
 	//
 	// modify the file size 
@@ -48,10 +42,10 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 				// large file ,we skip it now
 				if (info->AllocationSize.HighPart > 0) goto _next_file_;
 				// is size valid 
-				if (info->EndOfFile.QuadPart < ctx->PmHeadSize) goto _next_file_;
+				if (info->EndOfFile.QuadPart < PM_SIZE) goto _next_file_;
 
 				// hide the header size
-				info->EndOfFile.QuadPart -= ctx->PmHeadSize;
+				info->EndOfFile.QuadPart -= PM_SIZE;
 				ismod = TRUE;
 
 				// goto next file
@@ -63,7 +57,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 			}
 			if (ismod){
 				FltSetCallbackDataDirty(_data);
-				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
+				logi((NAME"dir FileIdBothDirectoryInformation, hide size: %d \n", PM_SIZE));
 			}			
 		}
 	}
@@ -82,10 +76,10 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 				// large file ,we skip it now
 				if (info->AllocationSize.HighPart > 0) goto _next_file_b_;
 				// is size valid 
-				if (info->EndOfFile.QuadPart < ctx->PmHeadSize) goto _next_file_b_;
+				if (info->EndOfFile.QuadPart < PM_SIZE) goto _next_file_b_;
 
 				// hide the header size
-				info->EndOfFile.QuadPart -= ctx->PmHeadSize;
+				info->EndOfFile.QuadPart -= PM_SIZE;
 				ismod = TRUE;
 
 				// goto next file
@@ -97,12 +91,10 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 			}
 			if (ismod){
 				FltSetCallbackDataDirty(_data);
-				logi((NAME"dir FileBothDirectoryInformation, hide size: %d \n", ctx->PmHeadSize));
+				logi((NAME"dir FileBothDirectoryInformation, hide size: %d \n", PM_SIZE));
 			}
 		}
 	}
-
-	if (ctx) FltReleaseContext(ctx);
 
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

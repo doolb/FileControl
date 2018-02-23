@@ -10,7 +10,6 @@ FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCF
 
 	ULONG readlen = iopb->Parameters.Read.Length;
 	NTSTATUS status = STATUS_SUCCESS;
-	PVolumeContext ctx = NULL;
 
 	try
 	{
@@ -21,21 +20,14 @@ FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCF
 		if (!NT_SUCCESS(status)){ loge((NAME"check file permision failed. %x \n", status)); leave; }
 		if (status == FLT_NO_NEED || status == FLT_ON_DIR) leave;
 
-		//
-		// get volume context, because we need the head size
-		//
-		status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
-		if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x \n", status)); leave; }
-
 
 		// modify the read offset
-		iopb->Parameters.Read.ByteOffset.QuadPart += ctx->PmHeadSize;
+		iopb->Parameters.Read.ByteOffset.QuadPart += PM_SIZE;
 		FltSetCallbackDataDirty(_data);
-		logw((NAME"hide file size in read : %d \n", ctx->PmHeadSize));
+		logw((NAME"hide file size in read : %d \n", PM_SIZE));
 	}
 	finally
 	{
-		if (ctx) FltReleaseContext(ctx);
 	}
 
 	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }

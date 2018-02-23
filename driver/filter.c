@@ -1,10 +1,16 @@
 #include "minidriver.h"
 #include "permission.h"
 #include "util.h"
+#include "filter.h"
 
 static BOOL gPause = FALSE;
-static UNICODE_STRING gWorkRoot;	// the root path for dirver work
+static UNICODE_STRING gWorkRoot;		// the root path for dirver work
 static UNICODE_STRING gKeyRoot;		// the root path for key file
+static WCHAR gKeyRoot_Buffer[256];
+
+static LIST_ENTRY gVolumeList;
+
+KSPIN_LOCK gFilterLock;
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
@@ -14,6 +20,9 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 	ULONG retlen = 0;
 
 	try{
+		// init lock
+		KeInitializeSpinLock(&gFilterLock);
+
 		// open registry
 		InitializeObjectAttributes(&oa, _regPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 		status = ZwOpenKey(&hand, KEY_READ, &oa);
@@ -36,8 +45,21 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		status = IUtil->getConfig(hand, L"Pause", (PVOID)&gPause, &retlen);
 		log((NAME"driver pause : %x \n", gPause));
 
-		gPause = FALSE;
-		IUtil->setConfig(hand, L"Pause", &gPause, sizeof(BOOL), REG_DWORD);
+		//
+		// setup key root
+		//
+		RtlInitEmptyUnicodeString(&gKeyRoot, gKeyRoot_Buffer, sizeof(gKeyRoot_Buffer));
+
+		//
+		// init volume list head
+		//
+		InitializeListHead(&gVolumeList);
+
+		// test write config
+		//gPause = FALSE;
+		//IUtil->setConfig(hand, L"Pause", &gPause, sizeof(BOOL), REG_DWORD);
+
+
 	}
 	finally{
 		if (hand) ZwClose(hand); hand = NULL;
@@ -49,6 +71,32 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 void onexit(){
 	if (gWorkRoot.Buffer){ ExFreePoolWithTag(gWorkRoot.Buffer, NAME_TAG); gWorkRoot.Buffer = NULL; }
 
+	//
+	// clear volume list
+	//
+	PLIST_ENTRY head = &gVolumeList;
+	for (PLIST_ENTRY e = RemoveHeadList(head); e != head; e = RemoveHeadList(head))
+		ExFreePoolWithTag(e, FLT_TAG);
+}
+
+
+static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
+	ASSERT(ctx);
+
+	//
+	// allocate memory
+	//
+	PVolumeList list = ExAllocatePoolWithTag(NonPagedPool, sizeof(VolumeList), FLT_TAG);
+	if (!list){ loge((NAME"allocate memory failed.")); return NULL; }
+
+	//
+	// copy data
+	//
+	RtlInitEmptyUnicodeString(&list->GUID, list->_GUID_Buffer, sizeof(WCHAR) * GUID_SIZE);
+	RtlCopyUnicodeString(&list->GUID, &ctx->GUID);
+	list->type = ctx->prop->DeviceCharacteristics;
+
+	return (PLIST_ENTRY)list;
 }
 
 NTSTATUS onstart(PVolumeContext ctx){
@@ -58,11 +106,59 @@ NTSTATUS onstart(PVolumeContext ctx){
 		return status = STATUS_FLT_DO_NOT_ATTACH;
 	}
 
+	//
+	// lock operation
+	//
+	KLOCK_QUEUE_HANDLE hand;
+	KeAcquireInStackQueuedSpinLock(&gFilterLock, &hand);
+
+	//
+	// add this volume to list
+	//
+	PLIST_ENTRY list = createVolumeList(ctx);
+	if (!list){ loge((NAME"createVolumeList failed. %wZ", &ctx->GUID)); return STATUS_INSUFFICIENT_RESOURCES; }
+	InsertHeadList(&gVolumeList, list);
+
+
+	//
+	// unlock 
+	//
+	KeReleaseInStackQueuedSpinLock(&hand);
+
 	return status;
 }
 
 void onstop(PVolumeContext ctx){
-	UNREFERENCED_PARAMETER(ctx);
+	// no guid, skip it
+	if (ctx->GUID.Length == 0) return;
+
+	//
+	// lock operation
+	//
+	KLOCK_QUEUE_HANDLE hand;
+	KeAcquireInStackQueuedSpinLock(&gFilterLock, &hand);
+
+	PLIST_ENTRY head = &gVolumeList;
+	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+		//
+		// remove the same context from list
+		//
+		PVolumeList list = CONTAINING_RECORD(e, VolumeList, list);
+		if (RtlCompareUnicodeString(&ctx->GUID, &list->GUID, FALSE) == 0){
+
+			logw((NAME"remove volume : %wZ", &ctx->GUID));
+
+			RemoveEntryList(e);
+			ExFreePoolWithTag(e, FLT_TAG);
+			break;
+		}
+	}
+
+
+	//
+	// unlock 
+	//
+	KeReleaseInStackQueuedSpinLock(&hand);
 }
 NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
@@ -70,16 +166,14 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 	ASSERT(guid);
 
 	// is pause
-	if (gPause)
-		return FLT_NO_NEED;
+	if (gPause){ logw((NAME"driver is paused.")); return FLT_NO_NEED; }
 
 	// is the volume for work
-	if (!wcsstr(gWorkRoot.Buffer, guid->Buffer))
-		return FLT_NO_NEED;
+	if (!wcsstr(gWorkRoot.Buffer, guid->Buffer)) { return FLT_NO_NEED; }
+
 
 	// is user login
-	if (gKeyRoot.Length == 0)
-		return STATUS_ACCESS_DENIED;
+	if (gKeyRoot.Length != 0){ loge((NAME"user must be login.")); return STATUS_ACCESS_DENIED; }
 
 	return STATUS_SUCCESS;
 }

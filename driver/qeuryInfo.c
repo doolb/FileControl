@@ -26,13 +26,6 @@ FLT_POSTOP_CALLBACK_STATUS miniPostQueryInfo(_Inout_ PFLT_CALLBACK_DATA _data,
 	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
 	//
-	// get volume context, because we need the head size
-	//
-	PVolumeContext ctx = NULL;
-	status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
-	if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x \n", status)); return status; }
-
-	//
 	// modify the file size 
 	//
 	PFLT_PARAMETERS param = &_data->Iopb->Parameters;
@@ -42,11 +35,11 @@ FLT_POSTOP_CALLBACK_STATUS miniPostQueryInfo(_Inout_ PFLT_CALLBACK_DATA _data,
 		PFILE_STANDARD_INFORMATION info = (PFILE_STANDARD_INFORMATION)param->QueryFileInformation.InfoBuffer;
 
 		// hide the header size
-		if (info->EndOfFile.QuadPart >= ctx->PmHeadSize){
+		if (info->EndOfFile.QuadPart >= PM_SIZE){
 
-			info->EndOfFile.QuadPart -= ctx->PmHeadSize;
+			info->EndOfFile.QuadPart -= PM_SIZE;
 			FltSetCallbackDataDirty(_data);
-			logi((NAME"query FileStandardInformation, hide size: %d \n", ctx->PmHeadSize));
+			logi((NAME"query FileStandardInformation, hide size: %d \n", PM_SIZE));
 		}
 	}
 
@@ -57,14 +50,13 @@ FLT_POSTOP_CALLBACK_STATUS miniPostQueryInfo(_Inout_ PFLT_CALLBACK_DATA _data,
 		PFILE_ALL_INFORMATION info = (PFILE_ALL_INFORMATION)param->QueryFileInformation.InfoBuffer;
 
 		// hide the header size
-		if (info->StandardInformation.EndOfFile.QuadPart >= ctx->PmHeadSize){
+		if (info->StandardInformation.EndOfFile.QuadPart >= PM_SIZE){
 
-			info->StandardInformation.EndOfFile.QuadPart -= ctx->PmHeadSize;
+			info->StandardInformation.EndOfFile.QuadPart -= PM_SIZE;
 			FltSetCallbackDataDirty(_data);
-			logi((NAME"query FileAllInformation, hide size: %d \n", ctx->PmHeadSize));
+			logi((NAME"query FileAllInformation, hide size: %d \n", PM_SIZE));
 		}
 
 	}
-	if (ctx) FltReleaseContext(ctx);
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

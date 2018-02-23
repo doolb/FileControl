@@ -8,14 +8,10 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 
 	PFLT_IO_PARAMETER_BLOCK iopb = _data->Iopb;
 	NTSTATUS status = STATUS_SUCCESS;
-	PVolumeContext ctx = NULL;
 
 	try{
 		ULONG len = iopb->Parameters.Write.Length;
 		if (len == 0) leave;
-
-		status = FltGetVolumeContext(_fltObjects->Filter, _fltObjects->Volume, &ctx);
-		if (!NT_SUCCESS(status)){ loge((NAME"FltGetVolumeContext failed. %x \n", status)); leave; }
 
 		//
 		// check user permission
@@ -25,12 +21,11 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 		if (status == FLT_NO_NEED || status == FLT_ON_DIR) leave;
 
 		// modify the write offset
-		iopb->Parameters.Write.ByteOffset.QuadPart += ctx->PmHeadSize;
+		iopb->Parameters.Write.ByteOffset.QuadPart += PM_SIZE;
 		FltSetCallbackDataDirty(_data);
-		logw((NAME"hide file size in write : %d \n", ctx->PmHeadSize));
+		logw((NAME"hide file size in write : %d \n", PM_SIZE));
 	}
 	finally	{
-		if (ctx) FltReleaseContext(ctx);
 	}
 
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;

@@ -1,6 +1,9 @@
 #include "minidriver.h"
 #include "permission.h"
 #include "checksum.h"
+#include "filter.h"
+#include "util.h"
+
 
 User gUser = {
 	L"test user",
@@ -8,6 +11,7 @@ User gUser = {
 	{ 0x5f1e1bc3, 0x4ad5, 0x49d5, { 0xa6, 0xee, 0xa, 0x2f, 0x86, 0x2, 0x9a, 0x64 } },
 	{ 0x76577a6, 0xc4d9, 0x41d2, { 0x97, 0xf, 0x1e, 0xc9, 0xf, 0x49, 0x3d, 0xb3 } }
 };
+extern KSPIN_LOCK gFilterLock;
 
 //
 // free the memory of permission data
@@ -23,7 +27,18 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	ULONG retlen;
 	LARGE_INTEGER offset = { 0 };
 
-	ASSERT(obj && pm && pm->sizeOnDisk > 0);
+	ASSERT(obj && pm);
+	
+	//
+	// lock
+	//
+	KLOCK_QUEUE_HANDLE que;
+	KeAcquireInStackQueuedSpinLock(&gFilterLock, &que);
+
+	//
+	// clear memory
+	//
+	memset(pm + PM_DATA_SIZE, 0, PM_SIZE - PM_DATA_SIZE);
 
 	//
 	// calc checksum,use crc32
@@ -31,11 +46,26 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	pm->crc32 = crc_32((PUCHAR)pm, PM_DATA_SIZE);
 
 	//
+	// encrypt data
+	//
+	retlen = PM_SIZE;
+	PVOID en = IUtil->encrypt((PVOID)pm, &retlen);
+	if (!en){ loge((NAME"encrypt data failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
+	ASSERT(retlen == PM_SIZE);	// size should be the same
+
+	//
 	// write data
 	//
-	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, pm->sizeOnDisk, pm, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, PM_SIZE, en, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x \n", status)); }
+
+	ExFreePoolWithTag(en, UTIL_TAG);
+
+	//
+	// unlock
+	//
+	KeReleaseInStackQueuedSpinLock(&que);
 
 	return status;
 
@@ -43,7 +73,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 
 NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN rewrite){
 
-	ASSERT(pm != NULL && pm->sizeOnDisk > 0);
+	ASSERT(pm);
 
 	pm->_head = 'FCHD';
 	pm->code = PC_Default;
@@ -130,57 +160,59 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
 
 	NTSTATUS status = STATUS_SUCCESS;
 	LARGE_INTEGER offset = { 0 };
-	PVolumeContext ctx = NULL;
 	PPermission pm = NULL;
-	ULONG retlen;
+	ULONG retlen = 0;
 	*_pm = NULL;
 
 	try{
 		//
-		// get volume context, so we can get the permission data size on disk
-		//
-		status = FltGetVolumeContext(_obj->Filter, _obj->Volume, &ctx);
-		if (!NT_SUCCESS(status)) { loge((NAME"FltGetVolumeContext failed. %x \n", status)); leave; }
-		if (ctx->PmHeadSize == 0){ loge((NAME"permission data size invalid. \n")); status = STATUS_INVALID_PARAMETER; leave; }
-
-		//
 		// allocate memory
 		//
-		pm = FltAllocatePoolAlignedWithTag(_obj->Instance, NonPagedPool, ctx->PmHeadSize, NAME_TAG);
+		pm = FltAllocatePoolAlignedWithTag(_obj->Instance, NonPagedPool, PM_SIZE, NAME_TAG);
 		if (!pm){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); status = STATUS_INVALID_PARAMETER; leave; }
-		memset(pm, 0, ctx->PmHeadSize);
+		memset(pm, 0, PM_SIZE);
 
 		//
 		// read file information
 		//
-		status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, PM_ALL_SIZE, pm,
+		status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, PM_SIZE, pm,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x \n", status)); }
-		pm->sizeOnDisk = ctx->PmHeadSize;
 
+#pragma region check data
 		//
 		// is this controled by ourself
 		//
-		if (!retlen || retlen < PM_ALL_SIZE || pm->_head != 'FCHD') {
-			logw((NAME"no control information in file, write the default permission \n"));
+		if (!retlen || retlen < PM_SIZE) { logw((NAME"no control information in file")); status = FLT_INVALID_HEAD; leave; }
 
-			status = setDefaultPermission(_obj, pm, FALSE);
-			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
-		}
+		//
+		// decrypt data
+		//
+		retlen = PM_SIZE;
+		PVOID de = IUtil->decrypt((PVOID)pm, &retlen);
+		ASSERT(retlen == PM_SIZE);
+		memcpy_s(pm, PM_SIZE, de, PM_SIZE);
+		ExFreePoolWithTag(de, UTIL_TAG);
+
+		if (pm->_head != 'FCHD'){ logw((NAME"invalid head")); status = FLT_INVALID_HEAD; leave; }
 
 		//
 		// checksum
 		//
 		UINT32 crc32 = crc_32((PUCHAR)pm, PM_DATA_SIZE);
-		if (crc32 != pm->crc32){
-			logw((NAME"check-sum failed, write the default permission \n"));
+		if (crc32 != pm->crc32){ logw((NAME"check-sum failed")); status = FLT_INVALID_HEAD; leave; }
 
-			status = setDefaultPermission(_obj, pm, TRUE);
-			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); leave; }
-		}
+#pragma endregion
 	}
 	finally{
-		if (ctx) FltReleaseContext(ctx); ctx = NULL;
+		//
+		// is get permission data success
+		//
+		if (!NT_SUCCESS(status)){
+			logw(("write the default permission \n"));
+			status = setDefaultPermission(_obj, pm, (!retlen || retlen < PM_SIZE) ? TRUE : FALSE);
+			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); }
+		}
 
 		// if failed, free the buffer
 		if (!NT_SUCCESS(status)) freePermission(_obj, pm);
@@ -252,7 +284,7 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 	NTSTATUS status = FLT_NO_NEED;
 
 	// save volume guid
-	UNICODE_STRING guid; WCHAR _guid_buffer[256];	RtlInitEmptyUnicodeString(&guid, _guid_buffer, sizeof(_guid_buffer));
+	UNICODE_STRING guid; WCHAR _guid_buffer[GUID_SIZE];	RtlInitEmptyUnicodeString(&guid, _guid_buffer, sizeof(_guid_buffer));
 
 	//
 	// get file name information

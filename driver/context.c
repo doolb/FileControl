@@ -1,5 +1,6 @@
 #include "minidriver.h"
 #include "permission.h"
+#include "filter.h"
 
 //
 // detech volume name and set in to context
@@ -48,11 +49,6 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 			ctx->SectorSize = max(ctx->prop->SectorSize, MIN_SECTOR_SIZE);
 
 		ctx->Name.Buffer = NULL;
-
-		//
-		// and the permission head size
-		//
-		ctx->PmHeadSize = max(ctx->SectorSize, PM_ALL_SIZE);
 
 #pragma region get volume name
 		//

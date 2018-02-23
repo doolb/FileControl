@@ -16,6 +16,7 @@ typedef enum _PermissionCode{
 
 
 #define PM_NAME_MAX 32
+#define PM_TAG 'Pmtg'
 
 typedef struct
 {
@@ -27,7 +28,7 @@ typedef struct
 }User, *PUser;
 
 #define PM_DATA_SIZE ( sizeof(User) + sizeof(ULONG) + sizeof(PermissionCode)	)	// the size of all permission data without the checksum
-#define PM_ALL_SIZE  ( PM_DATA_SIZE + sizeof(UINT32) + sizeof(ULONG))		// the size of all permission data (add crc32, size)
+#define PM_SIZE 256
 
 // set the user name
 #define pmSetName(ptr,name)  memcpy_s(&((ptr)->user.user), PM_NAME_MAX, name, wcsnlen(name,PM_NAME_MAX)*sizeof(WCHAR))
@@ -48,7 +49,6 @@ typedef struct _Permission
 	PermissionCode code;		// 4 byte
 	User   user;
 	UINT32 crc32;			// 4 byte
-	ULONG  sizeOnDisk;		// the size of data on disk, only avaliable in runtime
 }Permission, *PPermission;
 
 
