@@ -12,6 +12,8 @@ static LIST_ENTRY gVolumeList;
 
 KSPIN_LOCK gFilterLock;
 
+extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
+
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -22,6 +24,9 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 	try{
 		// init lock
 		KeInitializeSpinLock(&gFilterLock);
+		
+		// init lookaside list for permission data
+		ExInitializeNPagedLookasideList(&gPmLookasideList, NULL, NULL, 0, PM_SIZE, PM_TAG, 0);
 
 		// open registry
 		InitializeObjectAttributes(&oa, _regPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -70,6 +75,11 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 void onexit(){
 	if (gWorkRoot.Buffer){ ExFreePoolWithTag(gWorkRoot.Buffer, NAME_TAG); gWorkRoot.Buffer = NULL; }
+
+	//
+	// delete lookaside list
+	//
+	ExDeleteNPagedLookasideList(&gPmLookasideList);
 
 	//
 	// clear volume list

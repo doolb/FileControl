@@ -14,11 +14,16 @@ User gUser = {
 extern KSPIN_LOCK gFilterLock;
 
 //
+// lookaside list for permission data
+//
+NPAGED_LOOKASIDE_LIST gPmLookasideList;
+
+//
 // free the memory of permission data
 //
 void freePermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm){
 	FLT_ASSERT(_obj);
-	if (pm)  FltFreePoolAlignedWithTag(_obj->Instance, pm, NAME_TAG); pm = NULL;
+	if (pm)  ExFreeToNPagedLookasideList(&gPmLookasideList, pm); pm = NULL;
 }
 
 NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
@@ -28,12 +33,6 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	LARGE_INTEGER offset = { 0 };
 
 	ASSERT(obj && pm);
-	
-	//
-	// lock
-	//
-	KLOCK_QUEUE_HANDLE que;
-	KeAcquireInStackQueuedSpinLock(&gFilterLock, &que);
 
 	//
 	// clear memory
@@ -61,11 +60,6 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x \n", status)); }
 
 	ExFreePoolWithTag(en, UTIL_TAG);
-
-	//
-	// unlock
-	//
-	KeReleaseInStackQueuedSpinLock(&que);
 
 	return status;
 
@@ -165,10 +159,11 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
 	*_pm = NULL;
 
 	try{
+
 		//
 		// allocate memory
 		//
-		pm = FltAllocatePoolAlignedWithTag(_obj->Instance, NonPagedPool, PM_SIZE, NAME_TAG);
+		pm = ExAllocateFromNPagedLookasideList(&gPmLookasideList);
 		if (!pm){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); status = STATUS_INVALID_PARAMETER; leave; }
 		memset(pm, 0, PM_SIZE);
 
@@ -232,6 +227,7 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 	PPermission pm = NULL;
 
 	try{
+		
 		//
 		// check file status
 		//
@@ -240,12 +236,13 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		// is need filter
 		if (status == FLT_NO_NEED || status == FLT_ON_DIR) leave;
 
+
 		//
 		// get file permission data
 		//
 		status = getPermission(_obj, &pm);
 		if (!NT_SUCCESS(status)) { loge((NAME"getPermission failed. %x \n", status)); leave; }
-
+		ASSERT(pm);
 
 		//
 		// is current user

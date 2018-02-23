@@ -80,4 +80,5 @@ struct _IUserKey
 };
 
 extern struct _IUserKey IUserKey[1];
+
 #pragma endregion
