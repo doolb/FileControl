@@ -19,15 +19,11 @@ NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBuffer
 
 	NTSTATUS status = STATUS_SUCCESS;
 
-	if (PortCookie == NULL){
-		// normal port
-		status = onmsg((PMsg)InputBuffer);
+	status = onmsg((PMsg)InputBuffer);
+	if (NT_SUCCESS(status)){
+		// set result
 		RtlCopyMemory(OutputBuffer, InputBuffer, sizeof(Msg));
 		*ReturnOutputBufferLength = sizeof(Msg);
-	}
-	else if (*((PULONG)PortCookie) == DAEMON_COOKIE){
-		// daemon port
-		status = STATUS_PENDING;
 	}
 
 	log((NAME"client message in. (%x) %ws[%d] %x[%d,%x] \n", PortCookie, (PWCH)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));

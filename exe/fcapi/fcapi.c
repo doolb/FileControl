@@ -4,6 +4,7 @@
 
 static HANDLE gPort = INVALID_HANDLE_VALUE;
 static HANDLE gDaemonPort = INVALID_HANDLE_VALUE;
+static bool gIsDaemon;
 
 void CheckError(HRESULT ret){
 	WCHAR buf[256];
@@ -13,14 +14,18 @@ void CheckError(HRESULT ret){
 	MessageBox(0, buf, 0, 0);
 }
 
-FC_API bool fc_open(bool isdaemon){
+void fc_init(bool isdaemon){
+	gIsDaemon = isdaemon;
+}
+
+bool fc_open(){
 	HRESULT ret = 0;
 	//
 	// open communication port
 	//
-	PHANDLE hand = isdaemon ? &gDaemonPort : &gPort;
+	PHANDLE hand = gIsDaemon ? &gDaemonPort : &gPort;
 	if (*hand == INVALID_HANDLE_VALUE){
-		ret = FilterConnectCommunicationPort(isdaemon ? FC_DAEMON_PORT_NAME : FC_PORT_NAME, 0, NULL, 0, NULL, hand);
+		ret = FilterConnectCommunicationPort(gIsDaemon ? FC_DAEMON_PORT_NAME : FC_PORT_NAME, 0, NULL, 0, NULL, hand);
 		if (ret){
 			CheckError(ret);
 			return false;
@@ -30,24 +35,49 @@ FC_API bool fc_open(bool isdaemon){
 	return true;
 }
 
-FC_API void fc_close(bool isdaemon){
+void fc_close(){
 
-	PHANDLE hand = isdaemon ? &gDaemonPort : &gPort;
+	PHANDLE hand = gIsDaemon ? &gDaemonPort : &gPort;
 
 	if (*hand != INVALID_HANDLE_VALUE)
 		CloseHandle(*hand);
 	*hand = INVALID_HANDLE_VALUE;
 }
 
-FC_API int fc_send(bool isdaemon, PWCH msg, int len, PWCH out, int outLen){
+HRESULT fc_send(PMsg msg){
 
-	PHANDLE hand = isdaemon ? &gDaemonPort : &gPort;
+	PHANDLE hand = gIsDaemon ? &gDaemonPort : &gPort;
 
 	DWORD ret = 0;
 	HRESULT rst = S_OK;
-	rst = FilterSendMessage(*hand, msg, len*sizeof(WCHAR), out, outLen*sizeof(WCHAR), &ret);
+	Msg out = { 0 };
+	rst = FilterSendMessage(*hand, msg, sizeof(Msg), &out, sizeof(Msg), &ret);
 	if (rst){
 		CheckError(rst);
 	}
-	return ret;
+
+	memcpy_s(msg, sizeof(Msg), &out, sizeof(Msg));
+	return rst;
 }
+HRESULT fc_listen(PMsgCode code){
+	if (gDaemonPort == INVALID_HANDLE_VALUE) return E_INVALID_PROTOCOL_FORMAT;
+
+	HRESULT rst = S_OK;
+	MsgData m = { 0 };
+	rst = FilterGetMessage(gDaemonPort, (PFILTER_MESSAGE_HEADER)&m, sizeof(MsgData), NULL);
+	if (rst){
+		CheckError(rst);
+	}
+	*code = m.code;
+	return rst;
+}
+
+FC_API struct _IFc IFc[1] = {
+	fc_init,
+
+	fc_open,
+	fc_close,
+
+	fc_send,
+	fc_listen
+};

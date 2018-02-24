@@ -186,7 +186,14 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
 
 	// is user login
-	if (gKeyRoot.Length != 0){ loge((NAME"user must be login.")); return STATUS_ACCESS_DENIED; }
+	if (gKeyRoot.Length == 0){
+		loge((NAME"user must be login."));
+
+		// send message to application
+		sendMsg(MsgCode_User_Login);
+
+		return STATUS_ACCESS_DENIED;
+	}
 
 	return STATUS_SUCCESS;
 }
@@ -199,8 +206,9 @@ NTSTATUS onmsg(PMsg msg){
 	return status;
 }
 
-NTSTATUS sendMsg(PMsg msg){
-	ASSERT(msg);
-
-	return FltSendMessage(gFilter, &gDaemonClient, msg, sizeof(Msg), NULL, NULL, NULL);
+NTSTATUS sendMsg(MsgCode code){
+	NTSTATUS status = STATUS_SUCCESS;
+	if (gDaemonClient)
+		status = FltSendMessage(gFilter, &gDaemonClient, &code, sizeof(MsgCode), NULL, NULL, NULL);
+	return status;
 }

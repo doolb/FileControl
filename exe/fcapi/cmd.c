@@ -6,27 +6,18 @@
 #define N 129
 
 void __cdecl main(){
+	IFc->init(true);
 
-	//WCHAR in[N] = { 0 };
-	//WCHAR out[N] = { 0 };
+	if (IFc->open()){
+		Msg msg = { 0 };
+		msg.code = MsgCode_User_Get;
+		IFc->send(&msg);
 
-	if (fc_open(true)){
-// 		printf("input message:");
-// 		scanf_s("%ws", in, N);
-// 		if (fc_send(in, N, out, N)){
-// 			printf("return:%ws", out);
-// 		}
-		fc_close(true);
-		_getch();
+		printf("waiting.\n");
+		IFc->listen(&msg.code);
+		printf("recive msg:%x\n", msg.code);
+		IFc->close();
 	}
 
-	if (fc_open(false)){
-		// 		printf("input message:");
-		// 		scanf_s("%ws", in, N);
-		// 		if (fc_send(in, N, out, N)){
-		// 			printf("return:%ws", out);
-		// 		}
-		fc_close(false);
-		_getch();
-	}
+	_getch();
 }

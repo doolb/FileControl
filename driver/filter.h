@@ -38,6 +38,8 @@ typedef struct _VolumeList
 #define FLT_TAG 'Fttg'
 
 typedef enum {
+	MsgCode_Null, // null define , for daemon use
+
 	// user
 	MsgCode_User_Get,
 	MsgCode_User_Login,
@@ -90,4 +92,4 @@ NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
 void onstop(PVolumeContext ctx);		// call when stop filter on volme
 NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
 NTSTATUS onmsg(PMsg msg);	// call when user application message in
-NTSTATUS sendMsg(PMsg msg);	// send message to user application
+NTSTATUS sendMsg(MsgCode msg);	// send message to user application

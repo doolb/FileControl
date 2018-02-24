@@ -2,6 +2,8 @@
 #define UNICODE
 #include <windows.h>
 #include <fltUser.h>
+
+
 #ifndef bool
 typedef enum _bool
 {
@@ -30,16 +32,86 @@ typedef enum _bool
 #define log 
 #endif
 
-//
-// open coomunication with driver
-//
-FC_API bool fc_open(bool isdaemon);
-//
-// close coomunication with driver
-//
-FC_API void fc_close(bool isdaemon);
-//
-// send message to driver (sync)
-// return the bytes count of valid out buffer
-FC_API int fc_send(bool isdaemon, PWCH msg, int len, PWCH out, int outLen);
 
+/************************************************************************/
+/* driver msg define                                                                     */
+/************************************************************************/
+#pragma region msg
+typedef enum {
+	MsgCode_Null, // null define , for daemon use
+
+	// user
+	MsgCode_User_Get,
+	MsgCode_User_Login,
+	MsgCode_User_Sign,
+	MsgCode_User_Logout,
+
+	// file
+	MsgCode_Permission_Get,
+	MsgCode_Permission_Set,
+
+	// driver
+	MsgCode_GetPause,
+	MsgCode_SetPause,
+}MsgCode, *PMsgCode;
+
+#define PM_NAME_MAX 32
+
+typedef enum _PermissionCode{
+	PC_Invalid = 0,
+	PC_User_Read = 0x00000001,
+	PC_User_Write = 0x00000002,
+	PC_Group_Read = 0x00000004,
+	PC_Group_Write = 0x00000008,
+	PC_Other_Read = 0x00000010,
+	PC_Other_Write = 0x00000020,
+
+	PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
+}PermissionCode, *PPermissionCode;
+
+typedef struct _Msg
+{
+	MsgCode code;
+
+	union
+	{
+		struct
+		{
+			PWCHAR path;					// user key file path
+			WCHAR  name[PM_NAME_MAX];	// user name
+			WCHAR  group[PM_NAME_MAX];	// group name
+			WCHAR  password[PM_NAME_MAX];	// password
+		}User;
+
+		struct
+		{
+			PWCHAR path;					// file path
+			PermissionCode pmCode;		// permission code
+		}File;
+
+		struct
+		{
+			BOOL * pause;		// store the value of pause
+		}Driver;
+	}Data;
+}Msg, *PMsg;
+
+typedef struct _MsgData
+{
+	FILTER_MESSAGE_HEADER _head;
+	MsgCode code;
+}MsgData, *PMsgData;
+#pragma endregion
+
+struct _IFc
+{
+	void(*init)(bool isdaemon);	// init api
+
+	bool(*open)();
+	void(*close)();
+
+	HRESULT(*send)(PMsg msg);
+	HRESULT(*listen)(PMsgCode msg);
+};
+
+extern FC_API struct _IFc IFc[1];
