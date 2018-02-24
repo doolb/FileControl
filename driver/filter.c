@@ -14,6 +14,9 @@ KSPIN_LOCK gFilterLock;
 
 extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
 
+extern PFLT_FILTER gFilter;
+extern PFLT_PORT gDaemonClient;
+
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -24,7 +27,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 	try{
 		// init lock
 		KeInitializeSpinLock(&gFilterLock);
-		
+
 		// init lookaside list for permission data
 		ExInitializeNPagedLookasideList(&gPmLookasideList, NULL, NULL, 0, PM_SIZE, PM_TAG, 0);
 
@@ -187,9 +190,17 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
 	return STATUS_SUCCESS;
 }
-NTSTATUS onmsg(){
+NTSTATUS onmsg(PMsg msg){
+	ASSERT(msg);
+
 	NTSTATUS status = STATUS_SUCCESS;
 
 
 	return status;
+}
+
+NTSTATUS sendMsg(PMsg msg){
+	ASSERT(msg);
+
+	return FltSendMessage(gFilter, &gDaemonClient, msg, sizeof(Msg), NULL, NULL, NULL);
 }

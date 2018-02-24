@@ -28,6 +28,8 @@ extern ULONG gLogFlag;
 #define TAG "MNFL"
 #define NAME "[Mini Filter]@"__FUNCTION__": "
 
+#define DAEMON_COOKIE  'Daco'
+
 // file no need to filter
 //
 // nt_success

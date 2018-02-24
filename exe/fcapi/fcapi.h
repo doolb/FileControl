@@ -3,9 +3,11 @@
 #include <windows.h>
 #include <fltUser.h>
 #ifndef bool
-#define true 1
-#define false 0
-#define bool long
+typedef enum _bool
+{
+	false = 0,
+	true = 1
+}bool;
 #endif
 
 
@@ -20,6 +22,7 @@
 #endif
 
 #define FC_PORT_NAME L"\\fc"
+#define FC_DAEMON_PORT_NAME L"\\fc-d"
 
 #if _DEBUG
 #define log printf
@@ -30,13 +33,13 @@
 //
 // open coomunication with driver
 //
-FC_API bool fc_open();
+FC_API bool fc_open(bool isdaemon);
 //
 // close coomunication with driver
 //
-FC_API void fc_close();
+FC_API void fc_close(bool isdaemon);
 //
 // send message to driver (sync)
 // return the bytes count of valid out buffer
-FC_API int fc_send(PWCH msg, int len, PWCH out, int outLen);
-typedef void(*fc_on_msg)(WCHAR _in, int _inLen, WCHAR _out, int _outLen);
+FC_API int fc_send(bool isdaemon, PWCH msg, int len, PWCH out, int outLen);
+
