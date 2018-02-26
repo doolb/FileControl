@@ -32,6 +32,7 @@ typedef enum _bool
 #define log 
 #endif
 
+#define null		{0}
 
 /************************************************************************/
 /* driver msg define                                                                     */
@@ -41,7 +42,7 @@ typedef enum {
 	MsgCode_Null, // null define , for daemon use
 
 	// user
-	MsgCode_User_Get,
+	MsgCode_User_Query,
 	MsgCode_User_Login,
 	MsgCode_User_Sign,
 	MsgCode_User_Logout,
@@ -79,41 +80,20 @@ typedef enum _PermissionCode{
 
 	PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
 }PermissionCode, *PPermissionCode;
-
-typedef struct _Msg
+typedef struct
 {
-	MsgCode code;
+	WCHAR  name[PM_NAME_MAX];		// user name
+	WCHAR  group[PM_NAME_MAX];		// group name
+	WCHAR  password[PM_NAME_MAX];	// password
+	WCHAR  volume[GUID_SIZE];		// volume guid
+}Msg_User_Registry, *PMsg_User_Registry;
 
-	union
-	{
-		struct
-		{
-			struct{
-				ULONG count;
-				PUser users;
-			}query;
+typedef struct
+{
+	PWCHAR path;					// file path
+	PermissionCode pmCode;		// permission code
+}Msg_File, *PMsg_File;
 
-			struct
-			{
-				WCHAR  name[PM_NAME_MAX];		// user name
-				WCHAR  group[PM_NAME_MAX];		// group name
-				WCHAR  password[PM_NAME_MAX];	// password
-				WCHAR  volume[GUID_SIZE];		// volume guid
-			}signup;
-		}User;
-
-		struct
-		{
-			PWCHAR path;					// file path
-			PermissionCode pmCode;		// permission code
-		}File;
-
-		struct
-		{
-			BOOL * pause;		// store the value of pause
-		}Driver;
-	}Data;
-}Msg, *PMsg;
 
 typedef struct _MsgData
 {
@@ -127,8 +107,10 @@ struct _IFc
 	bool(*open)();
 	void(*close)();
 
-	HRESULT(*send)(PMsg msg);
+	HRESULT(*send)(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen);
 	HRESULT(*listen)(PMsgCode msg);
+
+	int(*queryUser)(PUser *users);
 };
 
 extern FC_API struct _IFc IFc[1];

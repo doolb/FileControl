@@ -208,18 +208,63 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
 	return STATUS_SUCCESS;
 }
-NTSTATUS onmsg(PMsg msg){
-	ASSERT(msg);
+NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
+	ASSERT(retlen);
 
 	NTSTATUS status = STATUS_SUCCESS;
+	*retlen = 0;
 
+	switch (msg)
+	{
+	case MsgCode_User_Query:{
+		int count = 0;
+		PLIST_ENTRY head = &gVolumeList;
+		//
+		// get the all user count
+		//	
+		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+			if (CONTAINING_RECORD(e, VolumeList, list)->isHasUser)
+				count++;
+		}
+		*retlen = count * sizeof(User);
+
+		//
+		// check the buffer and size
+		//
+		if (count == 0){
+			status = STATUS_SUCCESS;
+		}
+		else if (buffer && size >= count * sizeof(User)){
+			ULONG buff = (ULONG)buffer;
+			PVolumeList list;
+
+			for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+				list = CONTAINING_RECORD(e, VolumeList, list);
+				if (list->isHasUser){
+					memcpy_s((PVOID)buff, sizeof(User), &list->key.user, sizeof(User));
+
+					buff += sizeof(User);
+				}
+			}
+		}
+		else{
+			status = STATUS_BUFFER_TOO_SMALL;
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
 
 	return status;
 }
 
 NTSTATUS sendMsg(MsgCode code){
 	NTSTATUS status = STATUS_SUCCESS;
-	if (gDaemonClient)
+	if (gDaemonClient){
 		status = FltSendMessage(gFilter, &gDaemonClient, &code, sizeof(MsgCode), NULL, NULL, NULL);
+		log((NAME"send message to application. %x", code));
+	}
 	return status;
 }

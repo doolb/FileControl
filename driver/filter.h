@@ -49,7 +49,7 @@ typedef enum {
 	// user
 	MsgCode_User_Query,
 	MsgCode_User_Login,
-	MsgCode_User_Sign,
+	MsgCode_User_Registry,
 	MsgCode_User_Logout,
 
 	// file
@@ -61,41 +61,19 @@ typedef enum {
 	MsgCode_SetPause,
 }MsgCode, *PMsgCode;
 
-typedef struct _Msg
+typedef struct
 {
-	MsgCode code;
+	WCHAR  name[PM_NAME_MAX];		// user name
+	WCHAR  group[PM_NAME_MAX];		// group name
+	WCHAR  password[PM_NAME_MAX];	// password
+	WCHAR  volume[GUID_SIZE];		// volume guid
+}Msg_User_Registry, *PMsg_User_Registry;
 
-	union
-	{
-		struct
-		{
-			struct{
-				ULONG count;
-				PUser users;
-			}query;
-
-			struct
-			{
-				WCHAR  name[PM_NAME_MAX];		// user name
-				WCHAR  group[PM_NAME_MAX];		// group name
-				WCHAR  password[PM_NAME_MAX];	// password
-				WCHAR  volume[GUID_SIZE];		// volume guid
-			}signup;
-		}User;
-
-		struct
-		{
-			PWCHAR path;					// file path
-			PermissionCode pmCode;		// permission code
-		}File;
-
-		struct
-		{
-			BOOL * pause;		// store the value of pause
-		}Driver;
-	}Data;
-}Msg, *PMsg;
-
+typedef struct
+{
+	PWCHAR path;					// file path
+	PermissionCode pmCode;		// permission code
+}Msg_File, *PMsg_File;
 
 //
 // user filter interface 
@@ -105,5 +83,5 @@ void onexit();		// call when dirver unload
 NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
 void onstop(PVolumeContext ctx);		// call when stop filter on volme
 NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
-NTSTATUS onmsg(PMsg msg);	// call when user application message in
+NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen);	// call when user application message in
 NTSTATUS sendMsg(MsgCode msg);	// send message to user application

@@ -13,18 +13,21 @@ NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBuffer
 	UNREFERENCED_PARAMETER(OutputBufferLength);
 	UNREFERENCED_PARAMETER(ReturnOutputBufferLength);
 
-	ASSERT(InputBuffer && OutputBuffer);
-	ASSERT(InputBufferLength == sizeof(Msg));
-	ASSERT(OutputBufferLength == sizeof(Msg));
-
 	NTSTATUS status = STATUS_SUCCESS;
 
-	status = onmsg((PMsg)InputBuffer);
-	if (NT_SUCCESS(status)){
-		// set result
-		RtlCopyMemory(OutputBuffer, InputBuffer, sizeof(Msg));
-		*ReturnOutputBufferLength = sizeof(Msg);
+	//
+	// check parameter
+	//
+	if (!InputBuffer || InputBufferLength != sizeof(MsgCode) ||
+		!ReturnOutputBufferLength){
+		loge((NAME"invalid message"));
+		return STATUS_INVALID_PARAMETER;
 	}
+
+	//
+	// msg
+	//
+	status = onmsg((*(PMsgCode)InputBuffer), OutputBuffer, OutputBufferLength, ReturnOutputBufferLength);
 
 	log((NAME"client message in. (%x) %ws[%d] %x[%d,%x] \n", PortCookie, (PWCH)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));
 	return status;

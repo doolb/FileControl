@@ -5,14 +5,22 @@
 
 void __cdecl main(){
 
-	if (IFc->open(true)){
-		Msg msg = { 0 };
-		msg.code = MsgCode_User_Get;
-		IFc->send(&msg);
+	ULONG retlen = 0;
 
+	if (IFc->open(true)){
+		IFc->send(MsgCode_Null, NULL, 0, &retlen);
+
+		MsgCode msg;
 		printf("waiting.\n");
-		IFc->listen(&msg.code);
-		printf("recive msg:%x\n", msg.code);
+		IFc->listen(&msg);
+		printf("recive msg:%x\n", msg);
+
+		if (msg == MsgCode_User_Login){
+			PUser users;
+			int n = IFc->queryUser(&users);
+			if (n == 0) printf("no user avaible.");
+		}
+
 		IFc->close();
 	}
 

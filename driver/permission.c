@@ -428,12 +428,12 @@ static NTSTATUS writeUserKey(PUNICODE_STRING path, PUserKey key){
 		//
 		// open file
 		//
-		status = FltCreateFileEx(gFilter, gInstance, &hand, &obj, FILE_GENERIC_READ, &oa, &iostatus, NULL,
-			FILE_ATTRIBUTE_HIDDEN, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
+		status = FltCreateFileEx(gFilter, gInstance, &hand, &obj, FILE_GENERIC_WRITE, &oa, &iostatus, NULL,
+			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OPEN_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
 		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
 
 		//
-		// read file
+		// write file
 		//
 		status = FltWriteFile(gInstance, obj, &offset, sizeof(UserKey), key,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);

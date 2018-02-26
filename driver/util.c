@@ -1,5 +1,5 @@
 #include "util.h"
-
+#include <stdlib.h>
 
 
 
@@ -138,6 +138,18 @@ PVOID decrypt(const PVOID in[], PULONG len){
 	return aes((uint8_t*)in, len, false);
 }
 
+
+void createGuid(GUID* guid){
+	ASSERT(guid);
+
+	guid->Data1 = rand();
+	guid->Data2 = (unsigned short)rand();
+	guid->Data3 = (unsigned short)rand();
+
+	for (int i = 0; i < 8; i++)
+		guid->Data4[i] = (unsigned char)rand();
+}
+
 struct _IUtil IUtil[1] = {
 	getConfig,
 	setConfig,
@@ -145,5 +157,7 @@ struct _IUtil IUtil[1] = {
 	sha256,
 
 	encrypt,
-	decrypt
+	decrypt,
+
+	createGuid
 };
