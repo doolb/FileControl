@@ -3,12 +3,9 @@
 #include <stdio.h>
 #include <conio.h>
 
-#define N 129
-
 void __cdecl main(){
-	IFc->init(true);
 
-	if (IFc->open()){
+	if (IFc->open(true)){
 		Msg msg = { 0 };
 		msg.code = MsgCode_User_Get;
 		IFc->send(&msg);

@@ -105,8 +105,6 @@ typedef struct _MsgData
 
 struct _IFc
 {
-	void(*init)(bool isdaemon);	// init api
-
 	bool(*open)();
 	void(*close)();
 
