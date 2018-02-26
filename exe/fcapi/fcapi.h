@@ -57,6 +57,17 @@ typedef enum {
 
 #define PM_NAME_MAX 32
 
+#define GUID_SIZE	64 // the length for volume guid string
+
+typedef struct
+{
+	WCHAR user[PM_NAME_MAX];			// user name
+	WCHAR group[PM_NAME_MAX];		// group name
+
+	GUID uid;				// user id
+	GUID gid;				// group id
+}User, *PUser;
+
 typedef enum _PermissionCode{
 	PC_Invalid = 0,
 	PC_User_Read = 0x00000001,
@@ -77,10 +88,18 @@ typedef struct _Msg
 	{
 		struct
 		{
-			PWCHAR path;					// user key file path
-			WCHAR  name[PM_NAME_MAX];	// user name
-			WCHAR  group[PM_NAME_MAX];	// group name
-			WCHAR  password[PM_NAME_MAX];	// password
+			struct{
+				ULONG count;
+				PUser users;
+			}query;
+
+			struct
+			{
+				WCHAR  name[PM_NAME_MAX];		// user name
+				WCHAR  group[PM_NAME_MAX];		// group name
+				WCHAR  password[PM_NAME_MAX];	// password
+				WCHAR  volume[GUID_SIZE];		// volume guid
+			}signup;
 		}User;
 
 		struct

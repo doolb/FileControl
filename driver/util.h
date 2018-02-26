@@ -27,6 +27,7 @@ struct _IUtil
 	PVOID(*encrypt)(const PVOID in[], PULONG len);
 	PVOID(*decrypt)(const PVOID in[], PULONG len);
 
+	void(*GUID)(GUID* guid);
 };
 
 extern struct _IUtil IUtil[1];

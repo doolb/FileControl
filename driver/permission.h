@@ -31,9 +31,9 @@ typedef struct
 #define PM_SIZE 256
 
 // set the user name
-#define pmSetName(ptr,name)  memcpy_s(&((ptr)->user.user), PM_NAME_MAX, name, wcsnlen(name,PM_NAME_MAX)*sizeof(WCHAR))
+#define pmSetName(ptr,name)  memcpy_s(&((ptr)->user.user), PM_NAME_MAX*sizeof(WCHAR), name, wcsnlen(name,PM_NAME_MAX)*sizeof(WCHAR))
 // set the group name
-#define pmSetGroup(ptr,name) memcpy_s(&((ptr)->user.group), PM_NAME_MAX, name,wcsnlen(name,PM_NAME_MAX)*sizeof(WCHAR))
+#define pmSetGroup(ptr,name) memcpy_s(&((ptr)->user.group), PM_NAME_MAX*sizeof(WCHAR), name,wcsnlen(name,PM_NAME_MAX)*sizeof(WCHAR))
 
 // is the same user of file
 #define pmIsUser(pm,usr) 		(memcmp(&((pm)->user.uid), &((usr)->uid), sizeof(GUID)) == 0)
@@ -66,17 +66,22 @@ void freePermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
 
 #pragma region User Key define
 
+#define USER_KEY_FILE	L"\\user.key"
+
 typedef struct _UserKey{
-	User	user;				// user identify data
+	User		user;				// user identify data
 	UINT8	passwd[HASH_SIZE];	// user password hash
-	UINT32	crc;				// check sum
+	UINT32	crc;					// check sum
 }UserKey, *PUserKey;
 
 struct _IUserKey
 {
-	NTSTATUS(*getAllUser)();	// get all user can login
-	NTSTATUS(*login)();			// login a user 
-	NTSTATUS(*signup)();		// signup a user
+	// read user from file
+	NTSTATUS(*read)(PUNICODE_STRING path, PUserKey key);
+	// write a user data to file
+	NTSTATUS(*write)(PUNICODE_STRING path, PUserKey key);
+	// registry a user
+	PUserKey(*registry)(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR password);
 };
 
 extern struct _IUserKey IUserKey[1];

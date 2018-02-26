@@ -96,6 +96,8 @@ void onexit(){
 static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
 	ASSERT(ctx);
 
+	NTSTATUS status = STATUS_SUCCESS;
+
 	//
 	// allocate memory
 	//
@@ -108,6 +110,15 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
 	RtlInitEmptyUnicodeString(&list->GUID, list->_GUID_Buffer, sizeof(WCHAR) * GUID_SIZE);
 	RtlCopyUnicodeString(&list->GUID, &ctx->GUID);
 	list->type = ctx->prop->DeviceCharacteristics;
+
+	//
+	// load user key 
+	//
+	status = IUserKey->read(&list->GUID, &list->key);
+	if (NT_SUCCESS(status)){
+		logw((NAME"find a user"));
+		list->isHasUser = TRUE;
+	}
 
 	return (PLIST_ENTRY)list;
 }

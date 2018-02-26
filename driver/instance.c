@@ -14,6 +14,11 @@
 
 extern NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects);
 
+//
+// save global instance
+//
+PFLT_INSTANCE gInstance;
+
 NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_SETUP_FLAGS Flags, _In_ DEVICE_TYPE VolumeDeviceType, _In_ FLT_FILESYSTEM_TYPE VolumeFilesystemType){
 	UNREFERENCED_PARAMETER(FltObjects);
 	UNREFERENCED_PARAMETER(Flags);
@@ -21,6 +26,9 @@ NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_S
 	UNREFERENCED_PARAMETER(VolumeFilesystemType);
 
 	PAGED_CODE();
+
+	// save instance
+	gInstance = FltObjects->Instance;
 
 	NTSTATUS status = volumeDetech(FltObjects);
 
