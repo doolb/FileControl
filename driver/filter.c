@@ -387,6 +387,33 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 #pragma endregion
 		break;
 	}
+	case MsgCode_User_Logout:{
+#pragma region MsgCode_User_Logout
+		status = STATUS_SUCCESS;
+		gKeyRoot.Length = 0;
+#pragma endregion
+		break;
+	}
+	case MsgCode_GetPause:{
+#pragma region MsgCode_GetPause
+		if (!buffer || size < sizeof(BOOL)){ *retlen = sizeof(BOOL); status = STATUS_BUFFER_TOO_SMALL; break; }
+
+		*((BOOL*)buffer) = gPause;
+		*retlen = sizeof(BOOL);
+		status = STATUS_SUCCESS;
+#pragma endregion
+		break;
+	}
+	case MsgCode_SetPause:{
+#pragma region MsgCode_SetPause
+		if (!buffer || size < sizeof(BOOL)){ *retlen = sizeof(BOOL); status = STATUS_BUFFER_TOO_SMALL; break; }
+
+		gPause = *((BOOL*)buffer);
+
+		status = STATUS_SUCCESS;
+#pragma endregion
+		break;
+	}
 	default:
 		break;
 	}
