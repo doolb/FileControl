@@ -21,7 +21,6 @@ static User defaultUser = {
 
 extern KSPIN_LOCK	gFilterLock;
 extern PFLT_FILTER	gFilter;
-extern PFLT_INSTANCE gInstance;
 
 //
 // lookaside list for permission data
@@ -333,11 +332,10 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 
 #pragma region user key
 
-static NTSTATUS readUserKey(PUNICODE_STRING path, PUserKey key){
+static NTSTATUS readUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key){
 	ASSERT(path);
 	ASSERT(key);
 	ASSERT(gFilter);
-	ASSERT(gInstance);
 
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -368,14 +366,14 @@ static NTSTATUS readUserKey(PUNICODE_STRING path, PUserKey key){
 		//
 		// open file
 		//
-		status = FltCreateFileEx(gFilter, gInstance, &hand, &obj, FILE_GENERIC_READ, &oa, &iostatus, NULL,
+		status = FltCreateFileEx(gFilter, instance, &hand, &obj, FILE_GENERIC_READ, &oa, &iostatus, NULL,
 			FILE_ATTRIBUTE_HIDDEN, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
 		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
 
 		//
 		// read file
 		//
-		status = FltReadFile(gInstance, obj, &offset, sizeof(UserKey), key,
+		status = FltReadFile(instance, obj, &offset, sizeof(UserKey), key,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(UserKey)){ loge((NAME"read file failed. %x.%wZ", status, &name)); leave; }
 
@@ -386,7 +384,7 @@ static NTSTATUS readUserKey(PUNICODE_STRING path, PUserKey key){
 		if (!NT_SUCCESS(status) && retlen > 0){
 			loge((NAME"read user key failed. clear it : %wZ \n", &name));
 			FILE_END_OF_FILE_INFORMATION info = { 0 };
-			status = FltSetInformationFile(gInstance, obj, &info, sizeof(info), FileEndOfFileInformation);
+			status = FltSetInformationFile(instance, obj, &info, sizeof(info), FileEndOfFileInformation);
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
@@ -395,9 +393,11 @@ static NTSTATUS readUserKey(PUNICODE_STRING path, PUserKey key){
 
 	return status;
 }
-static NTSTATUS writeUserKey(PUNICODE_STRING path, PUserKey key){
+static NTSTATUS writeUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key){
 	ASSERT(path);
 	ASSERT(key);
+
+	ASSERT(gFilter);
 
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -408,7 +408,7 @@ static NTSTATUS writeUserKey(PUNICODE_STRING path, PUserKey key){
 
 	ULONG retlen = 0;
 	LARGE_INTEGER offset = null;
-
+	LARGE_INTEGER allocate = null;
 	UNICODE_STRING name;
 	short size = path->Length + sizeof(USER_KEY_FILE);
 	PWCHAR name_buffer = NULL;
@@ -428,27 +428,30 @@ static NTSTATUS writeUserKey(PUNICODE_STRING path, PUserKey key){
 		//
 		// open file
 		//
-		status = FltCreateFileEx(gFilter, gInstance, &hand, &obj, FILE_GENERIC_WRITE, &oa, &iostatus, NULL,
-			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OPEN_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
+		allocate.QuadPart = 4096;
+		status = FltCreateFileEx(gFilter, instance, &hand, &obj, FILE_GENERIC_WRITE, &oa, &iostatus, &allocate,
+			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
 		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
 
 		//
 		// write file
 		//
-		status = FltWriteFile(gInstance, obj, &offset, sizeof(UserKey), key,
+		status = FltWriteFile(instance, obj, &offset, sizeof(UserKey), key,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(UserKey)){ loge((NAME"write file failed. %x.%wZ", status, &name)); leave; }
 
 	}
 	finally{
-		if (!NT_SUCCESS(status)){
-			loge((NAME"read user key failed. clear it : %wZ \n", path));
+		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+
+		if (!NT_SUCCESS(status) && retlen > 0){
+			loge((NAME"read user key failed. clear it : %wZ \n", &name));
 			FILE_END_OF_FILE_INFORMATION info = { 0 };
-			status = FltSetInformationFile(gInstance, obj, &info, sizeof(info), FileEndOfFileInformation);
+			status = FltSetInformationFile(instance, obj, &info, sizeof(info), FileEndOfFileInformation);
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
-		if (hand) ZwClose(hand); hand = NULL; obj = NULL;
+		FltClose(hand);
 	}
 
 	return status;
@@ -469,10 +472,11 @@ PUserKey registryUserKey(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR
 		//
 		key = ExAllocatePoolWithTag(NonPagedPool, sizeof(UserKey), PM_TAG);
 		if (!key){ loge((NAME"allocate memory failed.")); leave; }
+		memset(key, 0, sizeof(UserKey));
 
 		// name
-		memcpy_s(key->user.user, PM_NAME_MAX * sizeof(WCHAR), name, wcsnlen(name, PM_NAME_MAX) * sizeof(WCHAR));
-		memcpy_s(key->user.group, PM_NAME_MAX * sizeof(WCHAR), group, wcsnlen(group, PM_NAME_MAX) * sizeof(WCHAR));
+		setWchar(key->user.user, name, PM_NAME_MAX);
+		setWchar(key->user.group, group, PM_NAME_MAX);
 
 		// guid
 		IUtil->GUID(&key->user.uid);

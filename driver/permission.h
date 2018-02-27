@@ -77,11 +77,11 @@ typedef struct _UserKey{
 struct _IUserKey
 {
 	// read user from file
-	NTSTATUS(*read)(PUNICODE_STRING path, PUserKey key);
+	NTSTATUS(*read)(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key);
 	// write a user data to file
-	NTSTATUS(*write)(PUNICODE_STRING path, PUserKey key);
+	NTSTATUS(*write)(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key);
 	// registry a user
-	PUserKey(*registry)(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR password);
+	PUserKey(*registry)( PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR password);
 };
 
 extern struct _IUserKey IUserKey[1];

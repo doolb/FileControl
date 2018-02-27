@@ -151,7 +151,7 @@ NTSTATUS volumeDetech(_In_ PCFLT_RELATED_OBJECTS FltObjects){
 		}
 #pragma endregion
 
-		status = onstart(ctx);
+		status = onstart(ctx, FltObjects->Instance);
 		if (!NT_SUCCESS(status)){ status = STATUS_FLT_DO_NOT_ATTACH; leave; }
 
 		//

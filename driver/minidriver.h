@@ -30,6 +30,8 @@ extern ULONG gLogFlag;
 
 #define DAEMON_COOKIE  'Daco'
 
+#define setWchar(ptr,name,max)	memcpy_s((ptr),max * sizeof(WCHAR), name, wcsnlen(name,max) * sizeof(WCHAR))
+
 // file no need to filter
 //
 // nt_success
