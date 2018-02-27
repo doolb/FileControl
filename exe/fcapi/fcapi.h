@@ -34,6 +34,12 @@ typedef enum _bool
 
 #define null		{0}
 
+//
+// dirver return code
+//
+#define E_INVALID_PASSWORD		((NTSTATUS)0xC1000004L)
+#define E_NO_USER				((NTSTATUS)0xC1000005L)
+
 /************************************************************************/
 /* driver msg define                                                                     */
 /************************************************************************/
@@ -44,8 +50,11 @@ typedef enum {
 	// user
 	MsgCode_User_Query,
 	MsgCode_User_Login,
-	MsgCode_User_Sign,
+	MsgCode_User_Registry,
 	MsgCode_User_Logout,
+
+	// volume
+	MsgCode_Volume_Query,
 
 	// file
 	MsgCode_Permission_Get,
@@ -57,7 +66,7 @@ typedef enum {
 }MsgCode, *PMsgCode;
 
 #define PM_NAME_MAX 32
-
+#define setWchar(ptr,name,max)	memcpy_s((ptr),max * sizeof(WCHAR), name, wcsnlen(name,max) * sizeof(WCHAR))
 #define GUID_SIZE	64 // the length for volume guid string
 
 typedef struct
@@ -85,8 +94,13 @@ typedef struct
 	WCHAR  name[PM_NAME_MAX];		// user name
 	WCHAR  group[PM_NAME_MAX];		// group name
 	WCHAR  password[PM_NAME_MAX];	// password
-	WCHAR  volume[GUID_SIZE];		// volume guid
+	WCHAR  letter;					// volume letter
 }Msg_User_Registry, *PMsg_User_Registry;
+
+typedef struct{
+	User		user;					// user
+	WCHAR	password[PM_NAME_MAX];	// password
+}Msg_User_Login, *PMsg_User_Login;
 
 typedef struct
 {

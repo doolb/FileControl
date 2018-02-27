@@ -17,6 +17,8 @@ extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
 extern PFLT_FILTER gFilter;
 extern PFLT_PORT gDaemonClient;
 
+extern User gUser;
+
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -93,7 +95,7 @@ void onexit(){
 }
 
 
-static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
+static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	ASSERT(ctx);
 
 	NTSTATUS status = STATUS_SUCCESS;
@@ -103,6 +105,12 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
 	//
 	PVolumeList list = ExAllocatePoolWithTag(NonPagedPool, sizeof(VolumeList), FLT_TAG);
 	if (!list){ loge((NAME"allocate memory failed.")); return NULL; }
+	memset(list, 0, sizeof(VolumeList));
+
+	//
+	// save instance
+	//
+	list->instance = instance;
 
 	//
 	// copy data
@@ -112,18 +120,31 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx){
 	list->type = ctx->prop->DeviceCharacteristics;
 
 	//
+	// save volume letter
+	//
+	if (ctx->Name.Length == 2 * sizeof(WCHAR))
+		list->letter = ctx->Name.Buffer[0];
+	else
+		list->letter = 0;
+
+	//
 	// load user key 
 	//
-	status = IUserKey->read(&list->GUID, &list->key);
+	status = IUserKey->read(list->instance, &list->GUID, &list->key);
 	if (NT_SUCCESS(status)){
 		logw((NAME"find a user"));
 		list->isHasUser = TRUE;
 	}
 
+	//
+	// is work root
+	//
+	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		list->isWorkRoot = TRUE;
+
 	return (PLIST_ENTRY)list;
 }
 
-NTSTATUS onstart(PVolumeContext ctx){
+NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance){
 	NTSTATUS status = STATUS_SUCCESS;
 
 	if (wcsstr(ctx->prop->RealDeviceName.Buffer, L"HarddiskVolume1")){
@@ -139,7 +160,7 @@ NTSTATUS onstart(PVolumeContext ctx){
 	//
 	// add this volume to list
 	//
-	PLIST_ENTRY list = createVolumeList(ctx);
+	PLIST_ENTRY list = createVolumeList(ctx, instance);
 	if (!list){ loge((NAME"createVolumeList failed. %wZ", &ctx->GUID)); return STATUS_INSUFFICIENT_RESOURCES; }
 	InsertHeadList(&gVolumeList, list);
 
@@ -214,16 +235,20 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 	NTSTATUS status = STATUS_SUCCESS;
 	*retlen = 0;
 
+	PLIST_ENTRY head = &gVolumeList;
+	PVolumeList list = NULL;
+
 	switch (msg)
 	{
 	case MsgCode_User_Query:{
+#pragma region MsgCode_User_Query
 		int count = 0;
-		PLIST_ENTRY head = &gVolumeList;
 		//
 		// get the all user count
 		//	
 		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
-			if (CONTAINING_RECORD(e, VolumeList, list)->isHasUser)
+			list = CONTAINING_RECORD(e, VolumeList, list);
+			if (list->isHasUser)
 				count++;
 		}
 		*retlen = count * sizeof(User);
@@ -236,7 +261,6 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 		}
 		else if (buffer && size >= count * sizeof(User)){
 			ULONG buff = (ULONG)buffer;
-			PVolumeList list;
 
 			for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 				list = CONTAINING_RECORD(e, VolumeList, list);
@@ -250,9 +274,119 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 		else{
 			status = STATUS_BUFFER_TOO_SMALL;
 		}
+#pragma endregion
 		break;
 	}
 
+	case MsgCode_Volume_Query:{
+#pragma region MsgCode_Volume_Query
+		//
+		// check size
+		//
+		ULONG needSize = 26 * sizeof(WCHAR);
+		if (!buffer || size < needSize){
+			status = STATUS_BUFFER_TOO_SMALL;
+			*retlen = needSize;
+			break;
+		}
+
+		int i = 0;
+		memset(buffer, 0, needSize);
+		PWCHAR letters = buffer;
+		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+			list = CONTAINING_RECORD(e, VolumeList, list);
+			if (list->letter &&
+				!list->isWorkRoot)
+				letters[i++] = list->letter;
+		}
+		*retlen = i * sizeof(WCHAR);
+#pragma endregion
+		break;
+	}
+	case MsgCode_User_Registry:{
+#pragma region MsgCode_User_Registry
+		if (!buffer || size < sizeof(Msg_User_Registry)){ *retlen = sizeof(Msg_User_Registry); status = STATUS_BUFFER_TOO_SMALL; break; }
+
+		PMsg_User_Registry reg = buffer;
+		PVolumeList volume = NULL;
+		//
+		// found the volume
+		//
+		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+			list = CONTAINING_RECORD(e, VolumeList, list);
+			if (list->letter == reg->letter){
+				volume = list;
+				break;
+			}
+		}
+		if (!volume){ status = FLT_NO_USER; break; }
+
+		//
+		// registry user
+		//
+		PUserKey key = IUserKey->registry(&volume->GUID, reg->name, reg->group, reg->password);
+		if (!key){ loge((NAME"registry user failed. %ws", reg->letter)); break; }
+
+		//
+		// write user key
+		//
+		status = IUserKey->write(list->instance, &volume->GUID, key);
+		if (!NT_SUCCESS(status)){ loge((NAME"write user key failed. %ws", reg->letter)); break; }
+
+		//
+		// save key to volume lsit
+		//
+		memcpy_s(&volume->key, sizeof(UserKey), key, sizeof(UserKey));
+		volume->isHasUser = TRUE;
+
+		//
+		// login user
+		//
+		RtlCopyUnicodeString(&gKeyRoot, &volume->GUID);
+		memcpy_s(&gUser, sizeof(User), &key->user, sizeof(User));
+
+		logw((NAME"registry user success, login in. %ws", reg->letter));
+		status = STATUS_SUCCESS;
+#pragma endregion
+		break;
+	}
+	case MsgCode_User_Login:{
+#pragma region MsgCode_User_Login
+		if (!buffer || size < sizeof(Msg_User_Login)){ *retlen = sizeof(Msg_User_Login); status = STATUS_BUFFER_TOO_SMALL; break; }
+
+		PMsg_User_Login login = buffer;
+		PVolumeList volume = NULL;
+		//
+		// found the volume
+		//
+		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+			list = CONTAINING_RECORD(e, VolumeList, list);
+			if (list->isHasUser &&
+				memcmp(&list->key.user.uid, &login->user.uid, sizeof(GUID)) == 0){
+				volume = list;
+				break;
+			}
+		}
+		if (!volume){ status = FLT_NO_USER; break; }
+
+		//
+		// compare password
+		//
+		UINT8 hash[HASH_SIZE];
+		IUtil->hash((PUINT8)login->password, wcsnlen(login->password, PM_NAME_MAX) * sizeof(WCHAR), hash);
+		if (memcmp(hash, volume->key.passwd, HASH_SIZE) != 0){ status = FLT_INVALID_PASSWORD; break; }
+
+		//
+		// login user
+		//
+		RtlCopyUnicodeString(&gKeyRoot, &volume->GUID);
+		memcpy_s(&gUser, sizeof(User), &volume->key.user, sizeof(User));
+
+		logw((NAME"user login in. %ws", volume->letter));
+		status = STATUS_SUCCESS;
+#pragma endregion
+		break;
+	}
 	default:
 		break;
 	}

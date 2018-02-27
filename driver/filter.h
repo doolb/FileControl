@@ -19,6 +19,16 @@ typedef struct _VolumeList
 	WCHAR _GUID_Buffer[GUID_SIZE];
 
 	//
+	// instance
+	//
+	PFLT_INSTANCE instance;
+
+	//
+	// volume letter
+	//
+	WCHAR letter;
+
+	//
 	//  Types
 	//  The possible DeviceCharacteristics flags are defined in NTIFS.H.
 	//  Potential values are:
@@ -39,6 +49,11 @@ typedef struct _VolumeList
 	//
 	UserKey	key;
 	BOOL		isHasUser;
+
+	//
+	// is work root
+	//
+	BOOL		isWorkRoot;
 }VolumeList, *PVolumeList;
 
 #define FLT_TAG 'Fttg'
@@ -51,6 +66,9 @@ typedef enum {
 	MsgCode_User_Login,
 	MsgCode_User_Registry,
 	MsgCode_User_Logout,
+
+	// volume
+	MsgCode_Volume_Query,
 
 	// file
 	MsgCode_Permission_Get,
@@ -66,8 +84,13 @@ typedef struct
 	WCHAR  name[PM_NAME_MAX];		// user name
 	WCHAR  group[PM_NAME_MAX];		// group name
 	WCHAR  password[PM_NAME_MAX];	// password
-	WCHAR  volume[GUID_SIZE];		// volume guid
+	WCHAR  letter;					// volume letter
 }Msg_User_Registry, *PMsg_User_Registry;
+
+typedef struct{
+	User		user;					// user
+	WCHAR	password[PM_NAME_MAX];	// password
+}Msg_User_Login, *PMsg_User_Login;
 
 typedef struct
 {
@@ -80,7 +103,7 @@ typedef struct
 //
 NTSTATUS oninit(PUNICODE_STRING _regPath);	// call when dirver start
 void onexit();		// call when dirver unload
-NTSTATUS onstart(PVolumeContext ctx); // call when setup filter on volume
+NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance); // call when setup filter on volume
 void onstop(PVolumeContext ctx);		// call when stop filter on volme
 NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
 NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen);	// call when user application message in

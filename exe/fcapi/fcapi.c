@@ -8,8 +8,10 @@
 static HANDLE gPort = INVALID_HANDLE_VALUE;
 
 void CheckError(HRESULT ret){
-	WCHAR buf[256];
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	WCHAR buf[256] = null;
+	if (ret == E_INVALID_PASSWORD) setWchar(buf, L"invalid password", 256);
+	else if (ret == E_NO_USER) setWchar(buf, L"no user in system", 256);
+	else FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL, ret, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		buf, sizeof(buf), NULL);
 	MessageBox(0, buf, 0, 0);
@@ -77,9 +79,7 @@ int fc_query_user(PUser *users){
 	rst = FilterSendMessage(gPort, &msg, sizeof(MsgCode), NULL, 0, &retlen);
 
 	// is no user in system
-	if (!retlen){
-		return S_FALSE;
-	}
+	if (!retlen) return 0;
 
 	//
 	// now we need allocate memory for save data

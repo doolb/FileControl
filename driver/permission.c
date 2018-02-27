@@ -483,7 +483,7 @@ PUserKey registryUserKey(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR
 		IUtil->GUID(&key->user.gid);
 
 		// password
-		IUtil->hash((uint8_t*)password, wcsnlen(name, PM_NAME_MAX) * sizeof(WCHAR), key->passwd);
+		IUtil->hash((uint8_t*)password, wcsnlen(password, PM_NAME_MAX) * sizeof(WCHAR), key->passwd);
 	}
 	finally{
 	}

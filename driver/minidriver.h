@@ -43,7 +43,9 @@ extern ULONG gLogFlag;
 //
 // nt_success will failed
 //
-#define FLT_INVALID_HEAD ((NTSTATUS)0xC1000003L)
+#define FLT_INVALID_HEAD			((NTSTATUS)0xC1000003L)
+#define FLT_INVALID_PASSWORD		((NTSTATUS)0xC1000004L)
+#define FLT_NO_USER				((NTSTATUS)0xC1000005L)
 
 #define GUID_SIZE	64 // the length for volume guid string
 
