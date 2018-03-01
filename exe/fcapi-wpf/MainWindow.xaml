@@ -1,0 +1,39 @@
+﻿<Window x:Class="fcapi_wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:v="clr-namespace:fcapi_wpf.View"
+        Title="MainWindow" Height="700" Width="525"
+        WindowStartupLocation="CenterScreen">
+
+
+    <Grid>
+        <metro:HamburgerMenu SelectedIndex="0"
+                             ItemClick="HamburgerMenu_ItemClick"
+                             OptionsItemClick="HamburgerMenu_ItemClick">
+            <metro:HamburgerMenu.ItemsSource>
+                <metro:HamburgerMenuItemCollection>
+                    <metro:HamburgerMenuGlyphItem Label="驱动" Glyph="D">
+                    </metro:HamburgerMenuGlyphItem>
+
+                    <metro:HamburgerMenuGlyphItem Label="用户" Glyph="U">
+                    </metro:HamburgerMenuGlyphItem>
+
+                    <metro:HamburgerMenuGlyphItem Label="Test" Glyph="T">
+                        <metro:HamburgerMenuGlyphItem.Tag>
+                            <v:Test/>
+                        </metro:HamburgerMenuGlyphItem.Tag>
+                    </metro:HamburgerMenuGlyphItem>
+                </metro:HamburgerMenuItemCollection>
+
+            </metro:HamburgerMenu.ItemsSource>
+
+            <metro:HamburgerMenu.OptionsItemsSource>
+                <metro:HamburgerMenuItemCollection>
+                    <metro:HamburgerMenuGlyphItem Label="About" Glyph="A">
+                    </metro:HamburgerMenuGlyphItem>
+                </metro:HamburgerMenuItemCollection>
+            </metro:HamburgerMenu.OptionsItemsSource>
+        </metro:HamburgerMenu>
+    </Grid>
+</Window>

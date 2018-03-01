@@ -1,6 +1,9 @@
 
 Win7Debug/
 Win8.1Debug/
+Debug/
+Release/
+packages/
 
 # ----[ Visual Studio / MonoDevelop generated ]------- #
  

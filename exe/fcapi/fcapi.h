@@ -128,3 +128,11 @@ struct _IFc
 };
 
 extern FC_API struct _IFc IFc[1];
+
+#pragma region dll export function 
+FC_API bool fc_open(bool isdaemon);
+FC_API void fc_close();
+FC_API HRESULT fc_send(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen);
+FC_API HRESULT fc_listen(PMsgCode code);
+FC_API int fc_query_user(PUser *users);
+#pragma endregion
