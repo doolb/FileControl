@@ -10,11 +10,11 @@ packages/
 ExportedObj/
 *.svd
 *.userprefs
-*.csproj
+#*.csproj
 *.pidb
 *.suo
 *.aps
-*.user
+#*.user
 *.unityproj
 *.booproj
  

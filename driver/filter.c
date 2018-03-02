@@ -374,7 +374,7 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 		//
 		UINT8 hash[HASH_SIZE];
 		IUtil->hash((PUINT8)login->password, wcsnlen(login->password, PM_NAME_MAX) * sizeof(WCHAR), hash);
-		if (memcmp(hash, volume->key.passwd, HASH_SIZE) != 0){ status = FLT_INVALID_PASSWORD; break; }
+		if (memcmp(hash, volume->key.passwd, HASH_SIZE) != 0){ status = FLT_INVALID_PASSWORD; loge((NAME"uncorrect password.\n")); break; }
 
 		//
 		// login user

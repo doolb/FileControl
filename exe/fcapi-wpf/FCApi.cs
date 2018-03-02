@@ -19,6 +19,7 @@ namespace FCApi {
         static extern void fc_close ();
         public static void Close () {
             fc_close ();
+            _isopen = false;
         }
 
         private static bool _isopen;

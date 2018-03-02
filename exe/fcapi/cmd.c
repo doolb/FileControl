@@ -96,7 +96,7 @@ void test_listen(){
 		else if (n == 1){
 			Msg_User_Login login = null;
 			login.user = users[0];
-			setWchar(login.password, L"passwaord", PM_NAME_MAX);
+			setWchar(login.password, L"password", PM_NAME_MAX);
 			rst = IFc->send(MsgCode_User_Login, &login, sizeof(Msg_User_Login), &retlen);
 
 		}
