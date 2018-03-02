@@ -1,31 +1,12 @@
 #pragma once
 #include <guiddef.h>
 #include "util.h"
-
-typedef enum _PermissionCode{
-	PC_Invalid = 0,
-	PC_User_Read = 0x00000001,
-	PC_User_Write = 0x00000002,
-	PC_Group_Read = 0x00000004,
-	PC_Group_Write = 0x00000008,
-	PC_Other_Read = 0x00000010,
-	PC_Other_Write = 0x00000020,
-
-	PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
-}PermissionCode, *PPermissionCode;
+#include "msg.h"
 
 
-#define PM_NAME_MAX 32
 #define PM_TAG 'Pmtg'
 
-typedef struct
-{
-	WCHAR user[PM_NAME_MAX];			// user name
-	WCHAR group[PM_NAME_MAX];		// group name
 
-	GUID uid;				// user id
-	GUID gid;				// group id
-}User, *PUser;
 
 #define PM_DATA_SIZE ( sizeof(User) + sizeof(ULONG) + sizeof(PermissionCode)	)	// the size of all permission data without the checksum
 #define PM_SIZE 256

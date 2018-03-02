@@ -1,6 +1,7 @@
 #pragma once
 #include "minidriver.h"
 #include "permission.h"
+#include "msg.h"
 
 typedef struct _VolumeList
 {
@@ -57,45 +58,6 @@ typedef struct _VolumeList
 }VolumeList, *PVolumeList;
 
 #define FLT_TAG 'Fttg'
-
-typedef enum {
-	MsgCode_Null, // null define , for daemon use
-
-	// user
-	MsgCode_User_Query,
-	MsgCode_User_Login,
-	MsgCode_User_Registry,
-	MsgCode_User_Logout,
-
-	// volume
-	MsgCode_Volume_Query,
-
-	// file
-	MsgCode_Permission_Get,
-	MsgCode_Permission_Set,
-
-	// driver
-	MsgCode_GetPause,
-	MsgCode_SetPause,
-}MsgCode, *PMsgCode;
-
-typedef struct
-{
-	User	 user;
-	WCHAR  password[PM_NAME_MAX];	// password
-	WCHAR  letter;					// volume letter
-}Msg_User_Registry, *PMsg_User_Registry;
-
-typedef struct{
-	User		user;					// user
-	WCHAR	password[PM_NAME_MAX];	// password
-}Msg_User_Login, *PMsg_User_Login;
-
-typedef struct
-{
-	PWCHAR path;					// file path
-	PermissionCode pmCode;		// permission code
-}Msg_File, *PMsg_File;
 
 //
 // user filter interface 

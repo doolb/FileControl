@@ -333,6 +333,7 @@
     <ClInclude Include="..\utils\libcrc\include\checksum.h" />
     <ClInclude Include="filter.h" />
     <ClInclude Include="minidriver.h" />
+    <ClInclude Include="msg.h" />
     <ClInclude Include="op.h" />
     <ClInclude Include="permission.h" />
     <ClInclude Include="util.h" />
