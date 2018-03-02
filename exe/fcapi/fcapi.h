@@ -91,8 +91,7 @@ typedef enum _PermissionCode{
 }PermissionCode, *PPermissionCode;
 typedef struct
 {
-	WCHAR  name[PM_NAME_MAX];		// user name
-	WCHAR  group[PM_NAME_MAX];		// group name
+	User	 user;
 	WCHAR  password[PM_NAME_MAX];	// password
 	WCHAR  letter;					// volume letter
 }Msg_User_Registry, *PMsg_User_Registry;

@@ -324,7 +324,7 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 		//
 		// registry user
 		//
-		PUserKey key = IUserKey->registry(&volume->GUID, reg->name, reg->group, reg->password);
+		PUserKey key = IUserKey->registry(&volume->GUID, reg);
 		if (!key){ loge((NAME"registry user failed. %ws", reg->letter)); break; }
 
 		//

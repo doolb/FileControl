@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <objbase.h>
 
 ULONG retlen = 0;
 HRESULT rst = S_OK;
@@ -11,15 +12,15 @@ PUser users = NULL;
 MsgCode msg = MsgCode_Null;
 
 void test_pause();
-
+void test_listen();
 
 void __cdecl main(){
 
 	try{
 		if (!IFc->open(true)) leave;
 
-		test_pause();
-
+		//test_pause();
+		test_listen();
 	}
 	finally{
 		if (users) free(users);
@@ -82,8 +83,10 @@ void test_listen(){
 			}
 
 			Msg_User_Registry reg = null;
-			setWchar(reg.name, L"user", PM_NAME_MAX);
-			setWchar(reg.group, L"group", PM_NAME_MAX);
+			setWchar(reg.user.user, L"user", PM_NAME_MAX);
+			setWchar(reg.user.group, L"group", PM_NAME_MAX);
+			CoCreateGuid(&reg.user.uid);
+			CoCreateGuid(&reg.user.gid);
 			reg.letter = letter[0];
 			setWchar(reg.password, L"password", PM_NAME_MAX);
 			printf("registry user.");

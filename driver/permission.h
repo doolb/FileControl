@@ -81,7 +81,7 @@ struct _IUserKey
 	// write a user data to file
 	NTSTATUS(*write)(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key);
 	// registry a user
-	PUserKey(*registry)( PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR password);
+	PUserKey(*registry)(PUNICODE_STRING path, PVOID reg);
 };
 
 extern struct _IUserKey IUserKey[1];

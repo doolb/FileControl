@@ -458,12 +458,11 @@ static NTSTATUS writeUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUser
 }
 
 
-PUserKey registryUserKey(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR password){
+PUserKey registryUserKey(PUNICODE_STRING path, PVOID _reg){
 	ASSERT(path);
-	ASSERT(name);
-	ASSERT(group);
-	ASSERT(password);
+	ASSERT(_reg);
 
+	PMsg_User_Registry reg = _reg;
 	PUserKey key = NULL;
 
 	try{
@@ -475,15 +474,10 @@ PUserKey registryUserKey(PUNICODE_STRING path, PWCHAR name, PWCHAR group, PWCHAR
 		memset(key, 0, sizeof(UserKey));
 
 		// name
-		setWchar(key->user.user, name, PM_NAME_MAX);
-		setWchar(key->user.group, group, PM_NAME_MAX);
-
-		// guid
-		IUtil->GUID(&key->user.uid);
-		IUtil->GUID(&key->user.gid);
+		memcpy_s(&key->user, sizeof(User), &reg->user, sizeof(User));
 
 		// password
-		IUtil->hash((uint8_t*)password, wcsnlen(password, PM_NAME_MAX) * sizeof(WCHAR), key->passwd);
+		IUtil->hash((uint8_t*)reg->password, wcsnlen(reg->password, PM_NAME_MAX) * sizeof(WCHAR), key->passwd);
 	}
 	finally{
 	}
