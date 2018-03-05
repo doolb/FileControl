@@ -1,6 +1,8 @@
 #pragma once
 #include <fltKernel.h>
 
+NTSTATUS opPreCheck(PCFLT_RELATED_OBJECTS obj);
+
 #pragma region Mini Driver IO
 //
 // create

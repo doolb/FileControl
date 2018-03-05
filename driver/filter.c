@@ -3,7 +3,6 @@
 #include "util.h"
 #include "filter.h"
 
-static BOOL gPause = FALSE;
 static UNICODE_STRING gWorkRoot;		// the root path for dirver work
 static UNICODE_STRING gKeyRoot;		// the root path for key file
 static WCHAR gKeyRoot_Buffer[256];
@@ -18,6 +17,8 @@ extern PFLT_FILTER gFilter;
 extern PFLT_PORT gDaemonClient;
 
 extern User gUser;
+
+PFLT_INSTANCE gInstance;
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
@@ -47,13 +48,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		if (!NT_SUCCESS(status)){ loge((NAME"get config: WorkRoot failed. %x \n", status)); leave; }
 		gWorkRoot.Length = gWorkRoot.MaximumLength = (USHORT)retlen;
 		log((NAME"work root dir: %wZ \n", &gWorkRoot));
-
-		//
-		// driver status
-		//
-		retlen = sizeof(BOOL); // dont need allocate buffer
-		status = IUtil->getConfig(hand, L"Pause", (PVOID)&gPause, &retlen);
-		log((NAME"driver pause : %x \n", gPause));
 
 		//
 		// setup key root
@@ -139,7 +133,9 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	//
 	// is work root
 	//
-	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		list->isWorkRoot = TRUE;
+	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		{
+		list->isWorkRoot = TRUE; gInstance = instance;
+	}
 
 	return (PLIST_ENTRY)list;
 }
@@ -193,6 +189,8 @@ void onstop(PVolumeContext ctx){
 
 			logw((NAME"remove volume : %wZ", &ctx->GUID));
 
+			if (list->instance == gInstance) gInstance = NULL;
+
 			RemoveEntryList(e);
 			ExFreePoolWithTag(e, FLT_TAG);
 			break;
@@ -209,9 +207,6 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
 	ASSERT(info);
 	ASSERT(guid);
-
-	// is pause
-	if (gPause){ logw((NAME"driver is paused.")); return FLT_NO_NEED; }
 
 	// is the volume for work
 	if (!wcsstr(gWorkRoot.Buffer, guid->Buffer)) { return FLT_NO_NEED; }
@@ -391,26 +386,6 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 #pragma region MsgCode_User_Logout
 		status = STATUS_SUCCESS;
 		gKeyRoot.Length = 0;
-#pragma endregion
-		break;
-	}
-	case MsgCode_GetPause:{
-#pragma region MsgCode_GetPause
-		if (!buffer || size < sizeof(BOOL)){ *retlen = sizeof(BOOL); status = STATUS_BUFFER_TOO_SMALL; break; }
-
-		*((BOOL*)buffer) = gPause;
-		*retlen = sizeof(BOOL);
-		status = STATUS_SUCCESS;
-#pragma endregion
-		break;
-	}
-	case MsgCode_SetPause:{
-#pragma region MsgCode_SetPause
-		if (!buffer || size < sizeof(BOOL)){ *retlen = sizeof(BOOL); status = STATUS_BUFFER_TOO_SMALL; break; }
-
-		gPause = *((BOOL*)buffer);
-
-		status = STATUS_SUCCESS;
 #pragma endregion
 		break;
 	}

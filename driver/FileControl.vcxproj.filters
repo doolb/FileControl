@@ -97,6 +97,9 @@
     <ClCompile Include="..\utils\crypto\aes.c">
       <Filter>Source Files\util</Filter>
     </ClCompile>
+    <ClCompile Include="op.c">
+      <Filter>Source Files\op</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

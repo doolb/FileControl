@@ -1,5 +1,6 @@
 #include "minidriver.h"
 #include "permission.h"
+#include "op.h"
 
 #define OVERWRITE (FILE_OVERWRITE << 24)
 
@@ -10,6 +11,11 @@ miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltO
 	UNREFERENCED_PARAMETER(_completionContext);
 
 	PFLT_IO_PARAMETER_BLOCK iopb = _data->Iopb;
+
+	NTSTATUS status = STATUS_SUCCESS;
+	status = opPreCheck(_fltObjects);
+	if (!NT_SUCCESS(status)) return FLT_PREOP_SUCCESS_NO_CALLBACK;
+
 
 	//
 	// overwrite will clean all data in file, so we remove it

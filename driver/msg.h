@@ -18,9 +18,6 @@ typedef enum {
 	MsgCode_Permission_Get,
 	MsgCode_Permission_Set,
 
-	// driver
-	MsgCode_GetPause,
-	MsgCode_SetPause,
 }MsgCode, *PMsgCode;
 
 #define PM_NAME_MAX 32
