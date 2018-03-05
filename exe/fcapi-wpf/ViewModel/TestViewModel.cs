@@ -40,5 +40,45 @@ namespace fcapi_wpf.ViewModel {
             }
         }
 
+        /// <summary>
+        /// close connect
+        /// </summary>
+        public Command queryUserCmd {
+            get {
+                return _queryUserCmd ?? (_queryUserCmd = new Command {
+                    ExecuteDelegate = _ => {
+                        users = FC.QueryUser ();
+                    },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _queryUserCmd;
+        private User[] users;
+
+        /// <summary>
+        /// close connect
+        /// </summary>
+        public Command listenCmd {
+            get {
+                return _listenCmd ?? (_listenCmd = new Command {
+                    ExecuteDelegate = async _ => {
+                        var msg = await FC.Listen ();
+                        if (msg == MsgCode.User_Login) {
+                            var users = FC.QueryUser ();
+                            var retlen= 0;
+                            if (users.Length == 1) {
+                                Msg_User_Login login = new Msg_User_Login ();
+                                login.user = users[0];
+                                login.password = "password";
+                                FC.Send<Msg_User_Login> (MsgCode.User_Login, login, ref retlen);
+                            }
+                        }
+                    },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _listenCmd;
     }
 }

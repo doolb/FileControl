@@ -26,8 +26,10 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <Button Content="open" Command="{Binding openCmd}"    Grid.Row="1" Grid.Column="0"/>
-        <Button Content="close" Command="{Binding closeCmd}"   Grid.Row="2" Grid.Column="0"/>
+        <Button Content="open"  Command="{Binding openCmd}"             Grid.Row="1" Grid.Column="0"/>
+        <Button Content="close" Command="{Binding closeCmd}"            Grid.Row="2" Grid.Column="0"/>
+        <Button Content="queryUser" Command="{Binding queryUserCmd}"    Grid.Row="3" Grid.Column="0"/>
+        <Button Content="listen" Command="{Binding listenCmd}"          Grid.Row="4" Grid.Column="0"/>
 
     </Grid>
 </UserControl>

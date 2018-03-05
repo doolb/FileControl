@@ -5,13 +5,13 @@
     <RemoteDebugMachine>localhost:6868</RemoteDebugMachine>
     <RemoteDebuggerConnection>RemoteWithoutAuthentication</RemoteDebuggerConnection>
     <StartAction>Program</StartAction>
-    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <StartWorkingDirectory>
     </StartWorkingDirectory>
     <StartProgram>C:\Users\blue\Desktop\Debug\fcapi-wpf.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup>
-    <PublishUrlHistory />
+    <PublishUrlHistory>publish\</PublishUrlHistory>
     <InstallUrlHistory />
     <SupportUrlHistory />
     <UpdateUrlHistory />
