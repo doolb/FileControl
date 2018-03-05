@@ -59,5 +59,23 @@ namespace fcapi_wpf.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Failed!.
+        /// </summary>
+        internal static string open_fail {
+            get {
+                return ResourceManager.GetString("open_fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Success!.
+        /// </summary>
+        internal static string open_success {
+            get {
+                return ResourceManager.GetString("open_success", resourceCulture);
+            }
+        }
     }
 }

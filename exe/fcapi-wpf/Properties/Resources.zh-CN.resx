@@ -118,9 +118,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="open_fail" xml:space="preserve">
-    <value>Open Failed!</value>
+    <value>打开失败</value>
   </data>
   <data name="open_success" xml:space="preserve">
-    <value>Open Success!</value>
+    <value>打开成功</value>
   </data>
 </root>

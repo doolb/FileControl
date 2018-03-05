@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using MVVM;
 using FCApi;
+using fcapi_wpf.View;
 
 namespace fcapi_wpf.ViewModel {
     public class TestViewModel : MVVM.ViewModel {
@@ -18,7 +19,7 @@ namespace fcapi_wpf.ViewModel {
             get {
                 return _openCmd ?? (_openCmd = new Command {
                     ExecuteDelegate = _ => {
-                        FC.Open (true);
+                        MsgLine.Show (FC.Open (true) ? "open_success" : "open_fail");
                     },
                     CanExecuteDelegate = _ => !FC.isopen
                 });
@@ -65,6 +66,7 @@ namespace fcapi_wpf.ViewModel {
                     ExecuteDelegate = async _ => {
                         var msg = await FC.Listen ();
                         if (msg == MsgCode.User_Login) {
+                            MsgLine.Show ("user login");
                             var users = FC.QueryUser ();
                             var retlen= 0;
                             if (users.Length == 1) {
