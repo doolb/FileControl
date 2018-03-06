@@ -76,7 +76,7 @@ NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm){
 
 }
 
-NTSTATUS setDefaultPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm, BOOLEAN rewrite){
+NTSTATUS setDefaultPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm, BOOL rewrite){
 
 	ASSERT(pm);
 
@@ -166,8 +166,10 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 	NTSTATUS status = STATUS_SUCCESS;
 	LARGE_INTEGER offset = { 0 };
 	PPermission pm = NULL;
+	BOOL rewrite = FALSE;
 	ULONG retlen = 0;
 	*_pm = NULL;
+
 
 	try{
 
@@ -200,13 +202,13 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		memcpy_s(pm, PM_SIZE, de, PM_SIZE);
 		ExFreePoolWithTag(de, UTIL_TAG);
 
-		if (pm->_head != 'FCHD'){ logw((NAME"invalid head")); status = FLT_INVALID_HEAD; leave; }
+		if (pm->_head != 'FCHD'){ logw((NAME"invalid head")); status = FLT_INVALID_HEAD; rewrite = TRUE; leave; }
 
 		//
 		// checksum
 		//
 		UINT32 crc32 = crc_32((PUCHAR)pm, PM_DATA_SIZE);
-		if (crc32 != pm->crc32){ logw((NAME"check-sum failed")); status = FLT_INVALID_HEAD; leave; }
+		if (crc32 != pm->crc32){ logw((NAME"check-sum failed")); status = FLT_INVALID_HEAD; rewrite = TRUE; leave; }
 
 #pragma endregion
 	}
@@ -216,7 +218,7 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		//
 		if (!NT_SUCCESS(status)){
 			logw(("write the default permission \n"));
-			status = setDefaultPermission(ins, obj, pm, (!retlen || retlen < PM_SIZE) ? TRUE : FALSE);
+			status = setDefaultPermission(ins, obj, pm, rewrite);
 			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); }
 		}
 

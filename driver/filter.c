@@ -6,6 +6,7 @@
 UNICODE_STRING gWorkRoot;		// the root path for dirver work
 UNICODE_STRING gKeyRoot;		// the root path for key file
 static WCHAR gKeyRoot_Buffer[256];
+WCHAR gWorkRootLetter;			// the letter of work root
 
 LIST_ENTRY gVolumeList;
 
@@ -134,7 +135,9 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	// is work root
 	//
 	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		{
-		list->isWorkRoot = TRUE; gInstance = instance;
+		gWorkRootLetter = list->letter;	// save the letter
+		list->isWorkRoot = TRUE;		// set flag
+		gInstance = instance;			// save the instance
 	}
 
 	return (PLIST_ENTRY)list;
@@ -189,7 +192,13 @@ void onstop(PVolumeContext ctx){
 
 			logw((NAME"remove volume : %wZ", &ctx->GUID));
 
-			if (list->instance == gInstance) gInstance = NULL;
+			//
+			// is work root
+			//
+			if (list->instance == gInstance) {
+				gWorkRootLetter = 0;
+				gInstance = NULL;
+			}
 
 			RemoveEntryList(e);
 			ExFreePoolWithTag(e, FLT_TAG);

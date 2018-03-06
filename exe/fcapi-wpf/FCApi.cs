@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,6 +72,10 @@ namespace FCApi {
         public String path;
         public User user;					// the user which whole the file
         public PermissionCode pmCode;		// permission code
+
+        public override string ToString () {
+            return string.Format ("{0}:{1}\n{2}", path, pmCode.ToString (), user.ToString ());
+        }
     }
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
@@ -321,22 +326,48 @@ namespace FCApi {
         }
     }
 
+    /// <summary>
+    /// work root
+    /// </summary>
     public partial class FC {
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, [MarshalAs (UnmanagedType.LPTStr)]StringBuilder lpOutBuffer, int dwOutBufferSize, ref int lpBytesReturned );
 
         public static string WorkRoot {
-            get { return workRoot ?? (workRoot = getWorkRoot ()); }
+            get { if (workRoot == null) { getWorkRoot (); } return workRoot; }
         }
         private static string workRoot;
-        static string getWorkRoot () {
+        public static char WorkRootLetter {
+            get { if (workRootLetter == 0) { getWorkRoot (); } return workRootLetter; }
+        }
+        private static char workRootLetter;
+        static void getWorkRoot () {
             StringBuilder sbd = new StringBuilder (1024);
             MsgCode msg = MsgCode.WorkRoot_Get;
             int retlen = 0;
             uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, sbd.Capacity, ref retlen);
             Check (ret);
 
-            return sbd.ToString ();
+            workRootLetter = sbd[0];
+            workRoot = sbd.ToString ().Substring (1, sbd.Length - 1);
+        }
+    }
+
+    /// <summary>
+    /// file permission
+    /// </summary>
+    public partial class FC {
+        public static Msg_File getFilePM ( string path ) {
+            if (path[0] != WorkRootLetter)
+                return default(Msg_File);
+
+            int retlen = 0;
+
+            Msg_File file = new Msg_File ();
+            file.path = WorkRoot + path.Substring (2, path.Length - 2);
+
+            file = (Msg_File)Send<Msg_File> (MsgCode.Permission_Get, file, ref retlen);
+            return file;
         }
     }
 }

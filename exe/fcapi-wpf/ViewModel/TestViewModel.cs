@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MVVM;
 using FCApi;
 using fcapi_wpf.View;
+using Microsoft.Win32;
 
 namespace fcapi_wpf.ViewModel {
     public class TestViewModel : MVVM.ViewModel {
@@ -68,13 +69,28 @@ namespace fcapi_wpf.ViewModel {
 
         public Command getworkRootCmd {
             get {
-                return _getworkRootCmd??(_getworkRootCmd = new Command {
+                return _getworkRootCmd ?? (_getworkRootCmd = new Command {
                     ExecuteDelegate = _ => data = FC.WorkRoot,
                     CanExecuteDelegate = _ => FC.isopen
                 });
             }
         }
         private Command _getworkRootCmd;
+
+        public Command getfilePMCmd {
+            get {
+                return _getfilePMCmd ?? (_getfilePMCmd = new Command {
+                    ExecuteDelegate = _ => {
+                        OpenFileDialog ofd = new OpenFileDialog ();
+                        if (ofd.ShowDialog () == true) {
+                            data = FC.getFilePM (ofd.FileName).ToString ();
+                        }
+                    },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _getfilePMCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }

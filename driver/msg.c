@@ -6,6 +6,7 @@ extern UNICODE_STRING gWorkRoot;
 extern UNICODE_STRING gKeyRoot;
 extern PFLT_INSTANCE gInstance;
 extern LIST_ENTRY gVolumeList;
+extern WCHAR gWorkRootLetter;
 extern PFLT_FILTER gFilter;
 extern User gUser;
 
@@ -314,9 +315,13 @@ NTSTATUS volume_query(void* buffer, unsigned long size, unsigned long *retlen){
 NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 	if (gWorkRoot.Length == 0) return STATUS_NOT_SUPPORTED;
 
-	if (!buffer || size < gWorkRoot.Length){ *retlen = gWorkRoot.Length; return STATUS_BUFFER_TOO_SMALL; }
+	if (!buffer || size < gWorkRoot.Length + sizeof(WCHAR)){ *retlen = gWorkRoot.Length + sizeof(WCHAR); return STATUS_BUFFER_TOO_SMALL; }
 
-	memcpy_s(buffer, size, gWorkRoot.Buffer, gWorkRoot.Length);
+	PWCHAR ptr = buffer;
+	// letter
+	ptr[0] = gWorkRootLetter;
+	// guid
+	memcpy_s(ptr + 1, size, gWorkRoot.Buffer, gWorkRoot.Length);
 	return STATUS_SUCCESS;
 }
 
