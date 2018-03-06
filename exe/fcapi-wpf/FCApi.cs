@@ -81,20 +81,24 @@ namespace FCApi {
     }
 
     public enum MsgCode {
-        Null=0, // null define , for daemon use
+        Null, // null define , for daemon use
 
         // user
-        User_Query      = 1,
-        User_Login      = 2,
-        User_Registry   = 4,
-        User_Logout     = 8,
+        User_Query,
+        User_Login,
+        User_Registry,
+        User_Logout,
 
         // volume
-        Volume_Query = 16,
+        Volume_Query,
 
         // file
-        Permission_Get = 32,
-        Permission_Set = 64,
+        Permission_Get,
+        Permission_Set,
+
+        // work root
+        WorkRoot_Get,
+        WorkRoot_Set
     }
 
     public enum PermissionCode {

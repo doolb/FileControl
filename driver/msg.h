@@ -18,6 +18,10 @@ typedef enum {
 	MsgCode_Permission_Get,
 	MsgCode_Permission_Set,
 
+	// work root
+	MsgCode_WorkRoot_Get,
+	MsgCode_WorkRoot_Set
+
 }MsgCode, *PMsgCode;
 
 #define PM_NAME_MAX 32
@@ -59,6 +63,7 @@ typedef struct{
 
 typedef struct
 {
-	PWCHAR path;					// file path
-	PermissionCode pmCode;		// permission code
+	PWCHAR	path;					// file path
+	User		user;					// the user which whole the file
+	PermissionCode pmCode;			// permission code
 }Msg_File, *PMsg_File;
