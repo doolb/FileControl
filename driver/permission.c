@@ -22,6 +22,8 @@ static User defaultUser = {
 extern KSPIN_LOCK	gFilterLock;
 extern PFLT_FILTER	gFilter;
 
+extern UNICODE_STRING gKeyRoot;
+
 //
 // lookaside list for permission data
 //
@@ -30,19 +32,18 @@ NPAGED_LOOKASIDE_LIST gPmLookasideList;
 //
 // free the memory of permission data
 //
-void freePermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm){
-	FLT_ASSERT(_obj);
-	if (pm)  ExFreeToNPagedLookasideList(&gPmLookasideList, pm); pm = NULL;
+void freePermission(PPermission pm){
+	if (pm)  { ExFreeToNPagedLookasideList(&gPmLookasideList, pm); pm = NULL; }
 }
 
 
-NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
+NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm){
 
 	// writh at head
 	ULONG retlen;
 	LARGE_INTEGER offset = { 0 };
 
-	ASSERT(obj && pm);
+	ASSERT(ins && obj && pm);
 
 	//
 	// clear memory
@@ -65,7 +66,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 	//
 	// write data
 	//
-	NTSTATUS status = FltWriteFile(obj->Instance, obj->FileObject, &offset, PM_SIZE, en, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	NTSTATUS status = FltWriteFile(ins, obj, &offset, PM_SIZE, en, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x \n", status)); }
 
@@ -75,7 +76,7 @@ NTSTATUS setPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm){
 
 }
 
-NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN rewrite){
+NTSTATUS setDefaultPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm, BOOLEAN rewrite){
 
 	ASSERT(pm);
 
@@ -100,7 +101,7 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	// save the origin data
 	//
 	// get file size
-	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
+	status = FltQueryInformationFile(ins, obj, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
 	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x \n", status)); return status; }
 	logi((NAME"file size : %d(%d)", fileInfo.EndOfFile, fileInfo.AllocationSize));
 
@@ -118,11 +119,11 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	if (fileInfo.EndOfFile.QuadPart > 0 && !rewrite){
 		// allocate buffer
 		len = fileInfo.AllocationSize.LowPart;
-		buff = FltAllocatePoolAlignedWithTag(obj->Instance, NonPagedPool, len, NAME_TAG);
+		buff = FltAllocatePoolAlignedWithTag(ins, NonPagedPool, len, NAME_TAG);
 		if (!buff){ loge((NAME"allocate buffer failed. \n")); return STATUS_INSUFFICIENT_RESOURCES; }
 
 		// read file
-		status = FltReadFile(obj->Instance, obj->FileObject, &offset, len, buff,
+		status = FltReadFile(ins, obj, &offset, len, buff,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status)){ loge((NAME"read file failed. %x \n", status)); goto _set_default_pem_end_; }
 
@@ -131,7 +132,7 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	//
 	// write permission information
 	//
-	status = setPermission(obj, pm);
+	status = setPermission(ins, obj, pm);
 	if (!NT_SUCCESS(status)){ loge((NAME"set file permission failed. %x \n", status)); goto _set_default_pem_end_; }
 
 	//
@@ -139,28 +140,28 @@ NTSTATUS setDefaultPermission(PCFLT_RELATED_OBJECTS obj, PPermission pm, BOOLEAN
 	//
 	if (fileInfo.EndOfFile.QuadPart > 0 && !rewrite){
 		offset.LowPart = sizeof(Permission);
-		status = FltWriteFile(obj->Instance, obj->FileObject, &offset, fileInfo.EndOfFile.LowPart, buff, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+		status = FltWriteFile(ins, obj, &offset, fileInfo.EndOfFile.LowPart, buff, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	}
 
 	//
 	// get the new information
 	//
-	status = FltQueryInformationFile(obj->Instance, obj->FileObject, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
+	status = FltQueryInformationFile(ins, obj, &fileInfo, sizeof(fileInfo), FileStandardInformation, &retlen);
 	if (!NT_SUCCESS(status)){ loge((NAME"get file info failed. %x \n", status)); return status; }
 	logi((NAME"file size : %d(%d) \n", fileInfo.EndOfFile, fileInfo.AllocationSize));
 
 _set_default_pem_end_:
-	if (buff) { FltFreePoolAlignedWithTag(obj->Instance, buff, NAME_TAG); }
+	if (buff) { FltFreePoolAlignedWithTag(ins, buff, NAME_TAG); }
 	return status;
 }
 
 //
 // get the permission of current user, the caller must support the buffer
 //
-NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
+NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 
-	FLT_ASSERT(_obj);
+	FLT_ASSERT(ins && obj && _pm);
 
 	NTSTATUS status = STATUS_SUCCESS;
 	LARGE_INTEGER offset = { 0 };
@@ -180,7 +181,7 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
 		//
 		// read file information
 		//
-		status = FltReadFile(_obj->Instance, _obj->FileObject, &offset, PM_SIZE, pm,
+		status = FltReadFile(ins, obj, &offset, PM_SIZE, pm,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x \n", status)); }
 
@@ -215,15 +216,48 @@ NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm) {
 		//
 		if (!NT_SUCCESS(status)){
 			logw(("write the default permission \n"));
-			status = setDefaultPermission(_obj, pm, (!retlen || retlen < PM_SIZE) ? TRUE : FALSE);
+			status = setDefaultPermission(ins, obj, pm, (!retlen || retlen < PM_SIZE) ? TRUE : FALSE);
 			if (!NT_SUCCESS(status)){ loge((NAME"set default permission to file failed. %x \n", status)); }
 		}
 
 		// if failed, free the buffer
-		if (!NT_SUCCESS(status)) freePermission(_obj, pm);
+		if (!NT_SUCCESS(status)) freePermission(pm);
 		else *_pm = pm;
 	}
 
+	return status;
+}
+
+NTSTATUS cmpPermission(PPermission pm, BOOL iswrite){
+	NTSTATUS status = STATUS_SUCCESS;
+	ASSERT(pm);
+
+	//
+	// is user login
+	//
+	if (gKeyRoot.Length == 0) return STATUS_ACCESS_DENIED;
+
+	//
+	// is current user
+	//
+	if (pmIsUser(pm, &gUser)) {
+		if (iswrite)		status = pm->code & PC_User_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+		else				status = pm->code & PC_User_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+	}
+	//
+	// is the same group
+	//
+	else if (pmIsGroup(pm, &gUser)) {
+		if (iswrite)		status = pm->code & PC_Group_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+		else				status = pm->code & PC_Group_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+	}
+	//
+	// other user
+	//
+	else{
+		if (iswrite)		status = pm->code & PC_Other_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+		else				status = pm->code & PC_Other_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+	}
 	return status;
 }
 
@@ -250,35 +284,17 @@ NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, B
 		//
 		// get file permission data
 		//
-		status = getPermission(_obj, &pm);
-		if (!NT_SUCCESS(status)) { loge((NAME"getPermission failed. %x \n", status)); leave; }
-		ASSERT(pm);
+		status = getPermission(_obj->Instance, _obj->FileObject, &pm);
+		if (!NT_SUCCESS(status) || !pm) { loge((NAME"getPermission failed. %x \n", status)); leave; }
 
 		//
-		// is current user
+		// compare user permission
 		//
-		//memcmp(&pm->user.uid, &gUser.uid, sizeof(GUID)) == 0;
-		if (pmIsUser(pm, &gUser)) {
-			if (iswrite)		status = pm->code & PC_User_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-			else				status = pm->code & PC_User_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-		}
-		//
-		// is the same group
-		//
-		else if (pmIsGroup(pm, &gUser)) {
-			if (iswrite)		status = pm->code & PC_Group_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-			else				status = pm->code & PC_Group_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-		}
-		//
-		// other user
-		//
-		else{
-			if (iswrite)		status = pm->code & PC_Other_Write ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-			else				status = pm->code & PC_Other_Read ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
-		}
+		status = cmpPermission(pm, iswrite);
+
 	}
 	finally{
-		freePermission(_obj, pm);
+		freePermission(pm);
 	}
 	return status;
 }

@@ -40,10 +40,10 @@ typedef struct _Permission
 NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj);
 // check the file status, is it is a dir and is need be filter
 NTSTATUS checkPermission(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj, BOOLEAN iswrite);
-
-NTSTATUS getPermission(PCFLT_RELATED_OBJECTS _obj, PPermission *_pm);
-NTSTATUS setPermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
-void freePermission(PCFLT_RELATED_OBJECTS _obj, PPermission pm);
+NTSTATUS cmpPermission(PPermission pm, BOOL iswrite);
+NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm);
+NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm);
+void freePermission(PPermission pm);
 
 #pragma region User Key define
 
