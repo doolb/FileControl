@@ -68,8 +68,8 @@ namespace FCApi {
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
     public struct Msg_File {
         [MarshalAs (UnmanagedType.LPWStr)]
-        public String   path;
-        public User     user;					// the user which whole the file
+        public String path;
+        public User user;					// the user which whole the file
         public PermissionCode pmCode;		// permission code
     }
 
@@ -99,7 +99,7 @@ namespace FCApi {
         // work root
         WorkRoot_Get,
         WorkRoot_Set,
-        
+
         Max
     }
 
@@ -318,6 +318,25 @@ namespace FCApi {
                     onmsg (lis.msg);
                 }
             });
+        }
+    }
+
+    public partial class FC {
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, [MarshalAs (UnmanagedType.LPTStr)]StringBuilder lpOutBuffer, int dwOutBufferSize, ref int lpBytesReturned );
+
+        public static string WorkRoot {
+            get { return workRoot ?? (workRoot = getWorkRoot ()); }
+        }
+        private static string workRoot;
+        static string getWorkRoot () {
+            StringBuilder sbd = new StringBuilder (1024);
+            MsgCode msg = MsgCode.WorkRoot_Get;
+            int retlen = 0;
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, sbd.Capacity, ref retlen);
+            Check (ret);
+
+            return sbd.ToString ();
         }
     }
 }

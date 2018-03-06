@@ -12,25 +12,23 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1.5*"/>
         </Grid.ColumnDefinitions>
 
-        <Button Content="open"  Command="{Binding openCmd}"             Grid.Row="1" Grid.Column="0"/>
-        <Button Content="close" Command="{Binding closeCmd}"            Grid.Row="2" Grid.Column="0"/>
-        <Button Content="load"  Command="{Binding loadCmd}"             Grid.Row="3" Grid.Column="0"/>
-        <Button Content="unload" Command="{Binding unloadCmd}"          Grid.Row="4" Grid.Column="0"/>
-        <Button Content="queryUser" Command="{Binding queryUserCmd}"    Grid.Row="5" Grid.Column="0"/>
+        <ScrollViewer Grid.Row="1" Grid.Column="0">
+            <StackPanel>
+                <Button Content="open"          Command="{Binding openCmd}"/>
+                <Button Content="close"         Command="{Binding closeCmd}"/>
+                <Button Content="load"          Command="{Binding loadCmd}"/>
+                <Button Content="unload"        Command="{Binding unloadCmd}"/>
+                <Button Content="queryUser"     Command="{Binding queryUserCmd}"/>
+                <Button Content="getworkRoot"   Command="{Binding getworkRootCmd}"/>
+            </StackPanel>
+        </ScrollViewer>
 
         <TextBlock Text="{Binding data}"    Grid.Row="1" Grid.RowSpan="6" Grid.Column="1"/>
 

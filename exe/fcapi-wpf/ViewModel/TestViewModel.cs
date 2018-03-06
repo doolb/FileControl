@@ -65,10 +65,21 @@ namespace fcapi_wpf.ViewModel {
 
         public Command unloadCmd { get { return _unloadCmd??(_unloadCmd = new Command { ExecuteDelegate = _ => FC.Unload () }); } }
         private Command _unloadCmd;
+
+        public Command getworkRootCmd {
+            get {
+                return _getworkRootCmd??(_getworkRootCmd = new Command {
+                    ExecuteDelegate = _ => data = FC.WorkRoot,
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _getworkRootCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }
         private string _data;
+
 
         void onmsg ( MsgCode msg ) {
             if (msg == MsgCode.Null) { return; }

@@ -311,6 +311,16 @@ NTSTATUS volume_query(void* buffer, unsigned long size, unsigned long *retlen){
 	return status;
 }
 
+NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
+	if (gWorkRoot.Length == 0) return STATUS_NOT_SUPPORTED;
+
+	if (!buffer || size < gWorkRoot.Length){ *retlen = gWorkRoot.Length; return STATUS_BUFFER_TOO_SMALL; }
+
+	memcpy_s(buffer, size, gWorkRoot.Buffer, gWorkRoot.Length);
+	return STATUS_SUCCESS;
+}
+
+
 // NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 // 
 // 	NTSTATUS status = STATUS_SUCCESS;
@@ -323,10 +333,10 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 	NULL,	//MsgCode_Null,
 
 	// user
-	user_query,	//MsgCode_User_Query,
-	user_login,	//MsgCode_User_Login,
+	user_query,		//MsgCode_User_Query,
+	user_login,		//MsgCode_User_Login,
 	user_registry,	//MsgCode_User_Registry,
-	user_logout,	//MsgCode_User_Logout,
+	user_logout,		//MsgCode_User_Logout,
 
 	// volume
 	volume_query,	//MsgCode_Volume_Query,
@@ -336,6 +346,6 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 	file_set,	//MsgCode_Permission_Set,
 
 	// work root
-	NULL,	//MsgCode_WorkRoot_Get,
+	workroot_get,	//MsgCode_WorkRoot_Get,
 	NULL,	//MsgCode_WorkRoot_Set,
 };
