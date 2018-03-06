@@ -37,12 +37,15 @@ namespace fcapi_wpf.View {
         private static MsgLine instance;
 
         public static void Show ( string msg ) {
-            if (MsgLine.instance == null) { return; }
+            Application.Current.Dispatcher.BeginInvoke (new Action (() => {
 
-            (MsgLine.instance.Resources["sb_show"] as Storyboard).Seek (TimeSpan.Zero);
-            (MsgLine.instance.Resources["sb_show"] as Storyboard).Begin ();
-            string format = Properties.Resources.ResourceManager.GetString (msg);
-            MsgLine.instance.vm.msg = format ?? msg;
+                if (MsgLine.instance == null) { return; }
+
+                (MsgLine.instance.Resources["sb_show"] as Storyboard).Seek (TimeSpan.Zero);
+                (MsgLine.instance.Resources["sb_show"] as Storyboard).Begin ();
+                string format = Properties.Resources.ResourceManager.GetString (msg);
+                MsgLine.instance.vm.msg = format ?? msg;
+            }));
         }
     }
 }

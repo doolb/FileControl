@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace FCApi {
+    #region driver struct
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
     public struct User {
@@ -31,6 +32,10 @@ namespace FCApi {
         /// group id
         /// </summary>
         public Guid gid;
+
+        public override string ToString () {
+            return string.Format ("{0} @ \n {1} \n\n {2} @ \n {3}", user, uid, group, gid);
+        }
     }
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
@@ -63,8 +68,8 @@ namespace FCApi {
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
     public struct Msg_File {
         [MarshalAs (UnmanagedType.LPWStr)]
-        public String path;
-
+        public String   path;
+        public User     user;					// the user which whole the file
         public PermissionCode pmCode;		// permission code
     }
 
@@ -76,24 +81,20 @@ namespace FCApi {
     }
 
     public enum MsgCode {
-        Null, // null define , for daemon use
+        Null=0, // null define , for daemon use
 
         // user
-        User_Query,
-        User_Login,
-        User_Registry,
-        User_Logout,
+        User_Query      = 1,
+        User_Login      = 2,
+        User_Registry   = 4,
+        User_Logout     = 8,
 
         // volume
-        Volume_Query,
+        Volume_Query = 16,
 
         // file
-        Permission_Get,
-        Permission_Set,
-
-        // driver
-        GetPause,
-        SetPause,
+        Permission_Get = 32,
+        Permission_Set = 64,
     }
 
     public enum PermissionCode {
@@ -107,6 +108,7 @@ namespace FCApi {
 
         PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
     }
+    #endregion
 
 
 
@@ -119,6 +121,7 @@ namespace FCApi {
 
         public const string DaemonPort = "\\fc-d";
         public const string NormalPort = "\\fc";
+        public const string FilterName = "fc";
     }
 
     /// <summary>
@@ -163,6 +166,12 @@ namespace FCApi {
 
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         static extern uint FilterGetMessage ( IntPtr hPort, ref Msg_Listen lpMessageBuffer, int dwMessageBufferSize, IntPtr lpOverlapped );
+
+
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterLoad ( string name );
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterUnload ( string name );
     }
 
     /// <summary>
@@ -172,9 +181,12 @@ namespace FCApi {
 
         static IntPtr Port;
 
-        public static bool Open ( bool isdaemon ) {
-            uint ret = FilterConnectCommunicationPort (isdaemon ? DaemonPort : NormalPort, 0, IntPtr.Zero, 0, IntPtr.Zero, ref Port);
+        public static bool Open ( Action<MsgCode> onmsg = null ) {
+            uint ret = FilterConnectCommunicationPort (onmsg != null ? DaemonPort : NormalPort, 0, IntPtr.Zero, 0, IntPtr.Zero, ref Port);
             Check (ret);
+
+            if (ret == 0 && onmsg != null) { Listen (onmsg); }
+
             return isopen;
         }
 
@@ -188,6 +200,9 @@ namespace FCApi {
         /// </summary>
         public static bool isopen { get { return Port != IntPtr.Zero && Port != (IntPtr)(-1); } }
 
+
+        public static void Load () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "load fc", UseShellExecute = false, CreateNoWindow = true }); }
+        public static void Unload () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "unload fc", UseShellExecute = false, CreateNoWindow = true }); }
     }
 
     /// <summary>
@@ -281,16 +296,21 @@ namespace FCApi {
     }
 
     public partial class FC {
-        public static Task<MsgCode> Listen () {
+        protected static void Listen ( Action<MsgCode> onmsg ) {
+            if (onmsg == null) { return; }
 
-            return Task.Run<MsgCode> (() => {
-                if (!isopen) { return MsgCode.Null; }
+            Task.Run (() => {
+
                 Msg_Listen lis = new Msg_Listen ();
 
-                uint ret = FilterGetMessage (Port, ref lis, Marshal.SizeOf (typeof (Msg_Listen)), IntPtr.Zero);
-                Check (ret);
+                while (isopen) {
+                    // get message
+                    uint ret = FilterGetMessage (Port, ref lis, Marshal.SizeOf (typeof (Msg_Listen)), IntPtr.Zero);
+                    Check (ret);
 
-                return lis.msg;
+                    // handle message
+                    onmsg (lis.msg);
+                }
             });
         }
     }

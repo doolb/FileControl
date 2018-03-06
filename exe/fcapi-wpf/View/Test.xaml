@@ -22,14 +22,17 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
 
         <Button Content="open"  Command="{Binding openCmd}"             Grid.Row="1" Grid.Column="0"/>
         <Button Content="close" Command="{Binding closeCmd}"            Grid.Row="2" Grid.Column="0"/>
-        <Button Content="queryUser" Command="{Binding queryUserCmd}"    Grid.Row="3" Grid.Column="0"/>
-        <Button Content="listen" Command="{Binding listenCmd}"          Grid.Row="4" Grid.Column="0"/>
+        <Button Content="load"  Command="{Binding loadCmd}"             Grid.Row="3" Grid.Column="0"/>
+        <Button Content="unload" Command="{Binding unloadCmd}"          Grid.Row="4" Grid.Column="0"/>
+        <Button Content="queryUser" Command="{Binding queryUserCmd}"    Grid.Row="5" Grid.Column="0"/>
+
+        <TextBlock Text="{Binding data}"    Grid.Row="1" Grid.RowSpan="6" Grid.Column="1"/>
 
     </Grid>
 </UserControl>

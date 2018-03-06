@@ -37,6 +37,12 @@
                 <Setter Property="Margin"   Value="10"/>
                 <Setter Property="metro:ButtonHelper.PreserveTextCase" Value="True"/>
             </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="FontSize"     Value="18"/>
+                <Setter Property="Foreground"   Value="Azure"/>
+                <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+            </Style>
         </ResourceDictionary>
 
     </Application.Resources>
