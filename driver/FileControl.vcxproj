@@ -67,6 +67,7 @@
     <ClCompile Include="filter.c" />
     <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
+    <ClCompile Include="msg.c" />
     <ClCompile Include="op.c" />
     <ClCompile Include="pageio.c" />
     <ClCompile Include="permission.c" />

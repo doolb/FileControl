@@ -20,7 +20,9 @@ typedef enum {
 
 	// work root
 	MsgCode_WorkRoot_Get,
-	MsgCode_WorkRoot_Set
+	MsgCode_WorkRoot_Set,
+
+	MsgCode_Max
 
 }MsgCode, *PMsgCode;
 

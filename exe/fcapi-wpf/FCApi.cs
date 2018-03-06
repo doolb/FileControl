@@ -98,7 +98,9 @@ namespace FCApi {
 
         // work root
         WorkRoot_Get,
-        WorkRoot_Set
+        WorkRoot_Set,
+        
+        Max
     }
 
     public enum PermissionCode {
