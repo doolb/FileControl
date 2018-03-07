@@ -8,6 +8,7 @@ typedef enum {
 	// user
 	MsgCode_User_Query,
 	MsgCode_User_Login,
+	MsgCode_User_Login_Get,
 	MsgCode_User_Registry,
 	MsgCode_User_Logout,
 

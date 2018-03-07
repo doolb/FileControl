@@ -147,6 +147,22 @@ NTSTATUS user_login(void* buffer, unsigned long size, unsigned long *retlen){
 	return status;
 }
 
+NTSTATUS user_login_get(void* buffer, unsigned long size, unsigned long *retlen){
+	//
+	// is login
+	//
+	if (gKeyRoot.Length == 0){ return STATUS_ACCESS_DENIED; }
+
+	//
+	// check buffer
+	//
+	if (!buffer || size < sizeof(User)){ *retlen = sizeof(User); return STATUS_BUFFER_TOO_SMALL; }
+
+	memcpy_s(buffer, sizeof(User), &gUser, sizeof(User));
+	*retlen = sizeof(User);
+	return STATUS_SUCCESS;
+}
+
 NTSTATUS user_logout(void* buffer, unsigned long size, unsigned long *retlen){
 	UNREFERENCED_PARAMETER(buffer);
 	UNREFERENCED_PARAMETER(size);
@@ -206,6 +222,7 @@ NTSTATUS file_get(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	file->pmCode = pm->code;
 	memcpy_s(&file->user, sizeof(User), &pm->user, sizeof(User));
+	*retlen = sizeof(Msg_File);
 
 	//
 	// clear
@@ -263,8 +280,7 @@ NTSTATUS file_set(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// compare permission
 	//
-	status = cmpPermission(pm, TRUE);
-	if (!NT_SUCCESS(status)){ loge((NAME"cmpPermission failed. %x.%wZ", status, &name)); freePermission(pm); FltClose(hand); return status; }
+	if (!pmIsUser(pm, &gUser)){ loge((NAME"only file Owner can set permission. %wZ", &name)); freePermission(pm); FltClose(hand); return status; }
 
 	//
 	// copy data
@@ -340,6 +356,7 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 	// user
 	user_query,		//MsgCode_User_Query,
 	user_login,		//MsgCode_User_Login,
+	user_login_get,	//MsgCode_User_Login_Get
 	user_registry,	//MsgCode_User_Registry,
 	user_logout,		//MsgCode_User_Logout,
 

@@ -13,12 +13,8 @@
 			ItemClick="HamburgerMenu_ItemClick"
 			OptionsItemClick="HamburgerMenu_ItemClick">
 			<metro:HamburgerMenu.ItemsSource>
-				<metro:HamburgerMenuItemCollection>
-					<metro:HamburgerMenuGlyphItem Label="驱动" Glyph="D"/>
-
-					<metro:HamburgerMenuGlyphItem Label="用户" Glyph="U"/>
-
-					<metro:HamburgerMenuGlyphItem Label="Test" Glyph="T">
+                <metro:HamburgerMenuItemCollection>
+                    <metro:HamburgerMenuGlyphItem Label="Test" Glyph="T">
 						<metro:HamburgerMenuGlyphItem.Tag>
 							<v:Test/>
 						</metro:HamburgerMenuGlyphItem.Tag>

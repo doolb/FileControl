@@ -91,6 +91,21 @@ namespace fcapi_wpf.ViewModel {
             }
         }
         private Command _getfilePMCmd;
+
+        public Command setfilePMCmd {
+            get {
+                return _setfilePMCmd ?? (_setfilePMCmd = new Command {
+                    ExecuteDelegate = _ => {
+                        OpenFileDialog ofd = new OpenFileDialog ();
+                        if (ofd.ShowDialog () == true) {
+                            new PMWindow (ofd.FileName).ShowDialog ();
+                        }
+                    },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _setfilePMCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }
@@ -99,10 +114,14 @@ namespace fcapi_wpf.ViewModel {
 
         void onmsg ( MsgCode msg ) {
             if (msg == MsgCode.Null) { return; }
-            MsgLine.Show (msg.ToString ());
+
 
             if (msg == MsgCode.User_Login) {
-                MsgLine.Show ("user login");
+                // is user logined
+                var user = FC.Get<User> (MsgCode.User_Login_Get);
+                if (user != default (User))
+                    return;
+
                 var users = FC.QueryUser ();
                 var retlen= 0;
                 if (users.Length == 1) {
@@ -112,6 +131,8 @@ namespace fcapi_wpf.ViewModel {
                     FC.Send<Msg_User_Login> (MsgCode.User_Login, login, ref retlen);
                 }
             }
+
+            MsgLine.Show (msg.ToString ());
         }
     }
 }

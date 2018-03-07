@@ -28,6 +28,7 @@
                 <Button Content="queryUser"     Command="{Binding queryUserCmd}"/>
                 <Button Content="getworkRoot"   Command="{Binding getworkRootCmd}"/>
                 <Button Content="getfilePM"     Command="{Binding getfilePMCmd}"/>
+                <Button Content="setfilePM"     Command="{Binding setfilePMCmd}"/>
             </StackPanel>
         </ScrollViewer>
 

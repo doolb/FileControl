@@ -117,10 +117,37 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="fail" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>确定</value>
+  </data>
   <data name="open_fail" xml:space="preserve">
     <value>打开失败</value>
   </data>
   <data name="open_success" xml:space="preserve">
     <value>打开成功</value>
+  </data>
+  <data name="pm_name_0" xml:space="preserve">
+    <value>用户读</value>
+  </data>
+  <data name="pm_name_1" xml:space="preserve">
+    <value>用户写</value>
+  </data>
+  <data name="pm_name_2" xml:space="preserve">
+    <value>组读</value>
+  </data>
+  <data name="pm_name_3" xml:space="preserve">
+    <value>组写</value>
+  </data>
+  <data name="pm_name_4" xml:space="preserve">
+    <value>其他读</value>
+  </data>
+  <data name="pm_name_5" xml:space="preserve">
+    <value>其他写</value>
+  </data>
+  <data name="success" xml:space="preserve">
+    <value>成功</value>
   </data>
 </root>

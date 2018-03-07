@@ -37,6 +37,21 @@ namespace FCApi {
         public override string ToString () {
             return string.Format ("{0} @ \n {1} \n\n {2} @ \n {3}", user, uid, group, gid);
         }
+
+        public static bool operator == ( User a, User b ) {
+            return (a.uid == b.uid && a.gid == b.gid);
+        }
+        public static bool operator != ( User a, User b ) {
+            return (a.uid != b.uid || a.gid != b.gid);
+        }
+
+        public override bool Equals ( object obj ) {
+            return base.Equals (obj);
+        }
+
+        public override int GetHashCode () {
+            return base.GetHashCode ();
+        }
     }
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
@@ -91,6 +106,7 @@ namespace FCApi {
         // user
         User_Query,
         User_Login,
+        User_Login_Get,
         User_Registry,
         User_Logout,
 
@@ -109,15 +125,15 @@ namespace FCApi {
     }
 
     public enum PermissionCode {
-        PC_Invalid = 0,
-        PC_User_Read = 0x00000001,
-        PC_User_Write = 0x00000002,
-        PC_Group_Read = 0x00000004,
-        PC_Group_Write = 0x00000008,
-        PC_Other_Read = 0x00000010,
-        PC_Other_Write = 0x00000020,
+        Invalid = 0,
+        User_Read = 0x00000001,
+        User_Write = 0x00000002,
+        Group_Read = 0x00000004,
+        Group_Write = 0x00000008,
+        Other_Read = 0x00000010,
+        Other_Write = 0x00000020,
 
-        PC_Default = PC_User_Read | PC_User_Write | PC_Group_Read
+        Default = User_Read | User_Write | Group_Read
     }
     #endregion
 
@@ -269,9 +285,11 @@ namespace FCApi {
             uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), buff, totalSize, ref retlen);
             Check (ret);
 
-            if (retlen == 0 && ret > 0) {
-                return true;
-            }
+            // is success
+            if (ret != 0) { return false; }
+
+            // is has result
+            if (retlen == 0) { return true; }
 
             T obj = default (T);
             T[] objs= null;
@@ -303,6 +321,25 @@ namespace FCApi {
                 return 0;
 
             return len;
+        }
+
+        /// <summary>
+        /// get data from driver
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static T Get<T> ( MsgCode msg ) {
+            if (!isopen) { return default (T); }
+
+            var size = Marshal.SizeOf (typeof (T));             // the size of one struct
+            var buff = Marshal.AllocHGlobal (size);        // memory ptr of buffer
+            var retlen = 0;
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), buff, size, ref retlen);
+            Check (ret);
+            if (ret != 0 || retlen == 0) { return default (T); }
+
+            return (T)Marshal.PtrToStructure (buff, typeof (T));
         }
     }
 
@@ -358,8 +395,8 @@ namespace FCApi {
     /// </summary>
     public partial class FC {
         public static Msg_File getFilePM ( string path ) {
-            if (path[0] != WorkRootLetter)
-                return default(Msg_File);
+            if (path[0] != WorkRootLetter || !isopen)
+                return default (Msg_File);
 
             int retlen = 0;
 
@@ -368,6 +405,13 @@ namespace FCApi {
 
             file = (Msg_File)Send<Msg_File> (MsgCode.Permission_Get, file, ref retlen);
             return file;
+        }
+
+        public static bool setFilePM ( Msg_File mf ) {
+            if (!isopen) { return false; }
+
+            var retlen = 0;
+            return (bool)Send<Msg_File> (MsgCode.Permission_Set, mf, ref retlen);
         }
     }
 }

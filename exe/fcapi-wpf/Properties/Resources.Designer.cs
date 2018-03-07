@@ -22,7 +22,7 @@ namespace fcapi_wpf.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace fcapi_wpf.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("fcapi_wpf.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace fcapi_wpf.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,27 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fail!.
+        /// </summary>
+        public static string fail {
+            get {
+                return ResourceManager.GetString("fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK！.
+        /// </summary>
+        public static string ok {
+            get {
+                return ResourceManager.GetString("ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Failed!.
         /// </summary>
-        internal static string open_fail {
+        public static string open_fail {
             get {
                 return ResourceManager.GetString("open_fail", resourceCulture);
             }
@@ -72,9 +90,72 @@ namespace fcapi_wpf.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Open Success!.
         /// </summary>
-        internal static string open_success {
+        public static string open_success {
             get {
                 return ResourceManager.GetString("open_success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User(R).
+        /// </summary>
+        public static string pm_name_0 {
+            get {
+                return ResourceManager.GetString("pm_name_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User(W).
+        /// </summary>
+        public static string pm_name_1 {
+            get {
+                return ResourceManager.GetString("pm_name_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group(R).
+        /// </summary>
+        public static string pm_name_2 {
+            get {
+                return ResourceManager.GetString("pm_name_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group(W).
+        /// </summary>
+        public static string pm_name_3 {
+            get {
+                return ResourceManager.GetString("pm_name_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Othe(R).
+        /// </summary>
+        public static string pm_name_4 {
+            get {
+                return ResourceManager.GetString("pm_name_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Other(W).
+        /// </summary>
+        public static string pm_name_5 {
+            get {
+                return ResourceManager.GetString("pm_name_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Success!.
+        /// </summary>
+        public static string success {
+            get {
+                return ResourceManager.GetString("success", resourceCulture);
             }
         }
     }

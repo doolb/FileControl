@@ -117,10 +117,37 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="fail" xml:space="preserve">
+    <value>Fail!</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK！</value>
+  </data>
   <data name="open_fail" xml:space="preserve">
     <value>Open Failed!</value>
   </data>
   <data name="open_success" xml:space="preserve">
     <value>Open Success!</value>
+  </data>
+  <data name="pm_name_0" xml:space="preserve">
+    <value>User(R)</value>
+  </data>
+  <data name="pm_name_1" xml:space="preserve">
+    <value>User(W)</value>
+  </data>
+  <data name="pm_name_2" xml:space="preserve">
+    <value>Group(R)</value>
+  </data>
+  <data name="pm_name_3" xml:space="preserve">
+    <value>Group(W)</value>
+  </data>
+  <data name="pm_name_4" xml:space="preserve">
+    <value>Othe(R)</value>
+  </data>
+  <data name="pm_name_5" xml:space="preserve">
+    <value>Other(W)</value>
+  </data>
+  <data name="success" xml:space="preserve">
+    <value>Success!</value>
   </data>
 </root>
