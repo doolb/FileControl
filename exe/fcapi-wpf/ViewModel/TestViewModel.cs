@@ -106,6 +106,16 @@ namespace fcapi_wpf.ViewModel {
             }
         }
         private Command _setfilePMCmd;
+
+        public Command nameWinCmd {
+            get {
+                return _nameWinCmd ?? (_nameWinCmd = new Command {
+                    ExecuteDelegate = _ => new UserWindow ().ShowDialog (),
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _nameWinCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }

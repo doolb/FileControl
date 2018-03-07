@@ -29,6 +29,7 @@
                 <Button Content="getworkRoot"   Command="{Binding getworkRootCmd}"/>
                 <Button Content="getfilePM"     Command="{Binding getfilePMCmd}"/>
                 <Button Content="setfilePM"     Command="{Binding setfilePMCmd}"/>
+                <Button Content="userWin"       Command="{Binding userWinCmd}"/>
             </StackPanel>
         </ScrollViewer>
 

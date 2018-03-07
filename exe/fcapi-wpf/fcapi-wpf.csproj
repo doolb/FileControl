@@ -86,17 +86,30 @@
     </ApplicationDefinition>
     <Compile Include="Command.cs" />
     <Compile Include="FCApi.cs" />
+    <Compile Include="Model\MarginSetter.cs">
+      <Generator>MSBuild:Compile</Generator>
+    </Compile>
     <Compile Include="Properties\Resources.zh-CN.Designer.cs">
       <DependentUpon>Resources.zh-CN.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="ViewModel\MsgLineViewModel.cs" />
+    <Compile Include="ViewModel\UserWindowViewModel.cs" />
     <Compile Include="ViewModel\PMWindowViewModel.cs" />
     <Compile Include="ViewModel\TestViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="View\MsgLine.xaml.cs">
       <DependentUpon>MsgLine.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\UserLoginPage.xaml.cs">
+      <DependentUpon>UserLoginPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\UserSelectPage.xaml.cs">
+      <DependentUpon>UserSelectPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\UserWindow.xaml.cs">
+      <DependentUpon>UserWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\PMWindow.xaml.cs">
       <DependentUpon>PMWindow.xaml</DependentUpon>
@@ -121,6 +134,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="View\MsgLine.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UserLoginPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UserSelectPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UserWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -170,7 +195,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Fonts\" />
-    <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

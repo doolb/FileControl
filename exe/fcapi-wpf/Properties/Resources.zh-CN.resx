@@ -120,6 +120,9 @@
   <data name="fail" xml:space="preserve">
     <value>失败</value>
   </data>
+  <data name="login" xml:space="preserve">
+    <value>登录</value>
+  </data>
   <data name="ok" xml:space="preserve">
     <value>确定</value>
   </data>
