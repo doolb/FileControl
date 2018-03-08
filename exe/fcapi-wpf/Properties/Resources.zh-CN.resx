@@ -126,6 +126,9 @@
   <data name="login_fail" xml:space="preserve">
     <value>登录失败</value>
   </data>
+  <data name="no_user" xml:space="preserve">
+    <value>无可用户！</value>
+  </data>
   <data name="null_password" xml:space="preserve">
     <value>密码无效！</value>
   </data>

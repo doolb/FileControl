@@ -108,6 +108,9 @@
     <Compile Include="View\UserSelectPage.xaml.cs">
       <DependentUpon>UserSelectPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\UserViewPage.xaml.cs">
+      <DependentUpon>UserViewPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\UserWindow.xaml.cs">
       <DependentUpon>UserWindow.xaml</DependentUpon>
     </Compile>
@@ -142,6 +145,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\UserSelectPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\UserViewPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

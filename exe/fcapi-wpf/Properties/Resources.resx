@@ -126,6 +126,9 @@
   <data name="login_fail" xml:space="preserve">
     <value>Login Failed!</value>
   </data>
+  <data name="no_user" xml:space="preserve">
+    <value>User no found!</value>
+  </data>
   <data name="null_password" xml:space="preserve">
     <value>Password is invalid!</value>
   </data>

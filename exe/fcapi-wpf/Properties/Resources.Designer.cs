@@ -88,6 +88,15 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to User no found!.
+        /// </summary>
+        public static string no_user {
+            get {
+                return ResourceManager.GetString("no_user", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Password is invalid!.
         /// </summary>
         public static string null_password {
