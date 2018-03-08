@@ -249,6 +249,16 @@ namespace FCApi {
 
             return users;
         }
+
+        public static bool Login ( User user, string password ) {
+            if (!isopen) { return false; }
+            Msg_User_Login login = new Msg_User_Login ();
+            login.user = user;
+            login.password = password;
+            var retlen = 0;
+            bool ok = (bool)Send<Msg_User_Login> (MsgCode.User_Login, login, ref retlen);
+            return ok;
+        }
     }
 
     /// <summary>

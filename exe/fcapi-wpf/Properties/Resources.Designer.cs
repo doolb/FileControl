@@ -79,6 +79,24 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Login Failed!.
+        /// </summary>
+        public static string login_fail {
+            get {
+                return ResourceManager.GetString("login_fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password is invalid!.
+        /// </summary>
+        public static string null_password {
+            get {
+                return ResourceManager.GetString("null_password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to OK！.
         /// </summary>
         public static string ok {

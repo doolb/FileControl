@@ -18,7 +18,6 @@
 
         <Button Style="{StaticResource IconButton}" Content="" Command="{Binding showUserCmd}" Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-
         <Image Source="{Binding img}" Width="150" Height="150" DockPanel.Dock="Left" Grid.Column="0" Margin="10,0,0,0"/>
 
         <DockPanel Grid.Column="1" VerticalAlignment="Center" t:MarginSetter.Margin="15">
@@ -26,9 +25,57 @@
 
             <PasswordBox DockPanel.Dock="Top" x:Name="_passwd"/>
 
-            <Button Content="{x:Static p:Resources.login}" Command="{Binding loginCmd}" CommandParameter="{Binding ElementName=_passwd,Path=Password}" DockPanel.Dock="Bottom"/>
+            <Button Content="{x:Static p:Resources.login}" Command="{Binding loginCmd}" CommandParameter="{Binding ElementName=_passwd}" DockPanel.Dock="Top"/>
 
         </DockPanel>
+
+        <TextBlock Text="{Binding msgFail}" Foreground="Firebrick" FontSize="15" Margin="20"
+                   Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5" Opacity="0">
+            <TextBlock.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </TextBlock.RenderTransform>
+
+            <TextBlock.Resources>
+                <Storyboard x:Key="stb_login_fail">
+                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
+                        <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="-10"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.6" Value="-4"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:1" Value="4"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:1.1" Value="0"/>
+                    </DoubleAnimationUsingKeyFrames>
+                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)">
+                        <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.1" Value="0.735"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.8" Value="1"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:0.9" Value="0.48"/>
+                        <EasingDoubleKeyFrame KeyTime="0:0:1.1" Value="0"/>
+                    </DoubleAnimationUsingKeyFrames>
+                </Storyboard>
+            </TextBlock.Resources>
+
+            <TextBlock.Style>
+                <Style>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding logFail}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource stb_login_fail}"/>
+                            </DataTrigger.EnterActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+
+        </TextBlock>
+
 
     </Grid>
 </Page>

@@ -123,6 +123,12 @@
   <data name="login" xml:space="preserve">
     <value>Login</value>
   </data>
+  <data name="login_fail" xml:space="preserve">
+    <value>Login Failed!</value>
+  </data>
+  <data name="null_password" xml:space="preserve">
+    <value>Password is invalid!</value>
+  </data>
   <data name="ok" xml:space="preserve">
     <value>OK！</value>
   </data>

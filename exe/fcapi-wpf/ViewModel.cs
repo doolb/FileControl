@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using p = fcapi_wpf.Properties;
+
 namespace MVVM {
     public class ViewModel : INotifyPropertyChanged {
 
@@ -36,7 +38,9 @@ namespace MVVM {
         #endregion
 
         #region 函数
-
+        public static string Language ( string key ) {
+            return p.Resources.ResourceManager.GetString (key) ?? key;
+        }
 
         #endregion
     }

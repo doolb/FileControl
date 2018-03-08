@@ -49,18 +49,27 @@ namespace fcapi_wpf.ViewModel {
 
             public UserWindowViewModel vm;
 
+            public FCApi.User data;
+
             public string img { get { return _img; } set { _img = value; RaisePropertyChanged (); } }
             private string _img;
 
             public string name { get { return _name; } set { _name = value; RaisePropertyChanged (); } }
             private string _name;
 
+            public bool logFail { get { return _logFail; } set { _logFail = value; RaisePropertyChanged (); } }
+            private bool _logFail;
 
+            public string msgFail { get { return _msgFail; } set { _msgFail = value; RaisePropertyChanged (); } }
+            private string _msgFail;
             public Command loginCmd {
                 get {
                     return _loginCmd ??(_loginCmd = new Command {
-                        ExecuteDelegate = _ => {
-
+                        ExecuteDelegate = p => {
+                            logFail = false;
+                            string pass = (p as PasswordBox).Password;
+                            if (string.IsNullOrEmpty (pass)) { logFail = true; msgFail = Language ("null_password"); return; }
+                            if (!FCApi.FC.Login (data, pass)) { logFail = true; msgFail = Language ("login_fail"); return; }
                         }
                     });
                 }

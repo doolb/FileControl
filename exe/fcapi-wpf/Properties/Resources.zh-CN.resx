@@ -123,6 +123,12 @@
   <data name="login" xml:space="preserve">
     <value>登录</value>
   </data>
+  <data name="login_fail" xml:space="preserve">
+    <value>登录失败</value>
+  </data>
+  <data name="null_password" xml:space="preserve">
+    <value>密码无效！</value>
+  </data>
   <data name="ok" xml:space="preserve">
     <value>确定</value>
   </data>
