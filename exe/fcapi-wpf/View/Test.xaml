@@ -30,6 +30,7 @@
                 <Button Content="getfilePM"     Command="{Binding getfilePMCmd}"/>
                 <Button Content="setfilePM"     Command="{Binding setfilePMCmd}"/>
                 <Button Content="userWin"       Command="{Binding userWinCmd}"/>
+                <Button Content="exit"          Command="{Binding exitCmd}"/>
             </StackPanel>
         </ScrollViewer>
 

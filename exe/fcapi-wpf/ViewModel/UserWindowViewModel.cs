@@ -8,6 +8,7 @@ using MVVM;
 using fcapi_wpf.View;
 using System.Windows.Navigation;
 using System.Windows.Controls;
+using FCApi;
 
 namespace fcapi_wpf.ViewModel {
     class UserWindowViewModel : MVVM.ViewModel {
@@ -17,8 +18,10 @@ namespace fcapi_wpf.ViewModel {
 
         Dictionary<Type, Page> pages = new Dictionary<Type, Page> ();
 
-        public UserViewModel[] users { get { return _users; } set { _users = value; RaisePropertyChanged (); } }
-        private UserViewModel[] _users;
+        public UserViewModel[] userVms { get { return _userVms; } set { _userVms = value; RaisePropertyChanged (); } }
+        private UserViewModel[] _userVms;
+
+        private User[] users;
 
         /// <summary>
         /// is no user in system
@@ -27,18 +30,24 @@ namespace fcapi_wpf.ViewModel {
         private bool _nouser;
 
         public UserWindowViewModel () {
-
-            users = new UserViewModel[5];
-            for (int i=0; i<users.Length; i++) {
-                users[i] = new UserViewModel {
-                    vm = this,
-                    img = "https://2-im.guokr.com/FKrbvmmuROVn-mFSEv9NzeuIF3LmaiFUnUP8kRCvndCgAAAAoAAAAEpQ.jpg?imageView2/1/w/69/h/69",
-                    name ="test",
-                    group="group"
-                };
+            // is user already login
+            User user = FC.Get<User> (MsgCode.User_Login_Get);
+            if (!user.Equals (default (User))) {
+                Show<UserViewPage> (new UserViewModel (this, user));
+                return;
             }
-            //Show<UserLoginPage> (users[0]);
-            Show<UserViewPage> (users[0]);
+
+            // query all user
+            users = FC.QueryUser ();
+            if (users != null) {
+                userVms = new UserViewModel[users.Length];
+                for (int i=0; i<users.Length; i++) { userVms[i] = new UserViewModel (this, users[i]); }
+                ShowAllUser ();
+                return;
+            }
+
+            // no user found
+            nouser = true;
         }
 
         public void Show<T> ( MVVM.ViewModel viewModel ) where T : Page {
@@ -55,9 +64,19 @@ namespace fcapi_wpf.ViewModel {
 
         public class UserViewModel : MVVM.ViewModel {
 
-            public UserWindowViewModel vm;
+            private UserWindowViewModel vm;
+            private User user;
 
-            public FCApi.User data;
+            public UserViewModel ( UserWindowViewModel vm, User user ) {
+                this.vm = vm;
+                this.user = user;
+
+                name = user.user;
+                group = user.group;
+                uid = user.uid;
+                gid = user.gid;
+                img = "https://2-im.guokr.com/FKrbvmmuROVn-mFSEv9NzeuIF3LmaiFUnUP8kRCvndCgAAAAoAAAAEpQ.jpg?imageView2/1/w/69/h/69";
+            }
 
             /// <summary>
             /// user image
@@ -102,7 +121,7 @@ namespace fcapi_wpf.ViewModel {
                             logFail = false;
                             string pass = (p as PasswordBox).Password;
                             if (string.IsNullOrEmpty (pass)) { logFail = true; msgFail = Language ("null_password"); return; }
-                            if (!FCApi.FC.Login (data, pass)) { logFail = true; msgFail = Language ("login_fail"); return; }
+                            if (!FCApi.FC.Login (user, pass)) { logFail = true; msgFail = Language ("login_fail"); return; }
                         }
                     });
                 }

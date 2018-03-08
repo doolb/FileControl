@@ -116,6 +116,10 @@ namespace fcapi_wpf.ViewModel {
             }
         }
         private Command _nameWinCmd;
+        public Command exitCmd {
+            get { return _exitCmd ?? (_exitCmd = new Command { ExecuteDelegate = _ => System.Windows.Application.Current.Shutdown() }); }
+        }
+        private Command _exitCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }
