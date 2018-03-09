@@ -1,0 +1,47 @@
+﻿<Page x:Class="fcapi_wpf.View.UserAdminPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:vm="clr-namespace:fcapi_wpf.ViewModel"
+      xmlns:p="clr-namespace:fcapi_wpf.Properties"
+      mc:Ignorable="d" 
+      d:DesignHeight="300" d:DesignWidth="300"
+	Title="UserAdminPage">
+
+    <Page.DataContext>
+        <vm:UserAdminViewModel/>
+    </Page.DataContext>
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0">
+            <Button Command="{Binding exitCmd}" Style="{StaticResource IconButton}" Content="" 
+                HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="Firebrick" 
+                ToolTip="{x:Static p:Resources.close}" BorderBrush="Firebrick"
+                Margin="10,6,6,0" DockPanel.Dock="Right"/>
+
+            <Button Command="{Binding unloadCmd}" Style="{StaticResource IconButton}" 
+                    Content="" Margin="0,6,6,0" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+
+            <Button Command="{Binding loadCmd}" Style="{StaticResource IconButton}" 
+                    Content="" Margin="0,6,6,0" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+        </DockPanel>
+        
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <TextBlock Text="{x:Static p:Resources.work_root}" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding workRoot}" MinWidth="50" Margin="10,0,0,0"/>
+            <Button Style="{StaticResource IconButton}" Content="" Margin="0" Height="25" Width="25" BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Page>

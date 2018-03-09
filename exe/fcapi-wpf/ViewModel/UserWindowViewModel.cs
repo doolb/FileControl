@@ -26,10 +26,49 @@ namespace fcapi_wpf.ViewModel {
         /// <summary>
         /// is no user in system
         /// </summary>
-        public bool nouser { get { return _nouser; } set { _nouser = value; RaisePropertyChanged (); } }
-        private bool _nouser;
+        public string status { get { return _status; } set { _status = value; RaisePropertyChanged (); } }
+        private string _status;
+
+        private Page lastPage;
+        public Command adminCmd {
+            get {
+                return _adminCmd ?? (_adminCmd = new Command {
+                    ExecuteDelegate = _ => {
+                        if (!inAdmin) { lastPage = page; Show<UserAdminPage> (null); inAdmin = true; status = ""; }
+                        else { inAdmin = false; page = lastPage; refresh (); }
+                    }
+                });
+            }
+        }
+        private Command _adminCmd;
+
+        public bool inAdmin { get { return _inAdmin; } set { _inAdmin = value; RaisePropertyChanged (); } }
+        private bool _inAdmin;
 
         public UserWindowViewModel () {
+            refresh ();
+        }
+
+        public void refresh () {
+            // is driver installed
+            if (!FC.installed) {
+                status = Language ("driver_no_install");
+                this.page = null;
+                return;
+            }
+
+            // is driver load
+            if (!FC.loaded) {
+                status = Language ("driver_no_run");
+                this.page = null;
+                return;
+            }
+
+            // open driver
+            if (!FC.isopen) {
+                FC.Open (null);
+            }
+
             // is user already login
             User user = FC.Get<User> (MsgCode.User_Login_Get);
             if (!user.Equals (default (User))) {
@@ -42,12 +81,17 @@ namespace fcapi_wpf.ViewModel {
             if (users != null) {
                 userVms = new UserViewModel[users.Length];
                 for (int i=0; i<users.Length; i++) { userVms[i] = new UserViewModel (this, users[i]); }
-                ShowAllUser ();
+
+                // is only one user
+                if (users.Length == 1)
+                    Show<UserLoginPage> (userVms[0]);
+                else
+                    ShowAllUser ();
                 return;
             }
 
-            // no user found
-            nouser = true;
+            this.page = null;
+            status = Language ("no_user");
         }
 
         public void Show<T> ( MVVM.ViewModel viewModel ) where T : Page {
@@ -55,7 +99,7 @@ namespace fcapi_wpf.ViewModel {
                 pages.Add (typeof (T), Activator.CreateInstance<T> ());
 
             page = pages[typeof (T)];
-            page.DataContext = viewModel;
+            if (viewModel != null) { page.DataContext = viewModel; }
         }
 
         public void ShowAllUser () {
@@ -122,6 +166,7 @@ namespace fcapi_wpf.ViewModel {
                             string pass = (p as PasswordBox).Password;
                             if (string.IsNullOrEmpty (pass)) { logFail = true; msgFail = Language ("null_password"); return; }
                             if (!FCApi.FC.Login (user, pass)) { logFail = true; msgFail = Language ("login_fail"); return; }
+                            vm.Show<UserViewPage> (this);
                         }
                     });
                 }

@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:fcapi_wpf.ViewModel"
         xmlns:p="clr-namespace:fcapi_wpf.Properties"
-        Title="UserWindow" Height="300" Width="450"
+        xmlns:t="clr-namespace:Tool"
+        xmlns:v="clr-namespace:fcapi_wpf.View"
+        Title="UserWindow" Height="300" Width="540"
         WindowStartupLocation="CenterScreen"
         WindowStyle="ToolWindow">
 
@@ -15,7 +17,10 @@
         <BooleanToVisibilityConverter x:Key="boolToVis"/>
     </Window.Resources>
     <Grid>
-        <Frame Content="{Binding page,Mode=TwoWay}" NavigationUIVisibility="Hidden"/>
-        <TextBlock Text="{x:Static p:Resources.no_user}" Visibility="{Binding nouser,Converter={StaticResource boolToVis}}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Frame Content="{Binding page,Mode=TwoWay}" NavigationUIVisibility="Hidden" Visibility="{Binding !inAdmin,Converter={StaticResource boolToVis}}"/>
+        <TextBlock Text="{Binding status}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Firebrick"/>
+        <Button Content="" Command="{Binding adminCmd}" Style="{StaticResource IconButton}" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10" 
+                Visibility="{Binding !inAdmin,Converter={StaticResource boolToVis}}"/>
     </Grid>
 </Window>

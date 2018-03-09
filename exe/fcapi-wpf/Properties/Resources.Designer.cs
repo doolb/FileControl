@@ -61,6 +61,42 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Close program!.
+        /// </summary>
+        public static string close {
+            get {
+                return ResourceManager.GetString("close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver is not installed!.
+        /// </summary>
+        public static string driver_no_install {
+            get {
+                return ResourceManager.GetString("driver_no_install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Driver must be loaded!.
+        /// </summary>
+        public static string driver_no_run {
+            get {
+                return ResourceManager.GetString("driver_no_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No found!.
+        /// </summary>
+        public static string empty {
+            get {
+                return ResourceManager.GetString("empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fail!.
         /// </summary>
         public static string fail {
@@ -192,6 +228,15 @@ namespace fcapi_wpf.Properties {
         public static string success {
             get {
                 return ResourceManager.GetString("success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work Root:.
+        /// </summary>
+        public static string work_root {
+            get {
+                return ResourceManager.GetString("work_root", resourceCulture);
             }
         }
     }

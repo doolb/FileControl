@@ -117,6 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="close" xml:space="preserve">
+    <value>关闭程序</value>
+  </data>
+  <data name="driver_no_install" xml:space="preserve">
+    <value>驱动未安装！</value>
+  </data>
+  <data name="driver_no_run" xml:space="preserve">
+    <value>驱动未运行！</value>
+  </data>
+  <data name="empty" xml:space="preserve">
+    <value>无</value>
+  </data>
   <data name="fail" xml:space="preserve">
     <value>失败</value>
   </data>
@@ -161,5 +173,8 @@
   </data>
   <data name="success" xml:space="preserve">
     <value>成功</value>
+  </data>
+  <data name="work_root" xml:space="preserve">
+    <value>监控目录：</value>
   </data>
 </root>

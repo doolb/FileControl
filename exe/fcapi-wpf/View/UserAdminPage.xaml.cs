@@ -10,17 +10,16 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace fcapi_wpf.View {
     /// <summary>
-    /// Interaction logic for NameWindow.xaml
+    /// Interaction logic for UserAdminPage.xaml
     /// </summary>
-    public partial class UserWindow : Window {
-        public UserWindow () {
+    public partial class UserAdminPage : Page {
+        public UserAdminPage () {
             InitializeComponent ();
-            tool = new Tool.NotifyTool ();
         }
-        Tool.NotifyTool tool;
     }
 }

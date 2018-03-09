@@ -151,6 +151,12 @@ namespace FCApi {
         public const string FilterName = "fc";
     }
 
+    public static class FC_Ext {
+        public static bool valid ( this IntPtr handle ) {
+            return handle != IntPtr.Zero && handle != (IntPtr)(-1);
+        }
+    }
+
     /// <summary>
     /// tools
     /// </summary>
@@ -172,6 +178,22 @@ namespace FCApi {
                 //throw new Win32Exception ((int)retCode);
             }
         }
+
+        /// <summary>
+        /// check is driver install
+        /// </summary>
+        protected static bool isInstall ( string driverName ) {
+            System.Management.SelectQuery query = new System.Management.SelectQuery ("Win32_SystemDriver");
+            query.Condition = string.Format ("Name = '{0}'", driverName);
+            System.Management.ManagementObjectSearcher searcher = new System.Management.ManagementObjectSearcher (query);
+            var drivers = searcher.Get ();
+
+            if (drivers.Count > 0)
+                return true;
+            else
+                return false;
+        }
+
     }
 
     /// <summary>
@@ -206,6 +228,14 @@ namespace FCApi {
     /// </summary>
     public partial class FC {
 
+        static FC () {
+            refresh ();
+        }
+
+        public static bool installed;
+        public static bool loaded;
+
+
         static IntPtr Port;
 
         public static bool Open ( Action<MsgCode> onmsg = null ) {
@@ -227,9 +257,29 @@ namespace FCApi {
         /// </summary>
         public static bool isopen { get { return Port != IntPtr.Zero && Port != (IntPtr)(-1); } }
 
+        /// <summary>
+        /// refresh data
+        /// </summary>
+        public static void refresh () {
 
-        public static void Load () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "load fc", UseShellExecute = false, CreateNoWindow = true }); }
-        public static void Unload () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "unload fc", UseShellExecute = false, CreateNoWindow = true }); }
+            // check driver install
+            installed = isInstall ("fc");
+
+            // check driver load
+            loaded = Open ();
+            if (loaded) {
+                getWorkRoot ();
+
+                Close ();
+            }
+            else {
+                workRoot = null;
+                workRootLetter = '\0';
+            }
+        }
+
+        public static void Load () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "load fc", UseShellExecute = false, CreateNoWindow = true }); refresh (); }
+        public static void Unload () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "unload fc", UseShellExecute = false, CreateNoWindow = true }); refresh (); }
     }
 
     /// <summary>
@@ -389,6 +439,8 @@ namespace FCApi {
         }
         private static char workRootLetter;
         static void getWorkRoot () {
+            if (!Port.valid ()) { return; }
+
             StringBuilder sbd = new StringBuilder (1024);
             MsgCode msg = MsgCode.WorkRoot_Get;
             int retlen = 0;
