@@ -120,6 +120,9 @@
   <data name="close" xml:space="preserve">
     <value>关闭程序</value>
   </data>
+  <data name="del_user" xml:space="preserve">
+    <value>删除用户：</value>
+  </data>
   <data name="driver_no_install" xml:space="preserve">
     <value>驱动未安装！</value>
   </data>
@@ -132,11 +135,17 @@
   <data name="fail" xml:space="preserve">
     <value>失败</value>
   </data>
+  <data name="group" xml:space="preserve">
+    <value>组：</value>
+  </data>
   <data name="login" xml:space="preserve">
     <value>登录</value>
   </data>
   <data name="login_fail" xml:space="preserve">
     <value>登录失败</value>
+  </data>
+  <data name="new_user" xml:space="preserve">
+    <value>新用户：</value>
   </data>
   <data name="no_user" xml:space="preserve">
     <value>无可用户！</value>
@@ -152,6 +161,9 @@
   </data>
   <data name="open_success" xml:space="preserve">
     <value>打开成功</value>
+  </data>
+  <data name="password" xml:space="preserve">
+    <value>密码：</value>
   </data>
   <data name="pm_name_0" xml:space="preserve">
     <value>用户读</value>

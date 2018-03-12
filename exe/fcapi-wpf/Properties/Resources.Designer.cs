@@ -70,6 +70,15 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete User:.
+        /// </summary>
+        public static string del_user {
+            get {
+                return ResourceManager.GetString("del_user", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Driver is not installed!.
         /// </summary>
         public static string driver_no_install {
@@ -106,6 +115,15 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group:.
+        /// </summary>
+        public static string group {
+            get {
+                return ResourceManager.GetString("group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Login.
         /// </summary>
         public static string login {
@@ -120,6 +138,15 @@ namespace fcapi_wpf.Properties {
         public static string login_fail {
             get {
                 return ResourceManager.GetString("login_fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New User:.
+        /// </summary>
+        public static string new_user {
+            get {
+                return ResourceManager.GetString("new_user", resourceCulture);
             }
         }
         
@@ -165,6 +192,15 @@ namespace fcapi_wpf.Properties {
         public static string open_success {
             get {
                 return ResourceManager.GetString("open_success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password:.
+        /// </summary>
+        public static string password {
+            get {
+                return ResourceManager.GetString("password", resourceCulture);
             }
         }
         

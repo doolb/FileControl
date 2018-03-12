@@ -23,6 +23,7 @@ extern KSPIN_LOCK	gFilterLock;
 extern PFLT_FILTER	gFilter;
 
 extern UNICODE_STRING gKeyRoot;
+extern UNICODE_STRING gWorkRoot;
 
 //
 // lookaside list for permission data
@@ -316,6 +317,11 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 	//
 	PFLT_FILE_NAME_INFORMATION nameInfo = NULL;
 	try{
+		//
+		// is work root has be set
+		//
+		if (gWorkRoot.Length == 0){ return FLT_NO_NEED; }
+
 		status = FltGetFileNameInformation(_data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &nameInfo);
 		// get file name failed when file is in creating
 		if (status == STATUS_FLT_INVALID_NAME_REQUEST) { status = FLT_NO_NEED; leave; }

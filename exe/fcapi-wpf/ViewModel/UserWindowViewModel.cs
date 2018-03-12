@@ -104,6 +104,7 @@ namespace fcapi_wpf.ViewModel {
 
         public void ShowAllUser () {
             Show<UserSelectPage> (this);
+            RaisePropertyChanged ("userVms");
         }
 
         public class UserViewModel : MVVM.ViewModel {
@@ -119,7 +120,7 @@ namespace fcapi_wpf.ViewModel {
                 group = user.group;
                 uid = user.uid;
                 gid = user.gid;
-                img = "https://2-im.guokr.com/FKrbvmmuROVn-mFSEv9NzeuIF3LmaiFUnUP8kRCvndCgAAAAoAAAAEpQ.jpg?imageView2/1/w/69/h/69";
+                img = "http://127.0.0.1/IMG/a.png";
             }
 
             /// <summary>
@@ -176,7 +177,8 @@ namespace fcapi_wpf.ViewModel {
             public Command showUserCmd {
                 get {
                     return _showUserCmd ?? (_showUserCmd = new Command {
-                        ExecuteDelegate = _ => vm.ShowAllUser ()
+                        ExecuteDelegate = _ => vm.ShowAllUser (),
+                        CanExecuteDelegate = _ => vm.users.Length > 1
                     });
                 }
             }
@@ -185,7 +187,9 @@ namespace fcapi_wpf.ViewModel {
             public Command selUserCmd {
                 get {
                     return _selUserCmd ??(_selUserCmd = new Command {
-                        ExecuteDelegate = _ => vm.Show<UserLoginPage> (this)
+                        ExecuteDelegate = _ => {
+                            vm.Show<UserLoginPage> (this);
+                        }
                     });
                 }
             }

@@ -450,6 +450,18 @@ namespace FCApi {
             workRootLetter = sbd[0];
             workRoot = sbd.ToString ().Substring (1, sbd.Length - 1);
         }
+
+        public static string getVolumes () {
+            if (!Port.valid ()) { return null; }
+
+            StringBuilder sbd = new StringBuilder (1024);
+            MsgCode msg = MsgCode.Volume_Query;
+            int retlen = 0;
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, sbd.Capacity, ref retlen);
+            Check (ret);
+
+            return sbd.ToString ();
+        }
     }
 
     /// <summary>

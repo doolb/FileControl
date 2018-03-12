@@ -20,11 +20,11 @@ extern PFLT_PORT gDaemonClient;
 extern User gUser;
 
 PFLT_INSTANCE gInstance;
+HANDLE gRegistry;
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
 
-	HANDLE hand = NULL;
 	OBJECT_ATTRIBUTES oa;
 	ULONG retlen = 0;
 
@@ -37,7 +37,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 		// open registry
 		InitializeObjectAttributes(&oa, _regPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-		status = ZwOpenKey(&hand, KEY_READ, &oa);
+		status = ZwOpenKey(&gRegistry, KEY_READ, &oa);
 		if (!NT_SUCCESS(status)){ loge((NAME"open registry failed. %x:%wZ \n", status, _regPath)); leave; }
 
 
@@ -45,7 +45,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		// work root path
 		//
 		retlen = 0; // we dont know the size
-		status = IUtil->getConfig(hand, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
+		status = IUtil->getConfig(gRegistry, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
 		if (!NT_SUCCESS(status)){ loge((NAME"get config: WorkRoot failed. %x \n", status)); leave; }
 		gWorkRoot.Length = gWorkRoot.MaximumLength = (USHORT)retlen;
 		log((NAME"work root dir: %wZ \n", &gWorkRoot));
@@ -67,7 +67,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 	}
 	finally{
-		if (hand) ZwClose(hand); hand = NULL;
 	}
 
 	return status;
@@ -75,6 +74,9 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 void onexit(){
 	if (gWorkRoot.Buffer){ ExFreePoolWithTag(gWorkRoot.Buffer, NAME_TAG); gWorkRoot.Buffer = NULL; }
+
+
+	if (gRegistry) ZwClose(gRegistry); gRegistry = NULL;
 
 	//
 	// delete lookaside list
@@ -128,7 +130,7 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	status = IUserKey->read(list->instance, &list->GUID, &list->key);
 	if (NT_SUCCESS(status)){
 		logw((NAME"find a user"));
-		list->isHasUser = TRUE;
+		vl_sethasUser(list);
 	}
 
 	//
@@ -136,7 +138,7 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	//
 	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		{
 		gWorkRootLetter = list->letter;	// save the letter
-		list->isWorkRoot = TRUE;		// set flag
+		vl_setWorkRoot(list);
 		gInstance = instance;			// save the instance
 	}
 

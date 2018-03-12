@@ -3,8 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:metor="http://metro.mahapps.com/winfx/xaml/controls"
       xmlns:vm="clr-namespace:fcapi_wpf.ViewModel"
       xmlns:p="clr-namespace:fcapi_wpf.Properties"
+      xmlns:t="clr-namespace:Tool"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
 	Title="UserAdminPage">
@@ -36,12 +38,38 @@
             <Button Command="{Binding loadCmd}" Style="{StaticResource IconButton}" 
                     Content="" Margin="0,6,6,0" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
         </DockPanel>
-        
+
 
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <TextBlock Text="{x:Static p:Resources.work_root}" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding workRoot}" MinWidth="50" Margin="10,0,0,0"/>
-            <Button Style="{StaticResource IconButton}" Content="" Margin="0" Height="25" Width="25" BorderThickness="0"/>
+            <metor:SplitButton Height="20" ItemsSource="{Binding volumes}" DisplayMemberPath="letter" SelectedIndex="{Binding selVolume}" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <TextBlock Text="{x:Static p:Resources.group}" VerticalAlignment="Center"/>
+            <metor:SplitButton Height="20" ItemsSource="{Binding groups}" DisplayMemberPath="name" SelectedIndex="{Binding selGroup}" Margin="10,0,0,0"/>
+            <Button Command="{Binding delGroupCmd}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
+            <TextBox Name="tb_group" Width="60" Height="20" />
+            <Button Command="{Binding addGroupCmd}" CommandParameter="{Binding ElementName=tb_group,Path=Text}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" t:MarginSetter.Margin="5,0,0,0">
+            <TextBlock Text="{x:Static p:Resources.new_user}" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding newUserName}" Width="60" Height="20" />
+            <TextBlock Text="{x:Static p:Resources.password}" VerticalAlignment="Center"/>
+            <PasswordBox Name="pb_user" Height="20" Width="60"/>
+            <metor:SplitButton Height="20" ItemsSource="{Binding groups}" DisplayMemberPath="name" SelectedIndex="{Binding newUserGroup}" Margin="10,0,0,0"/>
+            <metor:SplitButton Height="20" ItemsSource="{Binding nomVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding newUserVolume}" Margin="10,0,0,0"/>
+            <Button Command="{Binding newUserCmd}" CommandParameter="{Binding ElementName=pb_user,Path=Password}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
+        </StackPanel>
+
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" t:MarginSetter.Margin="5,0,0,0">
+            <TextBlock Text="{x:Static p:Resources.del_user}" VerticalAlignment="Center"/>
+
+            <metor:SplitButton Height="20" ItemsSource="{Binding userVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding selUserVolume}" Margin="10,0,0,0"/>
+
+            <Button Command="{Binding delUserCmd}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
         </StackPanel>
     </Grid>
 </Page>

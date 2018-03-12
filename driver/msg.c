@@ -8,6 +8,7 @@ extern PFLT_INSTANCE gInstance;
 extern LIST_ENTRY gVolumeList;
 extern WCHAR gWorkRootLetter;
 extern PFLT_FILTER gFilter;
+extern HANDLE gRegistry;
 extern User gUser;
 
 NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
@@ -22,7 +23,7 @@ NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
 	//	
 	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 		list = CONTAINING_RECORD(e, VolumeList, list);
-		if (list->isHasUser)
+		if (vl_ishasUser(list))
 			count++;
 	}
 	*retlen = count * sizeof(User);
@@ -38,7 +39,7 @@ NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
 
 		for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 			list = CONTAINING_RECORD(e, VolumeList, list);
-			if (list->isHasUser){
+			if (vl_ishasUser(list)){
 				memcpy_s((PVOID)buff, sizeof(User), &list->key.user, sizeof(User));
 
 				buff += sizeof(User);
@@ -89,7 +90,7 @@ NTSTATUS user_registry(void* buffer, unsigned long size, unsigned long *retlen){
 	// save key to volume lsit
 	//
 	memcpy_s(&volume->key, sizeof(UserKey), key, sizeof(UserKey));
-	volume->isHasUser = TRUE;
+	vl_sethasUser(volume);
 
 	//
 	// login user
@@ -121,7 +122,7 @@ NTSTATUS user_login(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 		list = CONTAINING_RECORD(e, VolumeList, list);
-		if (list->isHasUser &&
+		if (vl_ishasUser(list) &&
 			memcmp(&list->key.user.uid, &login->user.uid, sizeof(GUID)) == 0){
 			volume = list;
 			break;
@@ -141,6 +142,7 @@ NTSTATUS user_login(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	RtlCopyUnicodeString(&gKeyRoot, &volume->GUID);
 	memcpy_s(&gUser, sizeof(User), &volume->key.user, sizeof(User));
+	vl_setKeyRoot(volume);
 
 	loge((NAME"user login in. %ws", volume->letter));
 	status = STATUS_SUCCESS;
@@ -302,13 +304,13 @@ NTSTATUS file_set(void* buffer, unsigned long size, unsigned long *retlen){
 
 NTSTATUS volume_query(void* buffer, unsigned long size, unsigned long *retlen){
 	NTSTATUS status = STATUS_SUCCESS;
-	PLIST_ENTRY head = &gVolumeList;
+	PLIST_ENTRY head = &gVolumeList;	
 	PVolumeList list = NULL;
 
 	//
 	// check size
 	//
-	ULONG needSize = 26 * sizeof(WCHAR);
+	ULONG needSize = 25 * (sizeof(WCHAR) + sizeof(WCHAR)); // letter + type
 	if (!buffer || size < needSize){
 		*retlen = needSize;
 		return STATUS_BUFFER_TOO_SMALL;
@@ -319,11 +321,12 @@ NTSTATUS volume_query(void* buffer, unsigned long size, unsigned long *retlen){
 	PWCHAR letters = buffer;
 	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 		list = CONTAINING_RECORD(e, VolumeList, list);
-		if (list->letter &&
-			!list->isWorkRoot)
+		if (list->letter){
 			letters[i++] = list->letter;
+			letters[i++] = list->state;
+		}
 	}
-	*retlen = i * sizeof(WCHAR);
+	*retlen = (i / 2) * (sizeof(WCHAR) + sizeof(WCHAR));
 
 	return status;
 }
@@ -341,6 +344,42 @@ NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
+
+	if (!buffer || size != sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_INVALID_BUFFER_SIZE; }
+	WCHAR letter = *((PWCHAR)buffer);
+	PLIST_ENTRY head = &gVolumeList;
+	PVolumeList list = NULL;
+	PVolumeList volume = NULL;
+	//
+	// found the volume
+	//
+	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+		list = CONTAINING_RECORD(e, VolumeList, list);
+		if (vl_ishasUser(list) &&
+			list->letter == letter){
+			volume = list;
+			break;
+		}
+	}
+	if (!volume){ return STATUS_NOT_SUPPORTED; }
+
+	//
+	// save config
+	//
+	NTSTATUS status = STATUS_SUCCESS;
+	status = IUtil->setConfig(gRegistry, L"WorkRoot", volume->GUID.Buffer, volume->GUID.Length, REG_SZ);
+	if (!NT_SUCCESS(status)){ loge((NAME"set config (%ws.%x) failed", L"WorkRoot", status)); return status; }
+
+	//
+	// set value
+	//
+	memcpy_s(gWorkRoot.Buffer, gWorkRoot.MaximumLength, buffer, size);
+	gWorkRoot.Length = (USHORT)wcsnlen_s(buffer, size);
+	gWorkRootLetter = letter;
+	vl_setWorkRoot(volume);
+	return STATUS_SUCCESS;
+}
 
 // NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 // 

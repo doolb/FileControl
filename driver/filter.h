@@ -49,13 +49,23 @@ typedef struct _VolumeList
 	// use key install on this volume
 	//
 	UserKey	key;
-	BOOL		isHasUser;
 
 	//
-	// is work root
+	// volume state: (N:normal, W:work root, U:has user, K:user login root) 
 	//
-	BOOL		isWorkRoot;
+	WCHAR state;
 }VolumeList, *PVolumeList;
+
+
+#define vl_isWorkRoot(vl) ((vl)->state == L'W')
+#define vl_setWorkRoot(vl) ((vl)->state = L'W')
+
+#define vl_isKeyRoot(vl) ((vl)->state == L'K')
+#define vl_setKeyRoot(vl) ((vl)->state = L'K')
+
+#define vl_ishasUser(vl) ((vl)->state == L'U')
+#define vl_sethasUser(vl) ((vl)->state = L'U')
+
 
 #define FLT_TAG 'Fttg'
 

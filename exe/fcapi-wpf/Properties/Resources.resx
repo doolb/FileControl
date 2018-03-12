@@ -120,6 +120,9 @@
   <data name="close" xml:space="preserve">
     <value>Close program!</value>
   </data>
+  <data name="del_user" xml:space="preserve">
+    <value>Delete User:</value>
+  </data>
   <data name="driver_no_install" xml:space="preserve">
     <value>Driver is not installed!</value>
   </data>
@@ -132,11 +135,17 @@
   <data name="fail" xml:space="preserve">
     <value>Fail!</value>
   </data>
+  <data name="group" xml:space="preserve">
+    <value>Group:</value>
+  </data>
   <data name="login" xml:space="preserve">
     <value>Login</value>
   </data>
   <data name="login_fail" xml:space="preserve">
     <value>Login Failed!</value>
+  </data>
+  <data name="new_user" xml:space="preserve">
+    <value>New User:</value>
   </data>
   <data name="no_user" xml:space="preserve">
     <value>User no found!</value>
@@ -152,6 +161,9 @@
   </data>
   <data name="open_success" xml:space="preserve">
     <value>Open Success!</value>
+  </data>
+  <data name="password" xml:space="preserve">
+    <value>Password:</value>
   </data>
   <data name="pm_name_0" xml:space="preserve">
     <value>User(R)</value>
