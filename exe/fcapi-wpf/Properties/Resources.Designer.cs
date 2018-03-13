@@ -160,6 +160,15 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Work Root no set!.
+        /// </summary>
+        public static string no_work_dir {
+            get {
+                return ResourceManager.GetString("no_work_dir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Password is invalid!.
         /// </summary>
         public static string null_password {

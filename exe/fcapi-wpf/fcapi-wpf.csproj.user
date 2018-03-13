@@ -8,7 +8,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
     <StartWorkingDirectory>
     </StartWorkingDirectory>
-    <StartProgram>C:\Users\blue\Desktop\Debug\fcapi-wpf.exe</StartProgram>
+    <StartProgram>C:\Users\blue\Desktop\exe\fc.exe</StartProgram>
   </PropertyGroup>
   <PropertyGroup>
     <PublishUrlHistory>publish\</PublishUrlHistory>
@@ -19,5 +19,23 @@
     <ErrorReportUrlHistory />
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <StartProgram>C:\Users\blue\Desktop\exe\fc.exe</StartProgram>
+    <StartAction>Program</StartAction>
+    <RemoteDebugEnabled>true</RemoteDebugEnabled>
+    <RemoteDebugMachine>localhost:6868</RemoteDebugMachine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <RemoteDebugMachine>localhost:6868</RemoteDebugMachine>
+    <RemoteDebugEnabled>true</RemoteDebugEnabled>
+    <StartProgram>C:\Users\blue\Desktop\exe\fc.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <StartAction>Program</StartAction>
+    <RemoteDebugMachine>localhost:6868</RemoteDebugMachine>
+    <RemoteDebugEnabled>true</RemoteDebugEnabled>
+    <StartProgram>C:\Users\blue\Desktop\exe\fc.exe</StartProgram>
   </PropertyGroup>
 </Project>

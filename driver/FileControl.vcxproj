@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" 
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Win8.1 Debug|Win32">
       <Configuration>Win8.1 Debug</Configuration>
@@ -175,8 +176,7 @@
     <DriverType>WDM</DriverType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings"></ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -341,6 +341,13 @@
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets"></ImportGroup>
+
+  <ItemGroup>
+    <OutFiles Include="$(OutDir)*.sys;$(OutDir)*.cer;$(OutDir)*.inf;"/>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <Message Text="copy file to install" />
+    <Copy SourceFiles="@(OutFiles)" DestinationFolder="$(SolutionDir)install\drv\$(Platform)\"/>
+  </Target>
 </Project>

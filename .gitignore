@@ -4,6 +4,11 @@ Win8.1Debug/
 Debug/
 Release/
 packages/
+Win32/
+x64/
+
+*.dll
+*.exe
 
 # ----[ Visual Studio / MonoDevelop generated ]------- #
  

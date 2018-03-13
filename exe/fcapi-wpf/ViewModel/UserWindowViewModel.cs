@@ -51,23 +51,17 @@ namespace fcapi_wpf.ViewModel {
 
         public void refresh () {
             // is driver installed
-            if (!FC.installed) {
-                status = Language ("driver_no_install");
-                this.page = null;
-                return;
-            }
+            if (!FC.installed) { status = Language ("driver_no_install"); this.page = null; return; }
 
             // is driver load
-            if (!FC.loaded) {
-                status = Language ("driver_no_run");
-                this.page = null;
-                return;
-            }
+            if (!FC.loaded) { status = Language ("driver_no_run"); this.page = null; return; }
 
             // open driver
             if (!FC.isopen) {
                 FC.Open (null);
             }
+
+            if (FC.WorkRoot == null) { status = Language ("no_work_dir"); this.page = null; return; }
 
             // is user already login
             User user = FC.Get<User> (MsgCode.User_Login_Get);

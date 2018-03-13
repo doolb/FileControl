@@ -150,6 +150,9 @@
   <data name="no_user" xml:space="preserve">
     <value>无可用户！</value>
   </data>
+  <data name="no_work_dir" xml:space="preserve">
+    <value>监控目录未设置</value>
+  </data>
   <data name="null_password" xml:space="preserve">
     <value>密码无效！</value>
   </data>

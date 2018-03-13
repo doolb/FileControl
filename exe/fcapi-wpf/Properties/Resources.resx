@@ -150,6 +150,9 @@
   <data name="no_user" xml:space="preserve">
     <value>User no found!</value>
   </data>
+  <data name="no_work_dir" xml:space="preserve">
+    <value>Work Root no set!</value>
+  </data>
   <data name="null_password" xml:space="preserve">
     <value>Password is invalid!</value>
   </data>

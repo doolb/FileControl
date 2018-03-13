@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">      
+
+    <ItemGroup>
+        <Nsis Include='"C:\Program%20Files%20(x86)\NSIS\Unicode\makensis.exe"'/>
+        <Src Include='"$(SolutionDir)install\fc.nsi"'/>
+    </ItemGroup>
+
+    <Target Name="Build">
+        <Exec Command="echo makensis build..."/>  
+        <Exec Command="@(Nsis) @(Src)"/>          
+    </Target>
+</Project>

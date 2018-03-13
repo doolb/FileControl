@@ -199,7 +199,7 @@ namespace fcapi_wpf.ViewModel {
                 JsonSerializer js = new JsonSerializer ();
                 js.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamReader sr = new StreamReader ("group.json", Encoding.UTF8))
+                using (StreamReader sr = new StreamReader ("../group.json", Encoding.UTF8))
                 using (JsonTextReader tr = new JsonTextReader (sr)) {
                     groups = js.Deserialize<ObservableCollection<Group>> (tr);
                     if (groups == null) { groups = new ObservableCollection<Group> (); }
@@ -213,7 +213,7 @@ namespace fcapi_wpf.ViewModel {
                 JsonSerializer js = new JsonSerializer ();
                 js.NullValueHandling = NullValueHandling.Ignore;
 
-                using (StreamWriter sw = new StreamWriter ("group.json", false, Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter ("../group.json", false, Encoding.UTF8))
                 using (JsonTextWriter tw = new JsonTextWriter (sw)) {
                     js.Serialize (tw, groups);
                 }
