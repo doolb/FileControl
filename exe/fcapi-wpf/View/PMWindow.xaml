@@ -23,6 +23,8 @@
         </Grid.RowDefinitions>
         <TextBlock Text="{Binding file}" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="0"/>
 
+        <TextBlock Text="{Binding status}" Grid.Row="2" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Firebrick"/>
+
         <TextBlock Text="{Binding userName}" Grid.Row="1">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">

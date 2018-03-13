@@ -50,6 +50,8 @@ namespace fcapi_wpf.ViewModel {
         }
 
         public void refresh () {
+            if (!IsAdministrator ()) { status = Language ("admin"); return; }
+
             // is driver installed
             if (!FC.installed) { status = Language ("driver_no_install"); this.page = null; return; }
 

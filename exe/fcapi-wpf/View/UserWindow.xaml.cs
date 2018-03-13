@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Tool;
 
 namespace fcapi_wpf.View {
     /// <summary>
@@ -19,8 +20,8 @@ namespace fcapi_wpf.View {
     public partial class UserWindow : Window {
         public UserWindow () {
             InitializeComponent ();
-            tool = new Tool.NotifyTool ();
+            tool = new NotifyTool ();
         }
-        Tool.NotifyTool tool;
+        NotifyTool tool;
     }
 }

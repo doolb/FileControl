@@ -42,7 +42,10 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal">
             <TextBlock Text="{x:Static p:Resources.work_root}" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding workLetter}" VerticalAlignment="Center" Margin="10,10,0,10"/>
             <metor:SplitButton Height="20" ItemsSource="{Binding volumes}" DisplayMemberPath="letter" SelectedIndex="{Binding selVolume}" Margin="10,0,0,0"/>
+            <Button Command="{Binding setWorkRootCmd}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
+            <Button Command="{Binding delWorkRootCmd}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">
@@ -59,7 +62,7 @@
             <TextBlock Text="{x:Static p:Resources.password}" VerticalAlignment="Center"/>
             <PasswordBox Name="pb_user" Height="20" Width="60"/>
             <metor:SplitButton Height="20" ItemsSource="{Binding groups}" DisplayMemberPath="name" SelectedIndex="{Binding newUserGroup}" Margin="10,0,0,0"/>
-            <metor:SplitButton Height="20" ItemsSource="{Binding nomVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding newUserVolume}" Margin="10,0,0,0"/>
+            <metor:SplitButton Height="20" ItemsSource="{Binding remVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding newUserVolume}" Margin="10,0,0,0"/>
             <Button Command="{Binding newUserCmd}" CommandParameter="{Binding ElementName=pb_user,Path=Password}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
         </StackPanel>
 

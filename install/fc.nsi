@@ -98,17 +98,21 @@ Section "MainSection" SEC01
   SetOutPath "$INSTDIR\exe"
   SetOverwrite ifnewer
 
-  DetailPrint "copy file..."
+  DetailPrint "===========copy file...==========="
   File /nonfatal /a /r "exe\"
 
-  DetailPrint "create shortcut..."
+  DetailPrint "===========create shortcut...====="
   CreateDirectory "$SMPROGRAMS\fc"
   CreateShortCut "$SMPROGRAMS\fc\fc.lnk" "$INSTDIR\exe\fc.exe"
   CreateShortCut "$DESKTOP\fc.lnk" "$INSTDIR\exe\fc.exe"
   CreateShortCut "$SMSTARTUP\fc.lnk" "$INSTDIR\exe\fc.exe"
+
+  DetailPrint "RightMenu..."
+  Writeregstr HKCR "*\shell\fc\command" "" '"$INSTDIR\exe\fc.exe" "%1"'
+
   
   ; install driver
-  DetailPrint "install driver..."
+  DetailPrint "===========install driver...============="
   SetOutPath "$INSTDIR\drv"
   
   ; x64 :https://stackoverflow.com/questions/13229212/how-to-detect-windows-32bit-or-64-bit-using-nsis-script
@@ -189,6 +193,7 @@ Section Uninstall
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
+  DeleteRegKey HKCR "*\shell\fc"
 
   RMDir "$INSTDIR"  
 

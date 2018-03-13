@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
-
 using p = fcapi_wpf.Properties;
 
 namespace MVVM {
@@ -38,9 +38,20 @@ namespace MVVM {
         #endregion
 
         #region 函数
+        /// <summary>
+        /// get the language,if no found return the orgin key
+        /// </summary>
         public static string Language ( string key ) {
             return p.Resources.ResourceManager.GetString (key) ?? key;
         }
+
+        /// <summary>
+        /// test you is admin or not
+        /// </summary>
+        public static bool IsAdministrator () {
+            return (new WindowsPrincipal (WindowsIdentity.GetCurrent ()))
+                      .IsInRole (WindowsBuiltInRole.Administrator);
+        }  
 
         #endregion
     }

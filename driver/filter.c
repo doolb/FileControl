@@ -47,8 +47,11 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		retlen = 0; // we dont know the size
 		status = IUtil->getConfig(gRegistry, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
 		if (!NT_SUCCESS(status)){ loge((NAME"get config: WorkRoot failed. %x \n", status)); leave; }
-		gWorkRoot.Length = gWorkRoot.MaximumLength = (USHORT)retlen;
-		log((NAME"work root dir: %wZ \n", &gWorkRoot));
+		if (retlen > 0){
+			gWorkRoot.Length = (USHORT)retlen;
+			gWorkRoot.MaximumLength = sizeof(gKeyRoot_Buffer);
+			log((NAME"work root dir: %wZ \n", &gWorkRoot));
+		}
 
 		//
 		// setup key root
@@ -73,8 +76,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 }
 
 void onexit(){
-	if (gWorkRoot.Buffer){ ExFreePoolWithTag(gWorkRoot.Buffer, NAME_TAG); gWorkRoot.Buffer = NULL; }
-
 
 	if (gRegistry) ZwClose(gRegistry); gRegistry = NULL;
 
@@ -114,7 +115,6 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	//
 	RtlInitEmptyUnicodeString(&list->GUID, list->_GUID_Buffer, sizeof(WCHAR) * GUID_SIZE);
 	RtlCopyUnicodeString(&list->GUID, &ctx->GUID);
-	list->type = ctx->prop->DeviceCharacteristics;
 
 	//
 	// save volume letter
@@ -124,22 +124,29 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	else
 		list->letter = 0;
 
-	//
-	// load user key 
-	//
-	status = IUserKey->read(list->instance, &list->GUID, &list->key);
-	if (NT_SUCCESS(status)){
-		logw((NAME"find a user"));
-		vl_sethasUser(list);
+	if (ctx->prop->DeviceCharacteristics & FILE_REMOVABLE_MEDIA) {
+		//
+		// can load user key 
+		//
+		status = IUserKey->read(list->instance, &list->GUID, &list->key);
+		if (NT_SUCCESS(status)){
+			logw((NAME"find a user"));
+			vl_sethasUser(list);
+		}
+		else
+			vl_setRemove(list);
 	}
-
-	//
-	// is work root
-	//
-	if (wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		{
-		gWorkRootLetter = list->letter;	// save the letter
-		vl_setWorkRoot(list);
-		gInstance = instance;			// save the instance
+	else{
+		//
+		// is work root
+		//
+		if (gWorkRoot.Length > 0 && wcsstr(gWorkRoot.Buffer, list->GUID.Buffer))		{
+			gWorkRootLetter = list->letter;	// save the letter
+			vl_setWorkRoot(list);
+			gInstance = instance;			// save the instance
+		}
+		else
+			vl_setNormal(list);
 	}
 
 	return (PLIST_ENTRY)list;

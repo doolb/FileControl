@@ -40,24 +40,53 @@ namespace fcapi_wpf.ViewModel {
         public Command unloadCmd { get { return _unloadCmd ?? (_unloadCmd = new Command { ExecuteDelegate = _ => { FC.Unload (); refresh (); }, CanExecuteDelegate = _ => FC.installed && FC.loaded }); } }
         private Command _unloadCmd;
 
+        public string workLetter { get { return _workLetter; } set { _workLetter = value; RaisePropertyChanged (); } }
+        private string _workLetter;
+
         /// <summary>
         /// the volume can be set as work root
         /// </summary>
-        public List<Volume> volumes { get { return _volumes; } set { _volumes = value; RaisePropertyChanged (); } }
-        private List<Volume> _volumes;
+        public ObservableCollection<Volume> volumes { get { return _volumes; } set { _volumes = value; RaisePropertyChanged (); } }
+        private ObservableCollection<Volume> _volumes = new ObservableCollection<Volume> ();
         public int selVolume { get { return _selVolume; } set { _selVolume = value; RaisePropertyChanged (); } }
         private int _selVolume;
         /// <summary>
         /// the volume dont has user key or work root
         /// </summary>
-        public List<Volume> nomVolumes { get { return _nomVolumes; } set { _nomVolumes = value; RaisePropertyChanged (); } }
-        private List<Volume> _nomVolumes;
+        public ObservableCollection<Volume> nomVolumes { get { return _nomVolumes; } set { _nomVolumes = value; RaisePropertyChanged (); } }
+        private ObservableCollection<Volume> _nomVolumes = new ObservableCollection<Volume> ();
 
         /// <summary>
         /// the volume has user key
         /// </summary>
-        public List<Volume> userVolumes { get { return _userVolumes; } set { _userVolumes = value; RaisePropertyChanged (); } }
-        private List<Volume> _userVolumes;
+        public ObservableCollection<Volume> userVolumes { get { return _userVolumes; } set { _userVolumes = value; RaisePropertyChanged (); } }
+        private ObservableCollection<Volume> _userVolumes = new ObservableCollection<Volume> ();
+
+        /// <summary>
+        /// the volume can add new user
+        /// </summary>
+        public ObservableCollection<Volume> remVolumes { get { return _remVolumes; } set { _remVolumes = value; RaisePropertyChanged (); } }
+        private ObservableCollection<Volume> _remVolumes = new ObservableCollection<Volume> ();
+        public Command setWorkRootCmd {
+            get {
+                return _setWorkRootCmd??(_setWorkRootCmd = new Command {
+                    ExecuteDelegate = _ => { if (FC.setWorkRoot (volumes[selVolume].letter[0])) refresh (); },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _setWorkRootCmd;
+
+        public Command delWorkRootCmd {
+            get {
+                return _delWorkRootCmd??(_delWorkRootCmd = new Command {
+                    ExecuteDelegate = _ => { if (FC.setWorkRoot ('\0')) refresh (); },
+                    CanExecuteDelegate = _ => FC.isopen
+                });
+            }
+        }
+        private Command _delWorkRootCmd;
+
 
         #region group
         public ObservableCollection<Group> groups { get { return _groups; } set { _groups = value; RaisePropertyChanged (); } }
@@ -160,14 +189,10 @@ namespace fcapi_wpf.ViewModel {
         private Volume[] allVolume;
 
         void queryVolume () {
+            workLetter = Language ("empty");
 
-            volumes = new List<Volume> ();
-            nomVolumes = new List<Volume> ();
-            userVolumes = new List<Volume> ();
             string v = FC.getVolumes ();
             if (v == null) {
-                volumes.Add (new Volume { letter = Language ("empty") });
-                selVolume = 0;
                 return;
             }
 
@@ -180,12 +205,20 @@ namespace fcapi_wpf.ViewModel {
                 if (state == 'W') { allVolume[i].isWorkRoot = true; continue; }
                 else if (state == 'K') { allVolume[i].isKeyRoot = true; continue; }
                 else if (state == 'U') { allVolume[i].isHasUser = true; continue; }
+                else if (state == 'R') { allVolume[i].isRemote = true; continue; }
             }
 
+            volumes.Clear ();
+            remVolumes.Clear ();
+            nomVolumes.Clear ();
+            userVolumes.Clear ();
             for (int i=0; i<allVolume.Length; i++) {
-                if (allVolume[i].isWorkRoot) { volumes.Add (allVolume[i]); selVolume = 0; }
+                if (allVolume[i].isWorkRoot) { volumes.Add (allVolume[i]); workLetter = allVolume[i].letter; }
                 else if (allVolume[i].isHasUser || allVolume[i].isKeyRoot) {
                     userVolumes.Add (allVolume[i]);
+                }
+                else if (allVolume[i].isRemote) {
+                    remVolumes.Add (allVolume[i]);
                 }
                 else {
                     nomVolumes.Add (allVolume[i]);
@@ -226,6 +259,7 @@ namespace fcapi_wpf.ViewModel {
             public bool isKeyRoot { get; set; }
             public bool isHasUser { get; set; }
             public bool isWorkRoot { get; set; }
+            public bool isRemote { get; set; }
         }
 
         public class Group {

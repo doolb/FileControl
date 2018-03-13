@@ -171,12 +171,16 @@ namespace FCApi {
             }
         }
 
-        protected static void Check ( uint retCode ) {
+        protected static bool Check ( uint retCode ) {
             Debug.WriteLine (new Win32Exception ((int)retCode).Message);
             if (retCode == 0x80070006) { // The handle is invalid. (Exception from HRESULT: 0x80070006 (E_HANDLE))
                 Port = IntPtr.Zero;
                 //throw new Win32Exception ((int)retCode);
             }
+
+            if (retCode == 0)
+                return true;
+            return false;
         }
 
         /// <summary>
@@ -451,6 +455,18 @@ namespace FCApi {
             workRootLetter = sbd[0];
             workRoot = sbd.ToString ().Substring (1, sbd.Length - 1);
         }
+        public static bool setWorkRoot ( char letter ) {
+            if (!Port.valid ()) { return false; }
+
+            int retlen = 0;
+            MsgCode msg = MsgCode.WorkRoot_Set;
+            StringBuilder sbd = new StringBuilder (letter.ToString ());
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, 2, ref retlen);
+
+            if (Check (ret))
+                return true;
+            return false;
+        }
 
         public static string getVolumes () {
             if (!Port.valid ()) { return null; }
@@ -470,7 +486,7 @@ namespace FCApi {
     /// </summary>
     public partial class FC {
         public static Msg_File getFilePM ( string path ) {
-            if (path[0] != WorkRootLetter || !isopen)
+            if (char.ToUpper (path[0]) != WorkRootLetter || !isopen)
                 return default (Msg_File);
 
             int retlen = 0;

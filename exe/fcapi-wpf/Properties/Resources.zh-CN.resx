@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="admin" xml:space="preserve">
+    <value>需要管理员权限！</value>
+  </data>
+  <data name="clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
   <data name="close" xml:space="preserve">
     <value>关闭程序</value>
   </data>
@@ -152,6 +158,9 @@
   </data>
   <data name="no_work_dir" xml:space="preserve">
     <value>监控目录未设置</value>
+  </data>
+  <data name="Null" xml:space="preserve">
+    <value>无！</value>
   </data>
   <data name="null_password" xml:space="preserve">
     <value>密码无效！</value>

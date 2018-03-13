@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="admin" xml:space="preserve">
+    <value>Require Administrator privilege!</value>
+  </data>
+  <data name="clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
   <data name="close" xml:space="preserve">
     <value>Close program!</value>
   </data>
@@ -152,6 +158,9 @@
   </data>
   <data name="no_work_dir" xml:space="preserve">
     <value>Work Root no set!</value>
+  </data>
+  <data name="Null" xml:space="preserve">
+    <value>Null!</value>
   </data>
   <data name="null_password" xml:space="preserve">
     <value>Password is invalid!</value>

@@ -66,7 +66,7 @@ HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
 HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
 HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
 
-HKR,,"WorkRoot",0x00000000,"\??\Volume{e6819827-fd02-11e7-8763-000c29dc5a92}\"
+HKR,,"WorkRoot",0x00000000,""
 ;
 ; Copy Files
 ;

@@ -24,6 +24,9 @@ namespace fcapi_wpf.ViewModel {
         private Msg_File fileInfo;
         private User user;
 
+        public string status { get { return _status; } set { _status = value; RaisePropertyChanged (); } }
+        private string _status;
+
         public Command updateCmd {
             get {
                 return _updateCmd ??(_updateCmd = new Command {
@@ -42,12 +45,20 @@ namespace fcapi_wpf.ViewModel {
         /// <param name="path"></param>
         /// <returns></returns>
         public bool open ( string path ) {
+            file = path;
+
+            if (!IsAdministrator ()) { status = Language ("admin"); return false; }
+            // is driver installed
+            if (!FC.installed) { status = Language ("driver_no_install"); return false; }
+            // is driver load
+            if (!FC.loaded) { status = Language ("driver_no_run"); return false; }
+
+            if (FC.WorkRoot == null) { status = Language ("no_work_dir"); return false; }
+
             // get file info
             fileInfo = FC.getFilePM (path);
             if (fileInfo.Equals (default (Msg_File)))
                 return false;
-
-            file = path;
 
             userName = fileInfo.user.user + "  " + fileInfo.user.group;
 
@@ -67,6 +78,7 @@ namespace fcapi_wpf.ViewModel {
                 };
             }
 
+            status = "";
             return true;
         }
 

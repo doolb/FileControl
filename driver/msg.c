@@ -304,7 +304,7 @@ NTSTATUS file_set(void* buffer, unsigned long size, unsigned long *retlen){
 
 NTSTATUS volume_query(void* buffer, unsigned long size, unsigned long *retlen){
 	NTSTATUS status = STATUS_SUCCESS;
-	PLIST_ENTRY head = &gVolumeList;	
+	PLIST_ENTRY head = &gVolumeList;
 	PVolumeList list = NULL;
 
 	//
@@ -346,7 +346,7 @@ NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 
 NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 
-	if (!buffer || size != sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_INVALID_BUFFER_SIZE; }
+	if (!buffer || size < sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_INVALID_BUFFER_SIZE; }
 	WCHAR letter = *((PWCHAR)buffer);
 	PLIST_ENTRY head = &gVolumeList;
 	PVolumeList list = NULL;
@@ -354,10 +354,11 @@ NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// found the volume
 	//
+	WCHAR tofind = letter > 0 ? letter : gWorkRootLetter;
 	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
 		list = CONTAINING_RECORD(e, VolumeList, list);
-		if (vl_ishasUser(list) &&
-			list->letter == letter){
+		if (!vl_ishasUser(list) &&
+			list->letter == tofind){
 			volume = list;
 			break;
 		}
@@ -368,16 +369,26 @@ NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 	// save config
 	//
 	NTSTATUS status = STATUS_SUCCESS;
-	status = IUtil->setConfig(gRegistry, L"WorkRoot", volume->GUID.Buffer, volume->GUID.Length, REG_SZ);
+	if (letter > 0)
+		status = IUtil->setConfig(gRegistry, L"WorkRoot", volume->GUID.Buffer, volume->GUID.Length, REG_SZ);
+	else
+		status = IUtil->setConfig(gRegistry, L"WorkRoot", &letter, sizeof(letter), REG_SZ);
 	if (!NT_SUCCESS(status)){ loge((NAME"set config (%ws.%x) failed", L"WorkRoot", status)); return status; }
 
 	//
 	// set value
 	//
-	memcpy_s(gWorkRoot.Buffer, gWorkRoot.MaximumLength, buffer, size);
-	gWorkRoot.Length = (USHORT)wcsnlen_s(buffer, size);
-	gWorkRootLetter = letter;
-	vl_setWorkRoot(volume);
+	if (letter > 0){
+		RtlCopyUnicodeString(&gWorkRoot, &list->GUID);
+		gWorkRootLetter = letter;
+		vl_setWorkRoot(volume);
+	}
+	else{
+		gWorkRoot.Length = 0;
+		gWorkRootLetter = letter;
+		vl_setNormal(volume);
+	}
+	loge((NAME"set work root to: %wc", letter));
 	return STATUS_SUCCESS;
 }
 
@@ -408,5 +419,5 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 
 	// work root
 	workroot_get,	//MsgCode_WorkRoot_Get,
-	NULL,	//MsgCode_WorkRoot_Set,
+	workroot_set,	//MsgCode_WorkRoot_Set,
 };

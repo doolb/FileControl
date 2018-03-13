@@ -111,12 +111,13 @@
     <Compile Include="Model\MarginSetter.cs">
       <Generator>MSBuild:Compile</Generator>
     </Compile>
-    <Compile Include="Model\NotifyTool.cs" />
+    <Compile Include="Tool\NotifyTool.cs" />
     <Compile Include="Properties\Resources.zh-CN.Designer.cs">
       <DependentUpon>Resources.zh-CN.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Tool\PipeManager.cs" />
     <Compile Include="ViewModel\MsgLineViewModel.cs" />
     <Compile Include="ViewModel\UserWindowViewModel.cs" />
     <Compile Include="ViewModel\PMWindowViewModel.cs" />
@@ -215,8 +216,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.manifest">
       <SubType>Designer</SubType>
@@ -235,9 +236,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Fonts\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
       <Visible>False</Visible>
@@ -256,12 +255,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="res\icon-32.ico">
+    <Content Include="res\icon-32.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Expression\Blend\.NETFramework\v4.5\Microsoft.Expression.Blend.WPF.targets" />
@@ -272,15 +268,14 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>  
-    <OutFiles Include="$(OutDir)*.dll;$(OutDir)fc.exe;"/>
-    <ResFiles Include="$(OutDir)res\icon-32.ico;$(OutDir)res\seguisym.ttf;"/>
-  </ItemGroup>  
-  
-    <Target Name="AfterBuild">
-        <Message Text="copy file to install" />
-        <Copy  SourceFiles="@(OutFiles)"  DestinationFolder="$(SolutionDir)install\exe\"/>  
-        <Copy  SourceFiles="@(ResFiles)"  DestinationFolder="$(SolutionDir)install\exe\res"/>  
-        <Copy  SourceFiles="$(OutDir)zh-CN\fc.resources.dll"  DestinationFolder="$(SolutionDir)install\exe\zh-CN\"/>  
-    </Target>
+  <ItemGroup>
+    <OutFiles Include="$(OutDir)*.dll;$(OutDir)fc.exe"/>
+    <ResFiles Include="$(OutDir)res\icon-32.ico;$(OutDir)res\seguisym.ttf;" />
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <Message Text="copy file to install" />
+    <Copy SourceFiles="@(OutFiles)" DestinationFolder="$(SolutionDir)install\exe\" />
+    <Copy SourceFiles="@(ResFiles)" DestinationFolder="$(SolutionDir)install\exe\res" />
+    <Copy SourceFiles="$(OutDir)zh-CN\fc.resources.dll" DestinationFolder="$(SolutionDir)install\exe\zh-CN\" />
+  </Target>
 </Project>
