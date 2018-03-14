@@ -22,6 +22,7 @@ namespace fcapi_wpf.View {
         public PMWindow ( string path ) {
             InitializeComponent ();
 
+            (this.DataContext as PMWindowViewModel).msg = this.msg;
             (this.DataContext as PMWindowViewModel).open (path);
         }
     }

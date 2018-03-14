@@ -31,13 +31,13 @@ namespace fcapi_wpf.ViewModel {
         /// <summary>
         /// load driver
         /// </summary>
-        public Command loadCmd { get { return _loadCmd ?? (_loadCmd = new Command { ExecuteDelegate = _ => { FC.Load (); refresh (); }, CanExecuteDelegate = _ => FC.installed && !FC.loaded }); } }
+        public Command loadCmd { get { return _loadCmd ?? (_loadCmd = new Command { ExecuteDelegate = _ => { FC.Load (); refresh (); }, CanExecuteDelegate = _ => FC.installed && !FC.isopen }); } }
         private Command _loadCmd;
 
         /// <summary>
         /// unload driver
         /// </summary>
-        public Command unloadCmd { get { return _unloadCmd ?? (_unloadCmd = new Command { ExecuteDelegate = _ => { FC.Unload (); refresh (); }, CanExecuteDelegate = _ => FC.installed && FC.loaded }); } }
+        public Command unloadCmd { get { return _unloadCmd ?? (_unloadCmd = new Command { ExecuteDelegate = _ => { FC.Unload (); refresh (); }, CanExecuteDelegate = _ => FC.installed && FC.isopen }); } }
         private Command _unloadCmd;
 
         public string workLetter { get { return _workLetter; } set { _workLetter = value; RaisePropertyChanged (); } }
@@ -71,7 +71,8 @@ namespace fcapi_wpf.ViewModel {
             get {
                 return _setWorkRootCmd??(_setWorkRootCmd = new Command {
                     ExecuteDelegate = _ => { if (FC.setWorkRoot (volumes[selVolume].letter[0])) refresh (); },
-                    CanExecuteDelegate = _ => FC.isopen
+                    CanExecuteDelegate = _ => FC.isopen && selVolume >= 0 && selVolume < volumes.Count && 
+                        volumes[selVolume].letter != workLetter
                 });
             }
         }
@@ -170,20 +171,12 @@ namespace fcapi_wpf.ViewModel {
         }
 
         void refresh () {
-            //workRoot = FC.WorkRootLetter != 0 ? FC.WorkRootLetter.ToString () : Language ("empty");
-
             if (!FC.installed) { return; }
-            bool myopen = false;
-            if (!FC.loaded) { FC.Open (); myopen = true; }
+            FC.Open ();
 
             queryVolume ();
             loadGroup ();
             RaisePropertyChanged ("groups");
-
-
-
-            if (myopen)
-                FC.Close ();
         }
 
         private Volume[] allVolume;

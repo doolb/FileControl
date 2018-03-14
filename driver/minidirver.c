@@ -9,9 +9,6 @@ ULONG gLogFlag = ERROR | WARNING | LOG | INFO;
 PFLT_FILTER gFilter;		// global filter handler
 PFLT_PORT	gPort;		// comminication port created for client login
 
-PFLT_PORT	gDaemonPort;			// comminication port created for Daemon client login
-ULONG gDaemonCookie = DAEMON_COOKIE;	// cookie for daemon port
-
 NPAGED_LOOKASIDE_LIST gPre2PostContexList;	//  This is a lookAside list used to allocate our pre-2-post structure.
 
 //
@@ -86,7 +83,6 @@ void stop(){
 	// close port
 	//
 	if (gPort) FltCloseCommunicationPort(gPort); gPort = NULL;
-	if (gDaemonPort) FltCloseCommunicationPort(gDaemonPort); gDaemonPort = NULL;
 
 	//
 	// unregistry driver
@@ -125,14 +121,6 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, sd);
 		status = FltCreateCommunicationPort(gFilter, &gPort, &oa, NULL, miniConnect, miniDisconnect, miniMessage, 1);
 		if (!NT_SUCCESS(status)) { loge((NAME"create communication port  failed. %x \n", status)); leave; }
-
-		//
-		// daemon port
-		//
-		UNICODE_STRING daemName = RTL_CONSTANT_STRING(L"\\fc-d");
-		InitializeObjectAttributes(&oa, &daemName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, sd);
-		status = FltCreateCommunicationPort(gFilter, &gDaemonPort, &oa, &gDaemonCookie, miniConnect, miniDisconnect, miniMessage, 1);
-		if (!NT_SUCCESS(status)) { loge((NAME"create daemon communication port  failed. %x \n", status)); leave; }
 
 		FltFreeSecurityDescriptor(sd);
 

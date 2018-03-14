@@ -11,6 +11,8 @@ using Microsoft.Win32;
 
 namespace fcapi_wpf.ViewModel {
     public class TestViewModel : MVVM.ViewModel {
+
+        public MsgLine msg;
         #region Command
 
         private Command _openCmd;
@@ -21,7 +23,8 @@ namespace fcapi_wpf.ViewModel {
             get {
                 return _openCmd ?? (_openCmd = new Command {
                     ExecuteDelegate = _ => {
-                        MsgLine.Show (FC.Open (onmsg) ? "open_success" : "open_fail");
+                        FC.onMsging += onmsg;
+                        msg.Show (FC.Open () ? "open_success" : "open_fail");
                     },
                     CanExecuteDelegate = _ => !FC.isopen
                 });
@@ -117,7 +120,7 @@ namespace fcapi_wpf.ViewModel {
         }
         private Command _nameWinCmd;
         public Command exitCmd {
-            get { return _exitCmd ?? (_exitCmd = new Command { ExecuteDelegate = _ => System.Windows.Application.Current.Shutdown() }); }
+            get { return _exitCmd ?? (_exitCmd = new Command { ExecuteDelegate = _ => System.Windows.Application.Current.Shutdown () }); }
         }
         private Command _exitCmd;
         #endregion
@@ -146,7 +149,7 @@ namespace fcapi_wpf.ViewModel {
                 }
             }
 
-            MsgLine.Show (msg.ToString ());
+            this.msg.Show (msg.ToString ());
         }
     }
 }

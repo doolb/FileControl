@@ -15,7 +15,7 @@ KSPIN_LOCK gFilterLock;
 extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
 
 extern PFLT_FILTER gFilter;
-extern PFLT_PORT gDaemonClient;
+extern PFLT_PORT gClient;
 
 extern User gUser;
 
@@ -264,13 +264,13 @@ NTSTATUS sendMsg(MsgCode code){
 	//
 	if (gKeyRoot.Length != 0 && code == MsgCode_User_Login) return status;
 
-	if (gDaemonClient){
+	if (gClient){
 
 		LARGE_INTEGER timeout;
 		timeout.QuadPart = 1000;
 
 		log((NAME"send message to application. %x", code));
-		status = FltSendMessage(gFilter, &gDaemonClient, &code, sizeof(MsgCode), NULL, NULL, &timeout);
+		status = FltSendMessage(gFilter, &gClient, &code, sizeof(MsgCode), NULL, NULL, &timeout);
 		log((NAME"send message to application. %x.%x", code, status));
 	}
 	return status;

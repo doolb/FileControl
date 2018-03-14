@@ -17,6 +17,8 @@
         <BooleanToVisibilityConverter x:Key="boolToVis"/>
     </Window.Resources>
     <Grid>
+        <v:MsgLine x:Name="msg" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="-1,0,60,30"/>
+
         <Frame Content="{Binding page,Mode=TwoWay}" NavigationUIVisibility="Hidden" Visibility="{Binding !inAdmin,Converter={StaticResource boolToVis}}"/>
         <TextBlock Text="{Binding status}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Firebrick"/>
         <Button Content="" Command="{Binding adminCmd}" Style="{StaticResource IconButton}" 

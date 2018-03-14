@@ -56,12 +56,9 @@ namespace fcapi_wpf.ViewModel {
             if (!FC.installed) { status = Language ("driver_no_install"); this.page = null; return; }
 
             // is driver load
-            if (!FC.loaded) { status = Language ("driver_no_run"); this.page = null; return; }
+            if (!FC.isopen) { status = Language ("driver_no_run"); this.page = null; return; }
 
-            // open driver
-            if (!FC.isopen) {
-                FC.Open (null);
-            }
+            //if (FC.onMsging == null) { FC.onMsging += }
 
             if (FC.WorkRoot == null) { status = Language ("no_work_dir"); this.page = null; return; }
 

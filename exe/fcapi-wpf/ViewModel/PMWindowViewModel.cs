@@ -9,6 +9,7 @@ using MVVM;
 using p = fcapi_wpf.Properties;
 namespace fcapi_wpf.ViewModel {
     class PMWindowViewModel : MVVM.ViewModel {
+        public View.MsgLine msg;
         public string file { get { return _file; } set { _file = value; RaisePropertyChanged (); } }
         private string _file;
 
@@ -31,7 +32,7 @@ namespace fcapi_wpf.ViewModel {
             get {
                 return _updateCmd ??(_updateCmd = new Command {
                     ExecuteDelegate = _ => {
-                        View.MsgLine.Show (FC.setFilePM (fileInfo)?"success":"fail");
+                        msg.Show (FC.setFilePM (fileInfo)? "success" : "fail" );
                     },
                     CanExecuteDelegate = _ => FC.isopen && hasPM
                 });
@@ -51,7 +52,7 @@ namespace fcapi_wpf.ViewModel {
             // is driver installed
             if (!FC.installed) { status = Language ("driver_no_install"); return false; }
             // is driver load
-            if (!FC.loaded) { status = Language ("driver_no_run"); return false; }
+            if (!FC.isopen) { status = Language ("driver_no_run"); return false; }
 
             if (FC.WorkRoot == null) { status = Language ("no_work_dir"); return false; }
 

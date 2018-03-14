@@ -1,8 +1,7 @@
 #include "minidriver.h"
 #include "filter.h"
 
-static PFLT_PORT gClient;
-PFLT_PORT gDaemonClient;
+PFLT_PORT gClient;
 extern PFLT_FILTER gFilter;
 
 NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer, _In_ ULONG InputBufferLength, _Out_writes_bytes_to_opt_(OutputBufferLength, *ReturnOutputBufferLength) PVOID OutputBuffer, _In_ ULONG OutputBufferLength, _Out_ PULONG ReturnOutputBufferLength){
@@ -40,19 +39,9 @@ NTSTATUS miniConnect(_In_ PFLT_PORT ClientPort, _In_opt_ PVOID ServerPortCookie,
 	UNREFERENCED_PARAMETER(SizeOfContext);
 	UNREFERENCED_PARAMETER(ConnectionPortCookie);
 
-	if (ServerPortCookie == NULL){
-		// normal port
-		ASSERT(gClient == NULL);
-		gClient = ClientPort;
-	}
-	else if (*((PULONG)ServerPortCookie) == DAEMON_COOKIE){
-		// daemon port
-		ASSERT(gDaemonClient == NULL);
-		ASSERT(ConnectionPortCookie);
-
-		gDaemonClient = ClientPort;
-		*((PULONG)ConnectionPortCookie) = *((PULONG)ServerPortCookie);
-	}
+	// normal port
+	ASSERT(gClient == NULL);
+	gClient = ClientPort;
 
 	logw((NAME"client connect. %x \n", ServerPortCookie));
 	return STATUS_SUCCESS;
@@ -62,13 +51,6 @@ NTSTATUS miniConnect(_In_ PFLT_PORT ClientPort, _In_opt_ PVOID ServerPortCookie,
 // ConnectionCookie is the value of *ServerPortCookie
 //
 VOID miniDisconnect(_In_opt_ PVOID ConnectionCookie){
-	if (ConnectionCookie == 0){
-		// normal port
-		FltCloseClientPort(gFilter, &gClient);
-	}
-	else if (((ULONG)ConnectionCookie) == DAEMON_COOKIE){
-		// daemon port
-		FltCloseClientPort(gFilter, &gDaemonClient);
-	}
+	FltCloseClientPort(gFilter, &gClient);
 	logw((NAME"client disconnect. %x \n", ConnectionCookie));
 }

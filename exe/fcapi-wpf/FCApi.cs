@@ -146,8 +146,7 @@ namespace FCApi {
         /// </summary>
         public const int NameMax = 32;
 
-        public const string DaemonPort = "\\fc-d";
-        public const string NormalPort = "\\fc";
+        public const string PortName = "\\fc";
         public const string FilterName = "fc";
     }
 
@@ -237,16 +236,16 @@ namespace FCApi {
         }
 
         public static bool installed;
-        public static bool loaded;
 
 
         static IntPtr Port;
 
-        public static bool Open ( Action<MsgCode> onmsg = null ) {
-            uint ret = FilterConnectCommunicationPort (onmsg != null ? DaemonPort : NormalPort, 0, IntPtr.Zero, 0, IntPtr.Zero, ref Port);
+        public static bool Open () {
+            if (isopen) { return true; }
+            uint ret = FilterConnectCommunicationPort (PortName, 0, IntPtr.Zero, 0, IntPtr.Zero, ref Port);
             Check (ret);
 
-            if (ret == 0 && onmsg != null) { Listen (onmsg); }
+            if (ret == 0) { Listen (); }
 
             return isopen;
         }
@@ -268,18 +267,11 @@ namespace FCApi {
 
             // check driver install
             installed = isInstall ("fc");
+            Open ();
 
             // check driver load
-            loaded = Open ();
-            if (loaded) {
-                getWorkRoot ();
-
-                Close ();
-            }
-            else {
-                workRoot = null;
-                workRootLetter = '\0';
-            }
+            workRoot = null;
+            workRootLetter = '\0';
         }
 
         public static void Load () { Process.Start (new ProcessStartInfo { FileName = "fltmc", Arguments = "load fc", UseShellExecute = false, CreateNoWindow = true }); refresh (); }
@@ -350,10 +342,10 @@ namespace FCApi {
             Check (ret);
 
             // is success
-            if (ret != 0) { return false; }
+            if (ret != 0) { return default (T); }
 
             // is has result
-            if (retlen == 0) { return true; }
+            if (retlen == 0) { return default (T); }
 
             T obj = default (T);
             T[] objs= null;
@@ -408,9 +400,8 @@ namespace FCApi {
     }
 
     public partial class FC {
-        protected static void Listen ( Action<MsgCode> onmsg ) {
-            if (onmsg == null) { return; }
-
+        public static event Action<MsgCode> onMsging;
+        protected static void Listen () {
             Task.Run (() => {
 
                 Msg_Listen lis = new Msg_Listen ();
@@ -421,7 +412,8 @@ namespace FCApi {
                     Check (ret);
 
                     // handle message
-                    onmsg (lis.msg);
+                    if (onMsging!= null)
+                        onMsging (lis.msg);
                 }
             });
         }
