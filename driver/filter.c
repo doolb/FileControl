@@ -96,8 +96,6 @@ void onexit(){
 static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 	ASSERT(ctx);
 
-	NTSTATUS status = STATUS_SUCCESS;
-
 	//
 	// allocate memory
 	//
@@ -128,13 +126,13 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 		//
 		// can load user key 
 		//
-		status = IUserKey->read(list->instance, &list->GUID, &list->key);
+		NTSTATUS status = IUserKey->read(list->instance, &list->GUID, &list->key);
 		if (NT_SUCCESS(status)){
 			logw((NAME"find a user"));
 			vl_sethasUser(list);
 		}
 		else
-			vl_setRemove(list);
+		vl_setRemove(list);
 	}
 	else{
 		//
@@ -155,7 +153,8 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance){
 	NTSTATUS status = STATUS_SUCCESS;
 
-	if (wcsstr(ctx->prop->RealDeviceName.Buffer, L"HarddiskVolume1")){
+	if (ctx->Name.Buffer && ctx->Name.Buffer[0] == L'C'){
+		logw((NAME"we skip the System volume."));
 		return status = STATUS_FLT_DO_NOT_ATTACH;
 	}
 

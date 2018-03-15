@@ -22,7 +22,8 @@ NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_S
 	UNREFERENCED_PARAMETER(VolumeFilesystemType);
 
 	PAGED_CODE();
-
+	if (VolumeFilesystemType == FLT_FSTYPE_RAW){ return STATUS_FLT_DO_NOT_ATTACH; }
+	
 	NTSTATUS status = volumeDetech(FltObjects);
 
 	log((NAME"%p,%d,%x,%x \n", FltObjects, Flags, VolumeDeviceType, VolumeFilesystemType));
