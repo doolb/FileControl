@@ -11,6 +11,7 @@ WCHAR gWorkRootLetter;			// the letter of work root
 LIST_ENTRY gVolumeList;
 
 extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
+extern NPAGED_LOOKASIDE_LIST gGuidLookasideList;
 
 extern PFLT_FILTER gFilter;
 extern PFLT_PORT gClient;
@@ -35,6 +36,7 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 
 		// init lookaside list for permission data
 		ExInitializeNPagedLookasideList(&gPmLookasideList, NULL, NULL, 0, PM_SIZE, PM_TAG, 0);
+		ExInitializeNPagedLookasideList(&gGuidLookasideList, NULL, NULL, 0, 2 * GUID_SIZE * sizeof(WCHAR), PM_TAG, 0);
 
 		// open registry
 		InitializeObjectAttributes(&oa, _regPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -84,6 +86,7 @@ void onexit(){
 	// delete lookaside list
 	//
 	ExDeleteNPagedLookasideList(&gPmLookasideList);
+	ExDeleteNPagedLookasideList(&gGuidLookasideList);
 
 	//
 	// clear volume list
@@ -133,7 +136,7 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 			vl_sethasUser(list);
 		}
 		else
-		vl_setRemove(list);
+			vl_setRemove(list);
 	}
 	else{
 		//
@@ -156,6 +159,10 @@ NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance){
 
 	if (ctx->Name.Buffer && ctx->Name.Buffer[0] == L'C'){
 		logw((NAME"we skip the System volume."));
+		return status = STATUS_FLT_DO_NOT_ATTACH;
+	}
+	// is volume has a letter
+	if (ctx->Name.Length > 2 * sizeof(WCHAR)){
 		return status = STATUS_FLT_DO_NOT_ATTACH;
 	}
 
@@ -237,6 +244,6 @@ NTSTATUS sendMsg(MsgCode code){
 	NTSTATUS status = STATUS_SUCCESS;
 
 	currentMsg = code;
-	
+
 	return status;
 }

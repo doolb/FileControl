@@ -11,6 +11,7 @@ using System.IO;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 
 namespace fcapi_wpf.ViewModel {
     class UserAdminViewModel : MVVM.ViewModel {
@@ -158,9 +159,9 @@ namespace fcapi_wpf.ViewModel {
                         Msg_User_Registry reg= new Msg_User_Registry ();
                         reg.user.user = newUserName;
                         reg.user.uid = Guid.NewGuid ();
-                        reg.user.group = groups[newUserGroup].name;
                         reg.user.gid = groups[newUserGroup].guid;
-                        reg.password = p as string;
+                        reg.user.group = groups[newUserGroup].name;
+                        reg.password = (p as PasswordBox).Password;
                         reg.letter = remVolumes[newUserVolume].letter[0];
                         if (FC.addUser (reg)) { msg.Show ("success"); refresh (); }
                         else { msg.Show ("fail"); }
@@ -209,6 +210,8 @@ namespace fcapi_wpf.ViewModel {
             queryVolume ();
             loadGroup ();
             RaisePropertyChanged ("groups");
+            if (newUserVolume >= remVolumes.Count) { newUserVolume = 0; }
+            if (newUserGroup >= groups.Count) { newUserGroup = 0; }
         }
 
         private Volume[] allVolume;

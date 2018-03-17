@@ -6,7 +6,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreAcqSection(_Inout_ PFLT_CALLBACK_DATA _data, _I
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
-
+	logfi;
 
 	NTSTATUS status = STATUS_SUCCESS;
 	status = opPreCheck(_fltObjects);
@@ -37,5 +37,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreAcqSection(_Inout_ PFLT_CALLBACK_DATA _data, _I
 	loge((NAME"Diable PAGE IO here."));
 	_data->IoStatus.Status = STATUS_ACCESS_DENIED;
 	_data->IoStatus.Information = 0;
+
+	logfo;
 	return FLT_PREOP_COMPLETE;
 }

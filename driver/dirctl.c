@@ -9,10 +9,12 @@ FLT_PREOP_CALLBACK_STATUS miniPreDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
 
+	logfi;
 	NTSTATUS status = STATUS_SUCCESS;
 	status = opPreCheck(_fltObjects);
-	if (!NT_SUCCESS(status)) return FLT_PREOP_SUCCESS_NO_CALLBACK;
+	if (!NT_SUCCESS(status)) { logfo; return FLT_PREOP_SUCCESS_NO_CALLBACK; }
 
+	logfo;
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }
 
@@ -22,7 +24,7 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	_In_ FLT_POST_OPERATION_FLAGS _flags){
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_completionContext);
-
+	logfi;
 
 	NTSTATUS status = checkFltStatus(_data, _fltObjects);
 	if (status == FLT_NO_NEED) return FLT_POSTOP_FINISHED_PROCESSING;
@@ -101,5 +103,6 @@ FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 		}
 	}
 
+	logfo;
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

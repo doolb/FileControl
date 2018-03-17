@@ -6,7 +6,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
-
+	logfi;
 
 	NTSTATUS status = STATUS_SUCCESS;
 	status = opPreCheck(_fltObjects);
@@ -33,6 +33,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 	finally	{
 	}
 
+	logfo;
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }
 

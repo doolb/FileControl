@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:t="clr-namespace:Tool"
+      xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300"
 	Title="UserViewPage">
@@ -11,9 +12,9 @@
     <Grid>
 
         <DockPanel t:MarginSetter.Margin="12" VerticalAlignment="Center">
-            <Grid Width="150" Height="150" DockPanel.Dock="Left" Margin="10,0,0,0">
+            <metro:Tile Width="150" Height="150" DockPanel.Dock="Left" Margin="10,0,0,0">
                 <TextBlock Text="{Binding img}" FontSize="120" HorizontalAlignment="Center"/>
-            </Grid>
+            </metro:Tile>
 
             <TextBlock Text="{Binding name}"    DockPanel.Dock="Top"/>
 

@@ -93,15 +93,6 @@ NTSTATUS user_registry(void* buffer, unsigned long size, unsigned long *retlen){
 	memcpy_s(&volume->key, sizeof(UserKey), key, sizeof(UserKey));
 	vl_sethasUser(volume);
 
-	//
-	// login user
-	//
-	RtlCopyUnicodeString(&gKeyRoot, &volume->GUID);
-	memcpy_s(&gUser, sizeof(User), &key->user, sizeof(User));
-
-	logw((NAME"registry user success, login in. %ws", reg->letter));
-	status = STATUS_SUCCESS;
-
 	return status;
 }
 

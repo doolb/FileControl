@@ -10,11 +10,12 @@ miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltO
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
 
+	logfi;
 	PFLT_IO_PARAMETER_BLOCK iopb = _data->Iopb;
 
 	NTSTATUS status = STATUS_SUCCESS;
 	status = opPreCheck(_fltObjects);
-	if (!NT_SUCCESS(status)) return FLT_PREOP_SUCCESS_NO_CALLBACK;
+	if (!NT_SUCCESS(status)) { logfo; return FLT_PREOP_SUCCESS_NO_CALLBACK; }
 
 
 	//
@@ -24,7 +25,7 @@ miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltO
 		iopb->Parameters.Create.Options &= ~OVERWRITE;
 		FltSetCallbackDataDirty(_data);
 	}
-
+	logfo;
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }
 
@@ -35,8 +36,10 @@ miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _flt
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
+	logfi;
 
 	checkPermission(_data, _fltObjects, FALSE);
 
+	logfo;
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

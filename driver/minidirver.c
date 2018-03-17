@@ -4,7 +4,7 @@
 
 #pragma region Object
 
-ULONG gLogFlag = ERROR | WARNING | LOG;
+ULONG gLogFlag = ERROR | WARNING | LOG | INFO;
 
 PFLT_FILTER gFilter;		// global filter handler
 PFLT_PORT	gPort;		// comminication port created for client login

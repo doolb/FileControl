@@ -283,13 +283,12 @@ namespace FCApi {
             if (!isopen) { return null; }
 
 
-            int retlen = Send (MsgCode.User_Query);
-            if (retlen == 0)
+            int retlen = 0;
+            object r = Send<User> (MsgCode.User_Query, default (User), ref retlen, 25);
+            if (r is User[])
+                return (User[])r;
+            else
                 return null;
-
-            User[] users = (User[])Send<User> (MsgCode.User_Query, default (User), ref retlen, retlen / Marshal.SizeOf (typeof (User)));
-
-            return users;
         }
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, ref Msg_User_Login reg, int dwOutBufferSize, ref int lpBytesReturned );
@@ -375,7 +374,7 @@ namespace FCApi {
                 obj = (T)Marshal.PtrToStructure (buff, typeof (T));
             }
             else {
-                MarshalUnmananagedArray2Struct<T> (buff, count, out objs);
+                MarshalUnmananagedArray2Struct<T> (buff, retlen / size, out objs);
             }
 
             Marshal.FreeHGlobal (buff);
@@ -434,7 +433,7 @@ namespace FCApi {
                 while (isopen) {
                     uint ret = FilterSendMessage (Port, ref send, 4, ref recv, 4, ref retlen);
                     if (Check (ret) && recv != MsgCode.Null && onMsging != null) {
-                        onMsging (recv);
+                        System.Windows.Application.Current.Dispatcher.BeginInvoke (new Action (() => onMsging (recv)));
                     }
                     Thread.Sleep (1000);
                 }

@@ -29,6 +29,7 @@ extern UNICODE_STRING gWorkRoot;
 // lookaside list for permission data
 //
 NPAGED_LOOKASIDE_LIST gPmLookasideList;
+NPAGED_LOOKASIDE_LIST gGuidLookasideList;
 
 //
 // free the memory of permission data
@@ -310,7 +311,7 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 	NTSTATUS status = FLT_NO_NEED;
 
 	// save volume guid
-	UNICODE_STRING guid; WCHAR _guid_buffer[GUID_SIZE];	RtlInitEmptyUnicodeString(&guid, _guid_buffer, sizeof(_guid_buffer));
+	UNICODE_STRING guid = null;
 
 	//
 	// get file name information
@@ -329,6 +330,11 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 
 		status = FltParseFileNameInformation(nameInfo);
 		if (!NT_SUCCESS(status)) { loge((NAME"parse file name info failed. %x \n", status)); leave; }
+
+		guid.Buffer = ExAllocateFromNPagedLookasideList(&gGuidLookasideList);
+		if (!guid.Buffer){ loge((NAME"allocate buffer failed")); leave; }
+		guid.MaximumLength = 2 * GUID_SIZE * sizeof(WCHAR);
+		guid.Length = 0;
 
 		status = FltGetVolumeGuidName(_obj->Volume, &guid, NULL);
 		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x \n", status)); leave; }
@@ -350,6 +356,7 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 			logi((NAME"get file status: %wZ, %x \n", &nameInfo->Name, status));
 			FltReleaseFileNameInformation(nameInfo);
 		}
+		if (guid.Buffer){ ExFreeToNPagedLookasideList(&gGuidLookasideList, guid.Buffer); guid.Buffer = NULL; }
 	}
 	return status;
 }

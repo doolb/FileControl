@@ -6,7 +6,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCF
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
-
+	logfi;
 
 	NTSTATUS status = STATUS_SUCCESS;
 	status = opPreCheck(_fltObjects);
@@ -37,6 +37,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCF
 
 	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
+	logfo;
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
 }
 FLT_POSTOP_CALLBACK_STATUS miniPostRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags){
@@ -44,6 +45,8 @@ FLT_POSTOP_CALLBACK_STATUS miniPostRead(_Inout_ PFLT_CALLBACK_DATA _data, _In_ P
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_fltObjects);
 	UNREFERENCED_PARAMETER(_completionContext);
+	logfi;
 
+	logfo;
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }

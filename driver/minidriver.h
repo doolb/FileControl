@@ -10,6 +10,7 @@
 #define WARNING 0x010
 #define ERROR 0x100
 #define INFO 0x1000
+#define LDBG 0x10000
 
 #define BUFFER_SWAP_TAG     'bfBS'
 #define CONTEXT_TAG         'xaBS'
@@ -19,14 +20,17 @@
 #define logd KdPrint	
 extern ULONG gLogFlag;
 
+#define NAME "\r\n[Mini Filter]@"__FUNCTION__": "
+
 #define log(_x_) (FlagOn(gLogFlag,(LOG)) ? DbgPrint _x_  : ((int)(0)))
 #define logw(_x_) (FlagOn(gLogFlag,(WARNING)) ? DbgPrint _x_  : ((int)(0)))
 #define loge(_x_) (FlagOn(gLogFlag,(ERROR)) ? DbgPrint _x_  : ((int)(0)))
 #define logf(flag,_x_) (FlagOn(gLogFlag,(flag)) ? DbgPrint _x_  : ((int)(0)))
 #define logi(_x_) logf(INFO,_x_)
+#define logfi logf(INFO,(NAME"func ------"))
+#define logfo logf(INFO,(NAME"func ======\r\n"))
 
 #define TAG "MNFL"
-#define NAME "[Mini Filter]@"__FUNCTION__": "
 
 #define DAEMON_COOKIE  'Daco'
 
