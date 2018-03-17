@@ -28,7 +28,7 @@ NTSTATUS miniMessage(_In_opt_ PVOID PortCookie, _In_reads_bytes_opt_(InputBuffer
 	//
 	status = onmsg((*(PMsgCode)InputBuffer), OutputBuffer, OutputBufferLength, ReturnOutputBufferLength);
 
-	log((NAME"client message in. (%x) %d[%d] %x[%d,%x] \n", PortCookie, (*(PMsgCode)InputBuffer), InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));
+	logi((NAME"client message in. (%x) %d[%d] %x[%d,%x] \n", PortCookie, (*(PMsgCode)InputBuffer), InputBufferLength, OutputBuffer, OutputBufferLength, *ReturnOutputBufferLength));
 	return status;
 }
 

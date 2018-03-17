@@ -26,7 +26,7 @@ NTSTATUS miniInsSteup(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_S
 	
 	NTSTATUS status = volumeDetech(FltObjects);
 
-	log((NAME"%p,%d,%x,%x \n", FltObjects, Flags, VolumeDeviceType, VolumeFilesystemType));
+	logi((NAME"%p,%d,%x,%x \n", FltObjects, Flags, VolumeDeviceType, VolumeFilesystemType));
 
 	return status;		// -attach
 	//return STATUS_FLT_DO_NOT_ATTACH - do not attach
@@ -38,7 +38,7 @@ NTSTATUS	 miniInsQeuryTeardown(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_I
 
 	PAGED_CODE();
 
-	log((NAME"%p,%d \n", FltObjects, Flags));
+	logi((NAME"%p,%d \n", FltObjects, Flags));
 	return STATUS_SUCCESS;
 }
 VOID	 miniInsTeardownStart(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags){
@@ -47,7 +47,7 @@ VOID	 miniInsTeardownStart(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTA
 
 	PAGED_CODE();
 
-	log((NAME"%p,%d \n", FltObjects, Flags));
+	logi((NAME"%p,%d \n", FltObjects, Flags));
 
 }
 VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_INSTANCE_TEARDOWN_FLAGS Flags){
@@ -56,6 +56,6 @@ VOID	 miniInsTeardownComplete(_In_ PCFLT_RELATED_OBJECTS FltObjects, _In_ FLT_IN
 
 	PAGED_CODE();
 
-	log((NAME"%p,%d \n", FltObjects, Flags));
+	logi((NAME"%p,%d \n", FltObjects, Flags));
 }
 
