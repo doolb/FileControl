@@ -165,7 +165,7 @@ NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance){
 	PLIST_ENTRY list = createVolumeList(ctx, instance);
 	if (!list){ loge((NAME"createVolumeList failed. %wZ", &ctx->GUID)); return STATUS_INSUFFICIENT_RESOURCES; }
 	InsertHeadList(&gVolumeList, list);
-	//sendMsg(MsgCode_Volume_Query); // notify application volume changed
+	sendMsg(MsgCode_Volume_Query); // notify application volume changed
 	return status;
 }
 
@@ -193,7 +193,7 @@ void onstop(PVolumeContext ctx){
 
 			RemoveEntryList(e);
 			ExFreePoolWithTag(e, FLT_TAG);
-			// sendMsg(MsgCode_Volume_Query); // notify application volume changed
+			sendMsg(MsgCode_Volume_Query); // notify application volume changed
 			break;
 		}
 	}
