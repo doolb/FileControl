@@ -10,8 +10,6 @@ WCHAR gWorkRootLetter;			// the letter of work root
 
 LIST_ENTRY gVolumeList;
 
-KSPIN_LOCK gFilterLock;
-
 extern NPAGED_LOOKASIDE_LIST gPmLookasideList;
 
 extern PFLT_FILTER gFilter;
@@ -22,6 +20,11 @@ extern User gUser;
 PFLT_INSTANCE gInstance;
 HANDLE gRegistry;
 
+//
+// current driver state
+//
+MsgCode currentMsg = MsgCode_Null;
+
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
 
@@ -29,8 +32,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 	ULONG retlen = 0;
 
 	try{
-		// init lock
-		KeInitializeSpinLock(&gFilterLock);
 
 		// init lookaside list for permission data
 		ExInitializeNPagedLookasideList(&gPmLookasideList, NULL, NULL, 0, PM_SIZE, PM_TAG, 0);
@@ -159,36 +160,18 @@ NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance){
 	}
 
 	//
-	// lock operation
-	//
-	KLOCK_QUEUE_HANDLE hand;
-	KeAcquireInStackQueuedSpinLock(&gFilterLock, &hand);
-
-	//
 	// add this volume to list
 	//
 	PLIST_ENTRY list = createVolumeList(ctx, instance);
 	if (!list){ loge((NAME"createVolumeList failed. %wZ", &ctx->GUID)); return STATUS_INSUFFICIENT_RESOURCES; }
 	InsertHeadList(&gVolumeList, list);
-
-
-	//
-	// unlock 
-	//
-	KeReleaseInStackQueuedSpinLock(&hand);
-
+	//sendMsg(MsgCode_Volume_Query); // notify application volume changed
 	return status;
 }
 
 void onstop(PVolumeContext ctx){
 	// no guid, skip it
 	if (ctx->GUID.Length == 0) return;
-
-	//
-	// lock operation
-	//
-	KLOCK_QUEUE_HANDLE hand;
-	KeAcquireInStackQueuedSpinLock(&gFilterLock, &hand);
 
 	PLIST_ENTRY head = &gVolumeList;
 	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
@@ -210,15 +193,10 @@ void onstop(PVolumeContext ctx){
 
 			RemoveEntryList(e);
 			ExFreePoolWithTag(e, FLT_TAG);
+			// sendMsg(MsgCode_Volume_Query); // notify application volume changed
 			break;
 		}
 	}
-
-
-	//
-	// unlock 
-	//
-	KeReleaseInStackQueuedSpinLock(&hand);
 }
 NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
 
@@ -258,19 +236,7 @@ NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen){
 NTSTATUS sendMsg(MsgCode code){
 	NTSTATUS status = STATUS_SUCCESS;
 
-	//
-	// precheck
-	//
-	if (gKeyRoot.Length != 0 && code == MsgCode_User_Login) return status;
-
-	if (gClient){
-
-		LARGE_INTEGER timeout;
-		timeout.QuadPart = 1000;
-
-		log((NAME"send message to application. %x", code));
-		status = FltSendMessage(gFilter, &gClient, &code, sizeof(MsgCode), NULL, NULL, &timeout);
-		log((NAME"send message to application. %x.%x", code, status));
-	}
+	currentMsg = code;
+	
 	return status;
 }

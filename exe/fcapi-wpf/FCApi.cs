@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FCApi {
@@ -109,6 +110,7 @@ namespace FCApi {
         User_Login_Get,
         User_Registry,
         User_Logout,
+        User_Delete,
 
         // volume
         Volume_Query,
@@ -217,10 +219,6 @@ namespace FCApi {
         static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, IntPtr lpOutBuffer, int dwOutBufferSize, ref int lpBytesReturned );
 
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
-        static extern uint FilterGetMessage ( IntPtr hPort, ref Msg_Listen lpMessageBuffer, int dwMessageBufferSize, IntPtr lpOverlapped );
-
-
-        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         static extern uint FilterLoad ( string name );
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
         static extern uint FilterUnload ( string name );
@@ -243,9 +241,7 @@ namespace FCApi {
         public static bool Open () {
             if (isopen) { return true; }
             uint ret = FilterConnectCommunicationPort (PortName, 0, IntPtr.Zero, 0, IntPtr.Zero, ref Port);
-            Check (ret);
-
-            if (ret == 0) { Listen (); }
+            if (Check (ret)) { Listen (); }
 
             return isopen;
         }
@@ -295,6 +291,8 @@ namespace FCApi {
 
             return users;
         }
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, ref Msg_User_Login reg, int dwOutBufferSize, ref int lpBytesReturned );
 
         public static bool Login ( User user, string password ) {
             if (!isopen) { return false; }
@@ -302,8 +300,32 @@ namespace FCApi {
             login.user = user;
             login.password = password;
             var retlen = 0;
-            bool ok = (bool)Send<Msg_User_Login> (MsgCode.User_Login, login, ref retlen);
-            return ok;
+            MsgCode msg = MsgCode.User_Login;
+            uint ret = FilterSendMessage (Port, ref msg, 4, ref login, Marshal.SizeOf (typeof (Msg_User_Login)), ref retlen);
+            return Check (ret);
+        }
+
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, ref Msg_User_Registry reg, int dwOutBufferSize, ref int lpBytesReturned );
+
+        public static bool addUser ( Msg_User_Registry reg ) {
+            if (!isopen) { return false; }
+            int retlen = 0;
+            MsgCode msg = MsgCode.User_Registry;
+
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), ref reg, Marshal.SizeOf (typeof (Msg_User_Registry)), ref retlen);
+            if (Check (ret)) { return true; }
+            else { return false; }
+        }
+
+        public static bool delUser ( string volume ) {
+            if (!isopen) { return false; }
+
+            int retlen = 0;
+            MsgCode msg = MsgCode.User_Delete;
+            StringBuilder sbd = new StringBuilder (volume);
+            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, 2, ref retlen);
+            return Check (ret);
         }
     }
 
@@ -400,20 +422,21 @@ namespace FCApi {
     }
 
     public partial class FC {
+        [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern uint FilterSendMessage ( IntPtr hPort, ref MsgCode lpInBuffer, int dwInBufferSize, ref MsgCode lpOutBuffer, int dwOutBufferSize, ref int lpBytesReturned );
+
         public static event Action<MsgCode> onMsging;
         protected static void Listen () {
             Task.Run (() => {
-
-                Msg_Listen lis = new Msg_Listen ();
-
+                int retlen = 0;
+                MsgCode send = MsgCode.Null;
+                MsgCode recv = MsgCode.Null;
                 while (isopen) {
-                    // get message
-                    uint ret = FilterGetMessage (Port, ref lis, Marshal.SizeOf (typeof (Msg_Listen)), IntPtr.Zero);
-                    Check (ret);
-
-                    // handle message
-                    if (onMsging!= null)
-                        onMsging (lis.msg);
+                    uint ret = FilterSendMessage (Port, ref send, 4, ref recv, 4, ref retlen);
+                    if (Check (ret) && recv != MsgCode.Null && onMsging != null) {
+                        onMsging (recv);
+                    }
+                    Thread.Sleep (1000);
                 }
             });
         }

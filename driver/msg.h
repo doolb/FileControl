@@ -11,6 +11,7 @@ typedef enum {
 	MsgCode_User_Login_Get,
 	MsgCode_User_Registry,
 	MsgCode_User_Logout,
+	MsgCode_User_Del,
 
 	// volume
 	MsgCode_Volume_Query,

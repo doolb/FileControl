@@ -11,7 +11,9 @@
     <Grid>
 
         <DockPanel t:MarginSetter.Margin="12" VerticalAlignment="Center">
-            <Image Source="{Binding img}" Width="150" Height="150" DockPanel.Dock=" Left" Grid.Column="0" Margin="10,0,0,0"/>
+            <Grid Width="150" Height="150" DockPanel.Dock="Left" Margin="10,0,0,0">
+                <TextBlock Text="{Binding img}" FontSize="120" HorizontalAlignment="Center"/>
+            </Grid>
 
             <TextBlock Text="{Binding name}"    DockPanel.Dock="Top"/>
 

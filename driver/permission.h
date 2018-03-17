@@ -63,6 +63,8 @@ struct _IUserKey
 	NTSTATUS(*write)(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserKey key);
 	// registry a user
 	PUserKey(*registry)(PUNICODE_STRING path, PVOID reg);
+	// delete user
+	NTSTATUS(*delete)(PFLT_INSTANCE instance, PUNICODE_STRING path);
 };
 
 extern struct _IUserKey IUserKey[1];

@@ -113,7 +113,7 @@ namespace fcapi_wpf.ViewModel {
                 group = user.group;
                 uid = user.uid;
                 gid = user.gid;
-                img = "http://127.0.0.1/IMG/a.png";
+                img = name[0].ToString();
             }
 
             /// <summary>

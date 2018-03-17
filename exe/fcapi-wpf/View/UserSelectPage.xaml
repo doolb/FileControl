@@ -19,8 +19,8 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <metro:Tile Title="{Binding name}" Command="{Binding selUserCmd}">
-                            <Image Source="{Binding img}"/>
+                        <metro:Tile Command="{Binding selUserCmd}">
+                            <TextBlock Text="{Binding img}" FontSize="123" />
                         </metro:Tile>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

@@ -8,6 +8,7 @@ extern PFLT_INSTANCE gInstance;
 extern LIST_ENTRY gVolumeList;
 extern WCHAR gWorkRootLetter;
 extern PFLT_FILTER gFilter;
+extern MsgCode currentMsg;
 extern HANDLE gRegistry;
 extern User gUser;
 
@@ -145,6 +146,42 @@ NTSTATUS user_login(void* buffer, unsigned long size, unsigned long *retlen){
 	vl_setKeyRoot(volume);
 
 	loge((NAME"user login in. %ws", volume->letter));
+	status = STATUS_SUCCESS;
+	return status;
+}
+NTSTATUS user_delete(void* buffer, unsigned long size, unsigned long *retlen){
+	NTSTATUS status = STATUS_SUCCESS;
+	PLIST_ENTRY head = &gVolumeList;
+	PVolumeList list = NULL;
+	if (!buffer || size < sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_BUFFER_TOO_SMALL; }
+
+	PVolumeList volume = NULL;
+	WCHAR letter = *(PWCHAR)(buffer);
+	//
+	// found the volume
+	//
+	for (PLIST_ENTRY e = head->Blink; e != head; e = e->Blink){
+		list = CONTAINING_RECORD(e, VolumeList, list);
+		if (vl_ishasUser(list) &&
+			list->letter == letter){
+			volume = list;
+			break;
+		}
+	}
+	if (!volume){ return FLT_NO_USER; }
+
+	//
+	// is already login
+	//
+	if (vl_isKeyRoot(volume)){ gKeyRoot.Length = 0; }
+	vl_setRemove(volume); // set volume state
+
+	//
+	// delete file
+	//
+	IUserKey->delete(volume->instance, &volume->GUID);
+
+	loge((NAME"user deleted. %ws", volume->letter));
 	status = STATUS_SUCCESS;
 	return status;
 }
@@ -382,14 +419,29 @@ NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 		RtlCopyUnicodeString(&gWorkRoot, &list->GUID);
 		gWorkRootLetter = letter;
 		vl_setWorkRoot(volume);
+		gInstance = volume->instance;
 	}
 	else{
 		gWorkRoot.Length = 0;
 		gWorkRootLetter = letter;
 		vl_setNormal(volume);
+		gInstance = NULL;
 	}
 	loge((NAME"set work root to: %wc", letter));
 	return STATUS_SUCCESS;
+}
+
+//
+// query driver state
+//
+NTSTATUS msg_query(void* buffer, unsigned long size, unsigned long *retlen){
+
+	NTSTATUS status = STATUS_SUCCESS;
+	if (!buffer || size < sizeof(MsgCode)){ *retlen = sizeof(MsgCode); return STATUS_BUFFER_TOO_SMALL; }
+
+	*((MsgCode*)buffer) = currentMsg;	// send msg to application
+	currentMsg = MsgCode_Null;			// clear msg
+	return status;
 }
 
 // NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
@@ -401,7 +453,7 @@ NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 // }
 
 NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned long *retlen) = {
-	NULL,	//MsgCode_Null,
+	msg_query,	//MsgCode_Null,
 
 	// user
 	user_query,		//MsgCode_User_Query,
@@ -409,6 +461,7 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 	user_login_get,	//MsgCode_User_Login_Get
 	user_registry,	//MsgCode_User_Registry,
 	user_logout,		//MsgCode_User_Logout,
+	user_delete,		//MsgCode_User_Del,
 
 	// volume
 	volume_query,	//MsgCode_Volume_Query,

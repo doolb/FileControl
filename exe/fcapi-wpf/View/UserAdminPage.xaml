@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:metor="http://metro.mahapps.com/winfx/xaml/controls"
       xmlns:vm="clr-namespace:fcapi_wpf.ViewModel"
+      xmlns:v="clr-namespace:fcapi_wpf.View"
       xmlns:p="clr-namespace:fcapi_wpf.Properties"
       xmlns:t="clr-namespace:Tool"
       mc:Ignorable="d" 
@@ -25,6 +26,8 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
+        
+        <v:MsgLine x:Name="msg" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,30,0"/>
 
         <DockPanel Grid.Row="0">
             <Button Command="{Binding exitCmd}" Style="{StaticResource IconButton}" Content="" 
@@ -70,7 +73,7 @@
         <StackPanel Grid.Row="4" Orientation="Horizontal" t:MarginSetter.Margin="5,0,0,0">
             <TextBlock Text="{x:Static p:Resources.del_user}" VerticalAlignment="Center"/>
 
-            <metor:SplitButton Height="20" Width="40"  ItemsSource="{Binding userVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding selUserVolume}" Margin="10,0,0,0"/>
+            <metor:SplitButton Height="20" Width="40"  ItemsSource="{Binding userVolumes}" DisplayMemberPath="letter" SelectedIndex="{Binding delUservolum}" Margin="10,0,0,0"/>
 
             <Button Command="{Binding delUserCmd}" Style="{StaticResource IconButton}" Content="" Margin="10,0,6,0" BorderThickness="0" FontSize="12"/>
         </StackPanel>

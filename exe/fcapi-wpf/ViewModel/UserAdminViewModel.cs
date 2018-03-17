@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 
 namespace fcapi_wpf.ViewModel {
     class UserAdminViewModel : MVVM.ViewModel {
+        public View.MsgLine msg;
 
         /// <summary>
         /// exit
@@ -70,7 +71,10 @@ namespace fcapi_wpf.ViewModel {
         public Command setWorkRootCmd {
             get {
                 return _setWorkRootCmd??(_setWorkRootCmd = new Command {
-                    ExecuteDelegate = _ => { if (FC.setWorkRoot (volumes[selVolume].letter[0])) refresh (); },
+                    ExecuteDelegate = _ => {
+                        if (FC.setWorkRoot (volumes[selVolume].letter[0])) { msg.Show ("success"); refresh (); }
+                        else { msg.Show ("fail"); }
+                    },
                     CanExecuteDelegate = _ => FC.isopen && selVolume >= 0 && selVolume < volumes.Count && 
                         volumes[selVolume].letter != workLetter
                 });
@@ -81,7 +85,10 @@ namespace fcapi_wpf.ViewModel {
         public Command delWorkRootCmd {
             get {
                 return _delWorkRootCmd??(_delWorkRootCmd = new Command {
-                    ExecuteDelegate = _ => { if (FC.setWorkRoot ('\0')) refresh (); },
+                    ExecuteDelegate = _ => {
+                        if (FC.setWorkRoot ('\0')) { msg.Show ("success"); refresh (); }
+                        else { msg.Show ("fail"); }
+                    },
                     CanExecuteDelegate = _ => FC.isopen
                 });
             }
@@ -135,20 +142,32 @@ namespace fcapi_wpf.ViewModel {
 
         public string newUserName { get { return _newUserName; } set { _newUserName = value; RaisePropertyChanged (); } }
         private string _newUserName;
-        public string newUserPassword { get { return _newUserPassword; } set { _newUserPassword = value; RaisePropertyChanged (); } }
-        private string _newUserPassword;
 
         public int newUserGroup { get { return _newUserGroup; } set { _newUserGroup = value; RaisePropertyChanged (); } }
         private int _newUserGroup;
 
         public int newUserVolume { get { return _newUserVolume; } set { _newUserVolume = value; RaisePropertyChanged (); } }
         private int _newUserVolume;
-
+        public int delUserVolume { get { return _delUserVolume; } set { _delUserVolume = value; RaisePropertyChanged (); } }
+        private int _delUserVolume;
 
         public Command newUserCmd {
             get {
                 return _newUserCmd ??(_newUserCmd = new Command {
-                    CanExecuteDelegate = _ => FC.isopen && nomVolumes.Count > 0
+                    ExecuteDelegate = p => {
+                        Msg_User_Registry reg= new Msg_User_Registry ();
+                        reg.user.user = newUserName;
+                        reg.user.uid = Guid.NewGuid ();
+                        reg.user.group = groups[newUserGroup].name;
+                        reg.user.gid = groups[newUserGroup].guid;
+                        reg.password = p as string;
+                        reg.letter = remVolumes[newUserVolume].letter[0];
+                        if (FC.addUser (reg)) { msg.Show ("success"); refresh (); }
+                        else { msg.Show ("fail"); }
+                    },
+                    CanExecuteDelegate = _ => FC.isopen && 
+                        newUserVolume >= 0 && newUserVolume < remVolumes.Count && 
+                        newUserGroup >= 0  && newUserGroup < groups.Count
                 });
             }
         }
@@ -157,7 +176,12 @@ namespace fcapi_wpf.ViewModel {
         public Command delUserCmd {
             get {
                 return _delUserCmd ??(_delUserCmd = new Command {
-                    CanExecuteDelegate = _ => FC.isopen && userVolumes.Count > 0
+                    ExecuteDelegate = _ => {
+                        if (FC.delUser (userVolumes[delUserVolume].letter)) { msg.Show ("success"); refresh (); }
+                        else
+                            msg.Show ("fali");
+                    },
+                    CanExecuteDelegate = _ => FC.isopen && delUserVolume >= 0 && delUserVolume < userVolumes.Count
                 });
             }
         }
@@ -168,6 +192,14 @@ namespace fcapi_wpf.ViewModel {
 
         public UserAdminViewModel () {
             refresh ();
+            FC.onMsging +=FC_onMsging;
+        }
+
+        void FC_onMsging ( MsgCode obj ) {
+#if DEBUG
+            msg.Show (obj.ToString ());
+#endif
+            if (obj == MsgCode.Volume_Query) { queryVolume (); }
         }
 
         void refresh () {

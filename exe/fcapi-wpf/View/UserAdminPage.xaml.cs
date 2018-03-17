@@ -20,6 +20,7 @@ namespace fcapi_wpf.View {
     public partial class UserAdminPage : Page {
         public UserAdminPage () {
             InitializeComponent ();
+            (this.DataContext as ViewModel.UserAdminViewModel).msg = this.msg;
         }
     }
 }
