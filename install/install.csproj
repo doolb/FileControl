@@ -1,13 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">      
-
-    <ItemGroup>
-        <Nsis Include='"C:\Program%20Files%20(x86)\NSIS\Unicode\makensis.exe"'/>
-        <Src Include='"$(SolutionDir)install\fc.nsi"'/>
-    </ItemGroup>
-
-    <Target Name="Build">
-        <Exec Command="echo makensis build..."/>  
-        <Exec Command="@(Nsis) @(Src)"/>          
-    </Target>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectGuid>{3CD7E40C-4567-4979-A2F9-C59B16619587}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Nsis Include="&quot;C:\Program%20Files%20(x86)\NSIS\Unicode\makensis.exe&quot;" />
+    <Src Include="&quot;$(SolutionDir)install\fc.nsi&quot;" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\exe\fcapi-wpf\fcapi-wpf.csproj">
+      <Project>{d6d2ebdc-bd4d-4351-81b8-ad70238894de}</Project>
+      <Name>fcapi-wpf</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="Build">
+    <Exec Command="echo makensis build..." />
+    <Exec Command="@(Nsis) @(Src)" />
+  </Target>
 </Project>

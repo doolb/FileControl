@@ -8,6 +8,7 @@ using MVVM;
 using FCApi;
 using fcapi_wpf.View;
 using Microsoft.Win32;
+using Tool;
 
 namespace fcapi_wpf.ViewModel {
     public class TestViewModel : MVVM.ViewModel {
@@ -123,10 +124,26 @@ namespace fcapi_wpf.ViewModel {
             get { return _exitCmd ?? (_exitCmd = new Command { ExecuteDelegate = _ => System.Windows.Application.Current.Shutdown () }); }
         }
         private Command _exitCmd;
+
+        public Command rsaCmd {
+            get {
+                return _rsaCmd ?? (_rsaCmd = new Command {
+                    ExecuteDelegate = _ => {
+                        RSA rsa = new RSA ();
+                        rsa.genKeys ("res/primes.txt");
+                        data = rsa.key.ToString ();
+                        rsa.export ("rsa.key");
+                        rsa.import ("rsa.key");
+                    }
+                });
+            }
+        }
+        private Command _rsaCmd;
         #endregion
 
         public string data { get { return _data; } set { _data = value; RaisePropertyChanged (); } }
         private string _data;
+
 
 
         void onmsg ( MsgCode msg ) {

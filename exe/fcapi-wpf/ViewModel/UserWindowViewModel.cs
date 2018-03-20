@@ -12,7 +12,7 @@ using FCApi;
 
 namespace fcapi_wpf.ViewModel {
     class UserWindowViewModel : MVVM.ViewModel {
-
+        public MsgLine msg;
         public Page page { get { return _page; } set { _page = value; RaisePropertyChanged (); } }
         private Page _page;
 
@@ -34,6 +34,7 @@ namespace fcapi_wpf.ViewModel {
             get {
                 return _adminCmd ?? (_adminCmd = new Command {
                     ExecuteDelegate = _ => {
+                        if (!FC.CheckAdmin ()) { msg.Show ("fail"); return; }
                         if (!inAdmin) { lastPage = page; Show<UserAdminPage> (null); inAdmin = true; status = ""; }
                         else { inAdmin = false; page = lastPage; refresh (); }
                     }
@@ -113,7 +114,7 @@ namespace fcapi_wpf.ViewModel {
                 group = user.group;
                 uid = user.uid;
                 gid = user.gid;
-                img = name[0].ToString();
+                img = name[0].ToString ();
             }
 
             /// <summary>

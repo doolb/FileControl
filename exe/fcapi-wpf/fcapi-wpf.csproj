@@ -118,6 +118,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Tool\PipeManager.cs" />
+    <Compile Include="Tool\RSA.cs" />
     <Compile Include="ViewModel\MsgLineViewModel.cs" />
     <Compile Include="ViewModel\UserWindowViewModel.cs" />
     <Compile Include="ViewModel\PMWindowViewModel.cs" />
@@ -229,6 +230,9 @@
     </None>
     <AppDesigner Include="Properties\" />
     <Compile Include="ViewModel\UserAdminViewModel.cs" />
+    <Content Include="res\primes.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="res\seguisym.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -269,7 +273,7 @@
   </Target>
   -->
   <ItemGroup>
-    <OutFiles Include="$(OutDir)*.dll;$(OutDir)fc.exe"/>
+    <OutFiles Include="$(OutDir)*.dll;$(OutDir)fc.exe" />
     <ResFiles Include="$(OutDir)res\icon-32.ico;$(OutDir)res\seguisym.ttf;" />
   </ItemGroup>
   <Target Name="AfterBuild">

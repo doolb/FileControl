@@ -1,6 +1,7 @@
 #include <fltKernel.h>
 #include "msg.h"
 #include "filter.h"
+#include "rsa.h"
 
 extern UNICODE_STRING gWorkRoot;
 extern UNICODE_STRING gKeyRoot;
@@ -11,6 +12,9 @@ extern PFLT_FILTER gFilter;
 extern MsgCode currentMsg;
 extern HANDLE gRegistry;
 extern User gUser;
+
+static BOOL gIsAdmin = FALSE;
+extern struct public_key_class gAdminKey;
 
 NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
 
@@ -55,6 +59,11 @@ NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
 }
 
 NTSTATUS user_registry(void* buffer, unsigned long size, unsigned long *retlen){
+	//
+	// check admin 
+	//
+	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
+
 	NTSTATUS status = STATUS_SUCCESS;
 	PLIST_ENTRY head = &gVolumeList;
 	PVolumeList list = NULL;
@@ -141,6 +150,12 @@ NTSTATUS user_login(void* buffer, unsigned long size, unsigned long *retlen){
 	return status;
 }
 NTSTATUS user_delete(void* buffer, unsigned long size, unsigned long *retlen){
+
+	//
+	// check admin 
+	//
+	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
+
 	NTSTATUS status = STATUS_SUCCESS;
 	PLIST_ENTRY head = &gVolumeList;
 	PVolumeList list = NULL;
@@ -373,6 +388,10 @@ NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 }
 
 NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
+	//
+	// check admin 
+	//
+	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
 
 	if (!buffer || size < sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_INVALID_BUFFER_SIZE; }
 	WCHAR letter = *((PWCHAR)buffer);
@@ -435,6 +454,59 @@ NTSTATUS msg_query(void* buffer, unsigned long size, unsigned long *retlen){
 	return status;
 }
 
+NTSTATUS admin_init(void* buffer, unsigned long size, unsigned long *retlen){
+
+	// is has admin
+	if (gAdminKey.modulus != 0 || gAdminKey.exponent != 0){ return STATUS_ACCESS_DENIED; }
+
+	// check size
+	if (!buffer || size < 3 * sizeof(long long)){ *retlen = 3 * sizeof(long long); return STATUS_BUFFER_TOO_SMALL; }
+
+	//
+	// test key
+	//
+	long long * data = buffer;
+	char msg[4] = { "abc" };
+	long long en[3];
+	char out[4] = { 0 };
+	struct public_key_class pub;
+	struct private_key_class pri;
+	pub.modulus = pri.modulus = data[0];
+	pri.exponent = data[1];
+	pub.exponent = data[2];
+	rsa_encrypt(msg, 3, en, 3 * sizeof(long long), &pub);
+	if (en[0] == 0){ return STATUS_INVALID_PARAMETER_1; }
+	rsa_decrypt(out, 3, en, 3 * sizeof(long long), &pri);
+	if (msg[0] != out[0]){ return STATUS_INVALID_PARAMETER_2; }
+
+	//
+	// save data
+	//
+	gAdminKey.modulus = data[0];
+	gAdminKey.exponent = data[2];
+	IUtil->setConfig(gRegistry, L"Module", &gAdminKey.modulus, sizeof(long long), REG_QWORD);
+	IUtil->setConfig(gRegistry, L"Exponent", &gAdminKey.exponent, sizeof(long long), REG_QWORD);
+
+	NTSTATUS status = STATUS_SUCCESS;
+	return status;
+}
+
+NTSTATUS admin_check(void* buffer, unsigned long size, unsigned long *retlen){
+	UNREFERENCED_PARAMETER(buffer);
+	UNREFERENCED_PARAMETER(size);
+	UNREFERENCED_PARAMETER(retlen);
+	gIsAdmin = TRUE;
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS admin_exit(void* buffer, unsigned long size, unsigned long *retlen){
+	UNREFERENCED_PARAMETER(buffer);
+	UNREFERENCED_PARAMETER(size);
+	UNREFERENCED_PARAMETER(retlen);
+	gIsAdmin = FALSE;
+	return STATUS_SUCCESS;
+}
+
 // NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 // 
 // 	NTSTATUS status = STATUS_SUCCESS;
@@ -464,4 +536,7 @@ NTSTATUS(*MsgHandle[MsgCode_Max + 1])(void* buffer, unsigned long size, unsigned
 	// work root
 	workroot_get,	//MsgCode_WorkRoot_Get,
 	workroot_set,	//MsgCode_WorkRoot_Set,
+	admin_init,		//MsgCode_Admin_Init,
+	admin_check,		//MsgCode_Admin_Check,
+	admin_exit,		//MsgCode_Admin_Exit,
 };

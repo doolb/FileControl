@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Tool;
+
 namespace FCApi {
     #region driver struct
 
@@ -122,6 +124,10 @@ namespace FCApi {
         // work root
         WorkRoot_Get,
         WorkRoot_Set,
+
+        Admin_Init,
+        Admin_Check,
+        Admin_Exit,
 
         Max
     }
@@ -517,6 +523,19 @@ namespace FCApi {
 
             var retlen = 0;
             return (bool)Send<Msg_File> (MsgCode.Permission_Set, mf, ref retlen);
+        }
+    }
+
+    /// <summary>
+    /// admin 
+    /// </summary>
+    public partial class FC {
+        public static bool CheckAdmin () {
+            int retlen = 0;
+            RSA rsa = new RSA ();
+            rsa.genKeys ("res/primes.txt");
+            Send<RSA.Key> (MsgCode.Admin_Init, rsa.key, ref retlen);
+            return true;
         }
     }
 }

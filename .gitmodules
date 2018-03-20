@@ -4,6 +4,6 @@
 [submodule "utils/crypto"]
 	path = utils/crypto
 	url = https://github.com/xue-blood/crypto-algorithms.git
-[submodule "utils/RSAEuro"]
-	path = utils/RSAEuro
-	url = https://github.com/mort666/RSAEuro.git
+[submodule "utils/librsa"]
+	path = utils/librsa
+	url = https://github.com/xue-blood/rsa.git

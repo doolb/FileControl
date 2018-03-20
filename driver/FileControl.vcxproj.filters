@@ -103,6 +103,9 @@
     <ClCompile Include="msg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\utils\librsa\rsa.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="minidriver.h">

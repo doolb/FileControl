@@ -57,7 +57,7 @@ NTSTATUS getConfig(HANDLE hand, PWCHAR _name, PVOID * _value, PULONG _len){
 		//
 		// save data
 		//
-		if (info->Type == REG_DWORD){
+		if (info->Type == REG_DWORD || info->Type == REG_QWORD){
 			*((PULONG)(_value)) = (ULONG)info->Data[0];
 		}
 		else{

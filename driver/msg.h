@@ -24,6 +24,11 @@ typedef enum {
 	MsgCode_WorkRoot_Get,
 	MsgCode_WorkRoot_Set,
 
+	// admin rsa key
+	MsgCode_Admin_Init,
+	MsgCode_Admin_Check,
+	MsgCode_Admin_Exit,
+
 	MsgCode_Max
 
 }MsgCode, *PMsgCode;

@@ -2,7 +2,7 @@
 #include "permission.h"
 #include "util.h"
 #include "filter.h"
-
+#include "rsa.h"
 UNICODE_STRING gWorkRoot;		// the root path for dirver work
 UNICODE_STRING gKeyRoot;		// the root path for key file
 static WCHAR gKeyRoot_Buffer[256];
@@ -25,6 +25,11 @@ HANDLE gRegistry;
 // current driver state
 //
 MsgCode currentMsg = MsgCode_Null;
+
+//
+// admin key
+//
+struct public_key_class gAdminKey;
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
@@ -49,7 +54,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		//
 		retlen = 0; // we dont know the size
 		status = IUtil->getConfig(gRegistry, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
-		if (!NT_SUCCESS(status)){ loge((NAME"get config: WorkRoot failed. %x \n", status)); leave; }
 		if (retlen > 0){
 			gWorkRoot.Length = (USHORT)retlen;
 			gWorkRoot.MaximumLength = sizeof(gKeyRoot_Buffer);
@@ -66,11 +70,18 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		//
 		InitializeListHead(&gVolumeList);
 
+		//
+		// read admin key
+		//
+		retlen = 0;
+		status = IUtil->getConfig(gRegistry, L"Module", (PVOID*)&gAdminKey.modulus, &retlen);
+		retlen = 0;
+		status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdminKey.exponent, &retlen);
+		log((NAME"admin key: %x .. %x", gAdminKey.modulus, gAdminKey.exponent));
+
 		// test write config
 		//gPause = FALSE;
 		//IUtil->setConfig(hand, L"Pause", &gPause, sizeof(BOOL), REG_DWORD);
-
-
 	}
 	finally{
 	}
