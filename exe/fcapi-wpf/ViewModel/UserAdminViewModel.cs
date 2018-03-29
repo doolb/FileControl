@@ -74,7 +74,7 @@ namespace fcapi_wpf.ViewModel {
                 return _setWorkRootCmd??(_setWorkRootCmd = new Command {
                     ExecuteDelegate = _ => {
                         if (FC.setWorkRoot (volumes[selVolume].letter[0])) { msg.Show ("success"); refresh (); }
-                        else { msg.Show ("fail"); }
+                        else { msg.Show ("fail : " + FC.exception.Message); }
                     },
                     CanExecuteDelegate = _ => FC.isopen && selVolume >= 0 && selVolume < volumes.Count && 
                         volumes[selVolume].letter != workLetter

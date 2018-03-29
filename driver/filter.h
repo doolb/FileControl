@@ -65,6 +65,6 @@ NTSTATUS oninit(PUNICODE_STRING _regPath);	// call when dirver start
 void onexit();		// call when dirver unload
 NTSTATUS onstart(PVolumeContext ctx, PFLT_INSTANCE instance); // call when setup filter on volume
 void onstop(PVolumeContext ctx);		// call when stop filter on volme
-NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid);// call when filter data on volme
+NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info);// call when filter data on volme
 NTSTATUS onmsg(MsgCode msg, PVOID buffer, ULONG size, PULONG retlen);	// call when user application message in
 NTSTATUS sendMsg(MsgCode msg);	// send message to user application

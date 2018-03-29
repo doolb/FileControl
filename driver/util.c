@@ -97,14 +97,11 @@ NTSTATUS setConfig(HANDLE hand, PWCHAR _name, PVOID _value, ULONG _len, ULONG ty
 }
 
 
-PVOID aes(const uint8_t in[], PULONG len, bool isencrypt){
+PVOID aes(const uint8_t in[], PULONG len, bool isencrypt, uint32_t *key){
 
 	ASSERT(in);
 	ASSERT(len);
-
-	// key
-	uint32_t key[AES_KEY_DATA_SIZE];
-	aes_key_setup((uint8_t*)AES_KEY, key, AES_KEY_SIZE);
+	ASSERT(key);
 
 	//
 	// allocate result memory
@@ -130,12 +127,12 @@ PVOID aes(const uint8_t in[], PULONG len, bool isencrypt){
 	return out;
 }
 
-PVOID encrypt(const PVOID in[], PULONG len){
-	return aes((uint8_t*)in, len, true);
+PVOID encrypt(const PVOID in[], PULONG len, uint32_t *key){
+	return aes((uint8_t*)in, len, true, key);
 }
 
-PVOID decrypt(const PVOID in[], PULONG len){
-	return aes((uint8_t*)in, len, false);
+PVOID decrypt(const PVOID in[], PULONG len, uint32_t *key){
+	return aes((uint8_t*)in, len, false, key);
 }
 
 

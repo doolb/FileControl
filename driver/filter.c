@@ -21,6 +21,9 @@ extern User gUser;
 PFLT_INSTANCE gInstance;
 HANDLE gRegistry;
 
+// aes key
+uint32_t gAesKey[AES_KEY_DATA_SIZE];
+
 //
 // current driver state
 //
@@ -78,6 +81,11 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		retlen = 0;
 		status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdminKey.exponent, &retlen);
 		log((NAME"admin key: %x .. %x", gAdminKey.modulus, gAdminKey.exponent));
+
+		//
+		// setup aes key
+		//
+		aes_key_setup((uint8_t*)AES_KEY, gAesKey, AES_KEY_SIZE);
 
 		// test write config
 		//gPause = FALSE;
@@ -216,14 +224,9 @@ void onstop(PVolumeContext ctx){
 		}
 	}
 }
-NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info, PUNICODE_STRING guid){
+NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info){
 
 	ASSERT(info);
-	ASSERT(guid);
-
-	// is the volume for work
-	if (!wcsstr(gWorkRoot.Buffer, guid->Buffer)) { return FLT_NO_NEED; }
-
 
 	// is user login
 	if (gKeyRoot.Length == 0){

@@ -24,8 +24,8 @@ struct _IUtil
 
 	void(*hash)(const uint8_t data[], size_t len, uint8_t hash[]);
 
-	PVOID(*encrypt)(const PVOID in[], PULONG len);
-	PVOID(*decrypt)(const PVOID in[], PULONG len);
+	PVOID(*encrypt)(const PVOID in[], PULONG len, uint32_t *key);
+	PVOID(*decrypt)(const PVOID in[], PULONG len, uint32_t *key);
 
 	void(*GUID)(GUID* guid);
 };

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Windows;
 using Tool;
 
 namespace FCApi {
@@ -178,8 +178,11 @@ namespace FCApi {
             }
         }
 
+        public static Win32Exception exception { get; set; }
+
         protected static bool Check ( uint retCode ) {
-            Debug.WriteLine (new Win32Exception ((int)retCode).Message);
+            exception = new Win32Exception ((int)retCode);
+            Debug.WriteLine (exception.Message);
             if (retCode == 0x80070006) { // The handle is invalid. (Exception from HRESULT: 0x80070006 (E_HANDLE))
                 Port = IntPtr.Zero;
                 //throw new Win32Exception ((int)retCode);
@@ -535,6 +538,7 @@ namespace FCApi {
             RSA rsa = new RSA ();
             rsa.genKeys ("res/primes.txt");
             Send<RSA.Key> (MsgCode.Admin_Init, rsa.key, ref retlen);
+            Send<RSA.Key> (MsgCode.Admin_Check, rsa.key, ref retlen);
             return true;
         }
     }

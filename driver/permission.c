@@ -23,7 +23,9 @@ extern KSPIN_LOCK	gFilterLock;
 extern PFLT_FILTER	gFilter;
 
 extern UNICODE_STRING gKeyRoot;
-extern UNICODE_STRING gWorkRoot;
+extern PFLT_INSTANCE gInstance;
+
+extern uint32_t gAesKey[AES_KEY_DATA_SIZE];
 
 //
 // lookaside list for permission data
@@ -61,7 +63,7 @@ NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm){
 	// encrypt data
 	//
 	retlen = PM_SIZE;
-	PVOID en = IUtil->encrypt((PVOID)pm, &retlen);
+	PVOID en = IUtil->encrypt((PVOID)pm, &retlen, gAesKey);
 	if (!en){ loge((NAME"encrypt data failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
 	ASSERT(retlen == PM_SIZE);	// size should be the same
 
@@ -199,7 +201,7 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		// decrypt data
 		//
 		retlen = PM_SIZE;
-		PVOID de = IUtil->decrypt((PVOID)pm, &retlen);
+		PVOID de = IUtil->decrypt((PVOID)pm, &retlen, gAesKey);
 		ASSERT(retlen == PM_SIZE);
 		memcpy_s(pm, PM_SIZE, de, PM_SIZE);
 		ExFreePoolWithTag(de, UTIL_TAG);
@@ -310,9 +312,6 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 
 	NTSTATUS status = FLT_NO_NEED;
 
-	// save volume guid
-	UNICODE_STRING guid = null;
-
 	//
 	// get file name information
 	//
@@ -321,7 +320,7 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 		//
 		// is work root has be set
 		//
-		if (gWorkRoot.Length == 0){ return FLT_NO_NEED; }
+		if (_obj->Instance != gInstance) { return FLT_NO_NEED; }
 
 		status = FltGetFileNameInformation(_data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &nameInfo);
 		// get file name failed when file is in creating
@@ -331,21 +330,13 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 		status = FltParseFileNameInformation(nameInfo);
 		if (!NT_SUCCESS(status)) { loge((NAME"parse file name info failed. %x \n", status)); leave; }
 
-		guid.Buffer = ExAllocateFromNPagedLookasideList(&gGuidLookasideList);
-		if (!guid.Buffer){ loge((NAME"allocate buffer failed")); leave; }
-		guid.MaximumLength = 2 * GUID_SIZE * sizeof(WCHAR);
-		guid.Length = 0;
-
-		status = FltGetVolumeGuidName(_obj->Volume, &guid, NULL);
-		if (!NT_SUCCESS(status)) { loge((NAME"get volume guid failed. %x \n", status)); leave; }
-
 		// is dir
 		if (nameInfo->FinalComponent.Length == 0) { status = FLT_ON_DIR; leave; }
 
 		//
 		// is need filter now
 		//
-		status = onfilter(nameInfo, &guid);
+		status = onfilter(nameInfo);
 		if (status != STATUS_SUCCESS) leave;
 
 		// we need filter it
@@ -356,7 +347,6 @@ NTSTATUS checkFltStatus(PFLT_CALLBACK_DATA _data, PCFLT_RELATED_OBJECTS _obj){
 			logi((NAME"get file status: %wZ, %x \n", &nameInfo->Name, status));
 			FltReleaseFileNameInformation(nameInfo);
 		}
-		if (guid.Buffer){ ExFreeToNPagedLookasideList(&gGuidLookasideList, guid.Buffer); guid.Buffer = NULL; }
 	}
 	return status;
 }

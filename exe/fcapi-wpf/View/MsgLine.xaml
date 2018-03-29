@@ -35,7 +35,9 @@
     <Grid>
         <TextBlock x:Name="textBlock"  Text="{Binding msg}" FontSize="24" Foreground="Cyan" 
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
-                   RenderTransformOrigin="0.5,0.5" FontFamily="Microsoft YaHei" FontStyle="Italic">
+                   RenderTransformOrigin="0.5,0.5" FontFamily="Microsoft YaHei" 
+                   FontStyle="Italic"
+                   Padding="10">
         	<TextBlock.RenderTransform>
         		<TransformGroup>
         			<ScaleTransform/>
