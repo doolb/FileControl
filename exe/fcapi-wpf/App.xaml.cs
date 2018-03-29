@@ -53,11 +53,17 @@ namespace fcapi_wpf {
 
         void pipe_ReceiveString ( string filesToOpen ) {
             Dispatcher.Invoke (() => {
-                if (!string.IsNullOrEmpty (filesToOpen)) {
-                    var win = new View.PMWindow (filesToOpen);
-                    win.Topmost = true;
-                    win.Activate ();
-                    win.Show ();
+
+                try {
+                    if (!string.IsNullOrEmpty (filesToOpen)) {
+                        var win = new View.PMWindow (filesToOpen);
+                        win.Topmost = true;
+                        win.Activate ();
+                        win.Show ();
+                    }
+                }
+                catch (Exception _e) {
+                    MessageBox.Show (_e.Message);
                 }
             });
         }

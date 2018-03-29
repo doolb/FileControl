@@ -97,24 +97,20 @@ NTSTATUS setConfig(HANDLE hand, PWCHAR _name, PVOID _value, ULONG _len, ULONG ty
 }
 
 
-PVOID aes(const uint8_t in[], PULONG len, bool isencrypt, uint32_t *key){
+bool aes(const uint8_t in[], uint8_t out[], ULONG len, bool isencrypt, uint32_t *key){
 
 	ASSERT(in);
+	ASSERT(out);
 	ASSERT(len);
 	ASSERT(key);
 
-	//
-	// allocate result memory
-	//
-	size_t ilen = *len;
-	size_t size = ROUND_TO_SIZE(ilen, AES_SIZE);
-	uint8_t *out = ExAllocatePoolWithTag(NonPagedPool, size, UTIL_TAG);
-	if (!out){ KdPrint(("allocate memory failed. \n")); return NULL; }
+	// check length
+	if (len <= 0 || len % AES_SIZE != 0){ return false; }
 
 	//
 	// do aes
 	//
-	for (size_t i = 0; i < size; i += AES_SIZE){
+	for (size_t i = 0; i < len; i += AES_SIZE){
 
 		// encrypt 
 		if (isencrypt)
@@ -123,16 +119,15 @@ PVOID aes(const uint8_t in[], PULONG len, bool isencrypt, uint32_t *key){
 			aes_decrypt(in + i, out + i, key, AES_KEY_SIZE);
 	}
 
-	*len = size;
-	return out;
+	return true;
 }
 
-PVOID encrypt(const PVOID in[], PULONG len, uint32_t *key){
-	return aes((uint8_t*)in, len, true, key);
+bool encrypt(const PVOID in, PVOID out, ULONG len, uint32_t *key){
+	return aes((uint8_t*)in, (uint8_t*)out, len, true, key);
 }
 
-PVOID decrypt(const PVOID in[], PULONG len, uint32_t *key){
-	return aes((uint8_t*)in, len, false, key);
+bool decrypt(const PVOID in, PVOID out, ULONG len, uint32_t *key){
+	return aes((uint8_t*)in, (uint8_t*)out, len, false, key);
 }
 
 

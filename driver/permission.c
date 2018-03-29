@@ -44,7 +44,7 @@ void freePermission(PPermission pm){
 NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm){
 
 	// writh at head
-	ULONG retlen;
+	ULONG retlen = 0;
 	LARGE_INTEGER offset = { 0 };
 
 	ASSERT(ins && obj && pm);
@@ -62,19 +62,24 @@ NTSTATUS setPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission pm){
 	//
 	// encrypt data
 	//
-	retlen = PM_SIZE;
-	PVOID en = IUtil->encrypt((PVOID)pm, &retlen, gAesKey);
-	if (!en){ loge((NAME"encrypt data failed.")); return STATUS_INSUFFICIENT_RESOURCES; }
-	ASSERT(retlen == PM_SIZE);	// size should be the same
+	PVOID pm_buff = ExAllocateFromNPagedLookasideList(&gPmLookasideList);
+	if (!pm_buff){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); return STATUS_INVALID_PARAMETER; }
+	memset(pm_buff, 0, PM_SIZE);
+
+	if (!IUtil->encrypt(pm, pm_buff, PM_SIZE, gAesKey)){
+		freePermission(pm_buff);
+		loge((NAME"encrypt data failed."));
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
 
 	//
 	// write data
 	//
-	NTSTATUS status = FltWriteFile(ins, obj, &offset, PM_SIZE, en, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+	NTSTATUS status = FltWriteFile(ins, obj, &offset, PM_SIZE, pm_buff, FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 
 	if (!NT_SUCCESS(status)){ loge((NAME"write permission to file failed. %x \n", status)); }
 
-	ExFreePoolWithTag(en, UTIL_TAG);
+	freePermission(pm_buff);
 
 	return status;
 
@@ -170,6 +175,7 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 	NTSTATUS status = STATUS_SUCCESS;
 	LARGE_INTEGER offset = { 0 };
 	PPermission pm = NULL;
+	PPermission pm_buff = NULL;
 	BOOL rewrite = FALSE;
 	ULONG retlen = 0;
 	*_pm = NULL;
@@ -183,11 +189,14 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		pm = ExAllocateFromNPagedLookasideList(&gPmLookasideList);
 		if (!pm){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); status = STATUS_INVALID_PARAMETER; leave; }
 		memset(pm, 0, PM_SIZE);
+		pm_buff = ExAllocateFromNPagedLookasideList(&gPmLookasideList);
+		if (!pm_buff){ loge((NAME"FltAllocatePoolAlignedWithTag failed. \n")); status = STATUS_INVALID_PARAMETER; leave; }
+		memset(pm_buff, 0, PM_SIZE);
 
 		//
 		// read file information
 		//
-		status = FltReadFile(ins, obj, &offset, PM_SIZE, pm,
+		status = FltReadFile(ins, obj, &offset, PM_SIZE, pm_buff,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status)){ loge((NAME"Read file failed. %x \n", status)); }
 
@@ -200,11 +209,11 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		//
 		// decrypt data
 		//
-		retlen = PM_SIZE;
-		PVOID de = IUtil->decrypt((PVOID)pm, &retlen, gAesKey);
-		ASSERT(retlen == PM_SIZE);
-		memcpy_s(pm, PM_SIZE, de, PM_SIZE);
-		ExFreePoolWithTag(de, UTIL_TAG);
+		if (!IUtil->decrypt(pm_buff, pm, PM_SIZE, gAesKey)){
+			logw((NAME"no control information in file"));
+			status = FLT_INVALID_HEAD;
+			leave;
+		}
 
 		if (pm->_head != 'FCHD'){ logw((NAME"invalid head")); status = FLT_INVALID_HEAD; rewrite = TRUE; leave; }
 
@@ -229,6 +238,8 @@ NTSTATUS getPermission(PFLT_INSTANCE ins, PFILE_OBJECT obj, PPermission *_pm) {
 		// if failed, free the buffer
 		if (!NT_SUCCESS(status)) freePermission(pm);
 		else *_pm = pm;
+
+		freePermission(pm_buff);
 	}
 
 	return status;
