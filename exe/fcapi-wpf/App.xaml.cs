@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -20,19 +21,30 @@ namespace fcapi_wpf {
 
 
         private void Application_Startup ( object sender, StartupEventArgs e ) {
-            pipe = new NamedPipeManager (Name);
-            if (!pipe.SingleServer ()) {
-                if (e.Args.Length == 1)
-                    pipe.Write (e.Args[0]);
-                Environment.Exit (0);
+            try {
+                string root = Path.GetDirectoryName (Environment.GetCommandLineArgs ()[0]);
+                Environment.CurrentDirectory = root;
+
+                pipe = new NamedPipeManager (Name);
+                if (!pipe.SingleServer ()) {
+                    if (e.Args.Length == 1)
+                        pipe.Write (e.Args[0]);
+                    Environment.Exit (0);
+                }
+
+                pipe.ReceiveString +=pipe_ReceiveString;
+                pipe.StartServer ();
+
+                var win = new UserWindow ();
+                win.Closed+=win_Closed;
+                win.Show ();
+
             }
-
-            pipe.ReceiveString +=pipe_ReceiveString;
-            pipe.StartServer ();
-
-            var win = new UserWindow ();
-            win.Closed+=win_Closed;
-            win.Show ();
+            catch (Exception _e) {
+                MessageBox.Show (_e.Message);
+                Application.Current.Shutdown ();
+                pipe.StopServer ();
+            }
         }
 
         void win_Closed ( object sender, EventArgs e ) {

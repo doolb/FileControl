@@ -34,7 +34,7 @@
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\fc.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\exe\fc.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -60,37 +60,6 @@ ShowUnInstDetails show
 Function .onInit
   !insertmacro MUI_LANGDLL_DISPLAY
 FunctionEnd
-
-; net 4.5
-; see:https://stackoverflow.com/questions/12849352/nsis-installer-with-net-4-5
-Function CheckAndInstallDotNet
-    ; Magic numbers from http://msdn.microsoft.com/en-us/library/ee942965.aspx
-    ClearErrors
-    ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
-
-    IfErrors NotDetected
-
-    ${If} $0 >= 378389
-
-        DetailPrint "Microsoft .NET Framework 4.5 is installed ($0)"
-    ${Else}
-    NotDetected:
-        DetailPrint "Installing Microsoft .NET Framework 4.5"
-        SetDetailsPrint listonly
-        
-        ;MessageBox MB_OK "Please Install Microsoft .NET Framework 4.5"
-        ExecWait '"$INSTDIR\dotNetFx45_Full_setup.exe"' $0
-        ${If} $0 == 3010 
-        ${OrIf} $0 == 1641
-            DetailPrint "Microsoft .NET Framework 4.5 installer requested reboot"
-            SetRebootFlag true
-        ${EndIf}
-        SetDetailsPrint lastused
-        DetailPrint "Microsoft .NET Framework 4.5 installer returned $0"
-    ${EndIf}
-
-FunctionEnd
-; net 4.5 end
 
 Section "MainSection" SEC01
   
@@ -134,9 +103,6 @@ Section "MainSection" SEC01
   DetailPrint "load driver..."
   nsExec::Exec "fltmc unload fc"
   nsExec::Exec "fltmc load fc"
-
-  ; check net 4.5
-  ;Call CheckAndInstallDotNet
 
 SectionEnd
 
