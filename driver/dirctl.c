@@ -20,7 +20,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 
 FLT_POSTOP_CALLBACK_STATUS miniPostDirCtrl(_Inout_ PFLT_CALLBACK_DATA _data,
 	_In_ PCFLT_RELATED_OBJECTS _fltObjects,
-	_In_opt_ PVOID *_completionContext,
+	_In_opt_ PVOID _completionContext,
 	_In_ FLT_POST_OPERATION_FLAGS _flags){
 	UNREFERENCED_PARAMETER(_flags);
 	UNREFERENCED_PARAMETER(_completionContext);

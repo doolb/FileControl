@@ -30,7 +30,7 @@ miniPreCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltO
 }
 
 FLT_POSTOP_CALLBACK_STATUS
-miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID *_completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags){
+miniPostCreate(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PCFLT_RELATED_OBJECTS _fltObjects, _In_opt_ PVOID _completionContext, _In_ FLT_POST_OPERATION_FLAGS _flags){
 
 	UNREFERENCED_PARAMETER(_data);
 	UNREFERENCED_PARAMETER(_flags);

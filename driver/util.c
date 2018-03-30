@@ -142,6 +142,23 @@ void createGuid(GUID* guid){
 		guid->Data4[i] = (unsigned char)rand();
 }
 
+
+char *mt_file = "FILE0";
+char *mt_indx = "INDX(";
+char *mt_rcrd = "RCRD(";
+char *mt_rstr = "RSTR(";
+
+ULONG isMetaData(PVOID buff, ULONG_PTR len){
+	if (len < 0x1000 || len < sizeof(mt_file)) return 0;
+
+	if (memcmp(buff, mt_file, sizeof(mt_file)) == 0) return 1;
+	if (memcmp(buff, mt_indx, sizeof(mt_indx)) == 0) return 1;
+	if (memcmp(buff, mt_rcrd, sizeof(mt_rcrd)) == 0) return 1;
+	if (memcmp(buff, mt_rstr, sizeof(mt_rstr)) == 0) return 1;
+
+	return 0;
+}
+
 struct _IUtil IUtil[1] = {
 	getConfig,
 	setConfig,
@@ -151,5 +168,7 @@ struct _IUtil IUtil[1] = {
 	encrypt,
 	decrypt,
 
-	createGuid
+	createGuid,
+
+	isMetaData,
 };

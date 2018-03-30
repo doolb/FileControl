@@ -230,7 +230,7 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info){
 
 	// is user login
 	if (gKeyRoot.Length == 0){
-		loge((NAME"user must be login."));
+		logi((NAME"user must be login."));
 
 		// send message to application
 		sendMsg(MsgCode_User_Login);

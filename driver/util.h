@@ -28,6 +28,8 @@ struct _IUtil
 	bool(*decrypt)(const PVOID in, PVOID out, ULONG len, uint32_t *key);
 
 	void(*GUID)(GUID* guid);
+
+	ULONG(*isMetaData)(PVOID buff, ULONG_PTR len);
 };
 
 extern struct _IUtil IUtil[1];
