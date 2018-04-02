@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <fltKernel.h>
 #include <wdm.h>
 
 #include "aes.h"
@@ -28,6 +29,8 @@ struct _IUtil
 	bool(*decrypt)(const PVOID in, PVOID out, ULONG len, uint32_t *key);
 
 	void(*GUID)(GUID* guid);
+
+	bool(*isSystemDir)(PFLT_FILE_NAME_INFORMATION nameInfo);
 };
 
 extern struct _IUtil IUtil[1];

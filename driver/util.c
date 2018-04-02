@@ -142,6 +142,21 @@ void createGuid(GUID* guid){
 		guid->Data4[i] = (unsigned char)rand();
 }
 
+
+static WCHAR *sys_info = L"System Volume Information";
+static WCHAR *recy_bin = L"$RECYCLE.BIN";
+
+bool isSystemDir(PFLT_FILE_NAME_INFORMATION nameInfo){
+	if (nameInfo == NULL) return false;
+	if (nameInfo->Name.Length <= 1) return false;
+
+	if (nameInfo->Name.Length >= sizeof(sys_info) && wcsstr(nameInfo->Name.Buffer, sys_info) != NULL) return true;
+	if (nameInfo->Name.Length >= sizeof(recy_bin) && wcsstr(nameInfo->Name.Buffer, recy_bin) != NULL) return true;
+
+
+	return false;
+}
+
 struct _IUtil IUtil[1] = {
 	getConfig,
 	setConfig,
@@ -151,5 +166,7 @@ struct _IUtil IUtil[1] = {
 	encrypt,
 	decrypt,
 
-	createGuid
+	createGuid,
+
+	isSystemDir,
 };

@@ -228,6 +228,12 @@ NTSTATUS onfilter(PFLT_FILE_NAME_INFORMATION info){
 
 	ASSERT(info);
 
+	// is system dir
+	if (IUtil->isSystemDir(info)) {
+		log((NAME"system dir, skip it."));
+		return FLT_NO_NEED;
+	}
+
 	// is user login
 	if (gKeyRoot.Length == 0){
 		loge((NAME"user must be login."));
