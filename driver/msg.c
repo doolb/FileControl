@@ -13,8 +13,7 @@ extern MsgCode currentMsg;
 extern HANDLE gRegistry;
 extern User gUser;
 
-static BOOL gIsAdmin = FALSE;
-extern struct public_key_class gAdminKey;
+extern AdminUser gAdmin;
 
 NTSTATUS user_query(void* buffer, unsigned long size, unsigned long *retlen){
 
@@ -62,7 +61,7 @@ NTSTATUS user_registry(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// check admin 
 	//
-	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
+	if (!FlagOn(gAdmin.state, Admin_Login)){ return STATUS_ACCESS_DENIED; }
 
 	NTSTATUS status = STATUS_SUCCESS;
 	PLIST_ENTRY head = &gVolumeList;
@@ -154,7 +153,7 @@ NTSTATUS user_delete(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// check admin 
 	//
-	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
+	if (!FlagOn(gAdmin.state, Admin_Login)){ return STATUS_ACCESS_DENIED; }
 
 	NTSTATUS status = STATUS_SUCCESS;
 	PLIST_ENTRY head = &gVolumeList;
@@ -391,7 +390,7 @@ NTSTATUS workroot_set(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// check admin 
 	//
-	if (!gIsAdmin){ return STATUS_ACCESS_DENIED; }
+	if (!FlagOn(gAdmin.state, Admin_Login)){ return STATUS_ACCESS_DENIED; }
 
 	if (!buffer || size < sizeof(WCHAR)){ *retlen = sizeof(WCHAR); return STATUS_INVALID_BUFFER_SIZE; }
 	WCHAR letter = *((PWCHAR)buffer);
@@ -457,7 +456,7 @@ NTSTATUS msg_query(void* buffer, unsigned long size, unsigned long *retlen){
 NTSTATUS admin_init(void* buffer, unsigned long size, unsigned long *retlen){
 
 	// is has admin
-	if (gAdminKey.modulus != 0 || gAdminKey.exponent != 0){ return STATUS_ACCESS_DENIED; }
+	if (FlagOn(gAdmin.state, Admin_Valid)){ return STATUS_ACCESS_DENIED; }
 
 	// check size
 	if (!buffer || size < 3 * sizeof(long long)){ *retlen = 3 * sizeof(long long); return STATUS_BUFFER_TOO_SMALL; }
@@ -482,10 +481,10 @@ NTSTATUS admin_init(void* buffer, unsigned long size, unsigned long *retlen){
 	//
 	// save data
 	//
-	gAdminKey.modulus = data[0];
-	gAdminKey.exponent = data[2];
-	IUtil->setConfig(gRegistry, L"Module", &gAdminKey.modulus, sizeof(long long), REG_QWORD);
-	IUtil->setConfig(gRegistry, L"Exponent", &gAdminKey.exponent, sizeof(long long), REG_QWORD);
+	gAdmin.pub.modulus = data[0];
+	gAdmin.pub.exponent = data[2];
+	IUtil->setConfig(gRegistry, L"Module", &gAdmin.pub.modulus, sizeof(long long), REG_QWORD);
+	IUtil->setConfig(gRegistry, L"Exponent", &gAdmin.pub.exponent, sizeof(long long), REG_QWORD);
 
 	NTSTATUS status = STATUS_SUCCESS;
 	return status;
@@ -495,7 +494,7 @@ NTSTATUS admin_check(void* buffer, unsigned long size, unsigned long *retlen){
 	UNREFERENCED_PARAMETER(buffer);
 	UNREFERENCED_PARAMETER(size);
 	UNREFERENCED_PARAMETER(retlen);
-	gIsAdmin = TRUE;
+	SetFlag(gAdmin.state, Admin_Login);
 	return STATUS_SUCCESS;
 }
 
@@ -503,7 +502,7 @@ NTSTATUS admin_exit(void* buffer, unsigned long size, unsigned long *retlen){
 	UNREFERENCED_PARAMETER(buffer);
 	UNREFERENCED_PARAMETER(size);
 	UNREFERENCED_PARAMETER(retlen);
-	gIsAdmin = FALSE;
+	ClearFlag(gAdmin.state, Admin_Login);
 	return STATUS_SUCCESS;
 }
 

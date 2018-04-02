@@ -1,6 +1,7 @@
 #pragma once
+#include "rsa.h"
 /************************************************************************/
-/* driver and application msg define                                                                     */
+/* driver and application msg define                                    */
 /************************************************************************/
 typedef enum {
 	MsgCode_Null, // null define , for daemon use
@@ -57,6 +58,29 @@ typedef struct
 	GUID uid;				// user id
 	GUID gid;				// group id
 }User, *PUser;
+
+
+typedef enum
+{
+	Admin_Valid = 1,		// admin is valid
+	Admin_CanLogin = 2,	// admin can login
+	Admin_Login = 4,
+	Admin_Has_Pri = 8,
+}AdminUserState, *PAdminUserState;
+
+typedef struct
+{
+	//
+	// admin user key data
+	//
+	User admin;
+	struct public_key_class pub;
+	struct public_key_class pri;
+
+	struct public_key_class sys; // the key for current system
+
+	AdminUserState state;
+}AdminUser, *PAdminUser;
 
 typedef struct
 {

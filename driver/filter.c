@@ -2,7 +2,7 @@
 #include "permission.h"
 #include "util.h"
 #include "filter.h"
-#include "rsa.h"
+
 UNICODE_STRING gWorkRoot;		// the root path for dirver work
 UNICODE_STRING gKeyRoot;		// the root path for key file
 static WCHAR gKeyRoot_Buffer[256];
@@ -32,7 +32,7 @@ MsgCode currentMsg = MsgCode_Null;
 //
 // admin key
 //
-struct public_key_class gAdminKey;
+AdminUser gAdmin;
 
 NTSTATUS oninit(PUNICODE_STRING _regPath){
 	NTSTATUS status = STATUS_SUCCESS;
@@ -77,10 +77,13 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		// read admin key
 		//
 		retlen = 0;
-		status = IUtil->getConfig(gRegistry, L"Module", (PVOID*)&gAdminKey.modulus, &retlen);
+		status = IUtil->getConfig(gRegistry, L"Module", (PVOID*)&gAdmin.sys.modulus, &retlen);
+		if (!NT_SUCCESS(status)){ loge((NAME"read admin key failed. %x", status)); leave; }
 		retlen = 0;
-		status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdminKey.exponent, &retlen);
-		log((NAME"admin key: %x .. %x", gAdminKey.modulus, gAdminKey.exponent));
+		status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdmin.sys.exponent, &retlen);
+		if (!NT_SUCCESS(status)){ loge((NAME"read admin key failed. %x", status)); leave; }
+		log((NAME"admin key: %x .. %x", gAdmin.sys.modulus, gAdmin.sys.exponent));
+		gAdmin.state |= Admin_Valid;
 
 		//
 		// setup aes key
