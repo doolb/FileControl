@@ -21,13 +21,11 @@
 
         <Grid Width="150" Height="150" DockPanel.Dock="Left" Margin="10,0,0,0">
             <metro:Tile HorizontalAlignment="Center">
-                <TextBlock Text="{Binding img}" FontSize="123" />
+                <TextBlock Text="{Binding name}"/>
             </metro:Tile>
         </Grid>
 
         <DockPanel Grid.Column="1" VerticalAlignment="Center" t:MarginSetter.Margin="15">
-            <TextBlock Text="{Binding name}" Grid.Row="0" DockPanel.Dock="Top"/>
-
             <PasswordBox DockPanel.Dock="Top" x:Name="_passwd"/>
 
             <Button Content="{x:Static p:Resources.login}" Command="{Binding loginCmd}" CommandParameter="{Binding ElementName=_passwd}" DockPanel.Dock="Top"/>

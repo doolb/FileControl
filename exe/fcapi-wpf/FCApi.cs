@@ -55,6 +55,13 @@ namespace FCApi {
         public override int GetHashCode () {
             return base.GetHashCode ();
         }
+
+        public bool isAdmin () {
+            return gid.CompareTo (new Guid (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)) == 0;
+        }
+        public void setAsAdmin () {
+            gid = new Guid (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        }
     }
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
@@ -71,6 +78,30 @@ namespace FCApi {
         /// volume letter
         /// </summary>
         public char letter;
+    }
+
+    [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
+    public struct Msg_Admin_Registry {
+
+        public User user;
+
+        /// <summary>
+        /// password
+        /// </summary>
+        [MarshalAs (UnmanagedType.ByValTStr, SizeConst=FC.NameMax)]
+        public String password;
+
+        /// <summary>
+        /// volume letter
+        /// </summary>
+        public char letter;
+
+        /// <summary>
+        /// key
+        /// </summary>
+        public long mod;
+        public long pri;
+        public long pub;
     }
 
     [StructLayout (LayoutKind.Sequential, CharSet=CharSet.Unicode)]
@@ -125,9 +156,9 @@ namespace FCApi {
         WorkRoot_Get,
         WorkRoot_Set,
 
-        Admin_Init,
-        Admin_Check,
-        Admin_Exit,
+        Admin_New,
+        Admin_Query,
+        Admin_Set,
 
         Max
     }
@@ -243,7 +274,7 @@ namespace FCApi {
         }
 
         public static bool installed;
-
+        public static bool hasAdmin;
 
         static IntPtr Port;
 
@@ -269,10 +300,12 @@ namespace FCApi {
         /// refresh data
         /// </summary>
         public static void refresh () {
-
+            int retlen = 0;
             // check driver install
             installed = isInstall ("fc");
             Open ();
+            if (!isopen) { return; }
+            hasAdmin = (bool)Send<bool> (MsgCode.Admin_Query, false, ref retlen);
 
             // check driver load
             workRoot = null;
@@ -311,6 +344,12 @@ namespace FCApi {
             MsgCode msg = MsgCode.User_Login;
             uint ret = FilterSendMessage (Port, ref msg, 4, ref login, Marshal.SizeOf (typeof (Msg_User_Login)), ref retlen);
             return Check (ret);
+        }
+
+        public static bool LoginOut ( User user ) {
+            int retlen = 0;
+            Send<User> (MsgCode.User_Logout, user, ref retlen);
+            return exception.NativeErrorCode == 0;
         }
 
         [DllImport ("FltLib.dll", CharSet=CharSet.Unicode, SetLastError=true)]
@@ -392,24 +431,6 @@ namespace FCApi {
         }
 
         /// <summary>
-        /// send invalid buffer to query the size we need
-        /// </summary>
-        /// <param name="msg">MsgCode</param>
-        /// <returns>The size of buffer,which drive needing</returns>
-        public static int Send ( MsgCode msg ) {
-            if (!isopen) { return 0; }
-
-            int len = 0;
-
-            uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), IntPtr.Zero, 0, ref len);
-            Check (ret);
-            if (ret != 0x8007007a)
-                return 0;
-
-            return len;
-        }
-
-        /// <summary>
         /// get data from driver
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -445,6 +466,7 @@ namespace FCApi {
                         System.Windows.Application.Current.Dispatcher.BeginInvoke (new Action (() => onMsging (recv)));
                     }
                     Thread.Sleep (1000);
+                    refresh ();
                 }
             });
         }
@@ -533,13 +555,33 @@ namespace FCApi {
     /// admin 
     /// </summary>
     public partial class FC {
-        public static bool CheckAdmin () {
+
+        public static bool CreateAdmin ( char letter, string name, string pasword ) {
             int retlen = 0;
             RSA rsa = new RSA ();
             rsa.genKeys ("res/primes.txt");
-            Send<RSA.Key> (MsgCode.Admin_Init, rsa.key, ref retlen);
-            Send<RSA.Key> (MsgCode.Admin_Check, rsa.key, ref retlen);
-            return true;
+            Msg_Admin_Registry reg = new Msg_Admin_Registry ();
+            reg.password = pasword;
+            reg.letter = letter;
+            reg.mod = rsa.key.M;
+            reg.pri = rsa.key.D;
+            reg.pub = rsa.key.E;
+
+            reg.user.uid = Guid.NewGuid ();
+            reg.user.setAsAdmin ();
+            reg.user.user = name;
+            Send<Msg_Admin_Registry> (MsgCode.Admin_New, reg, ref retlen);
+            if (FC.exception.NativeErrorCode ==0) {
+                FC.Send<User> (MsgCode.Admin_Set, reg.user, ref retlen);
+                if (FC.exception.NativeErrorCode ==0) {
+                    FC.Login (reg.user, reg.password);
+                    if (FC.exception.NativeErrorCode  == 0) {
+                        refresh ();
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

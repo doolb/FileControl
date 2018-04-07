@@ -14,15 +14,21 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="boolToVis"/>
+        <BooleanToVisibilityConverter x:Key="bool2V"/>
     </Window.Resources>
-    <Grid>
-        <v:MsgLine x:Name="msg" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="-1,0,60,30"/>
 
-        <Frame Content="{Binding page,Mode=TwoWay}" NavigationUIVisibility="Hidden" Visibility="{Binding !inAdmin,Converter={StaticResource boolToVis}}"/>
-        <TextBlock Text="{Binding status}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Firebrick"/>
-        <Button Content="" Command="{Binding adminCmd}" Style="{StaticResource IconButton}" 
-                HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10" 
-                Visibility="{Binding !inAdmin,Converter={StaticResource boolToVis}}"/>
+    <Grid>
+        <ItemsControl ItemsSource="{Binding msg}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="-1,0,60,30" IsHitTestVisible="False" />
+
+        <Frame Content="{Binding page,Mode=TwoWay}" NavigationUIVisibility="Hidden"/>
+
+        <TextBlock Text="{Binding status}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="Firebrick" IsHitTestVisible="False" Margin="10"/>
+
+
+        <Button Command="{Binding exitCmd}" Style="{StaticResource IconButton}" Content="" 
+                HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="Firebrick" 
+                Visibility="{Binding islogin,Converter={StaticResource bool2V}}"
+                ToolTip="{x:Static p:Resources.close}" BorderBrush="Firebrick"
+                Margin="10,6,6,0" DockPanel.Dock="Right"/>
     </Grid>
 </Window>

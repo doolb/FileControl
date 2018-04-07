@@ -124,7 +124,7 @@
     <value>清除</value>
   </data>
   <data name="close" xml:space="preserve">
-    <value>关闭程序</value>
+    <value>退出登录！</value>
   </data>
   <data name="del_user" xml:space="preserve">
     <value>删除用户：</value>
@@ -166,7 +166,7 @@
     <value>密码无效！</value>
   </data>
   <data name="ok" xml:space="preserve">
-    <value>确定</value>
+    <value>确定!</value>
   </data>
   <data name="open_fail" xml:space="preserve">
     <value>打开失败</value>
@@ -200,5 +200,20 @@
   </data>
   <data name="work_root" xml:space="preserve">
     <value>监控目录：</value>
+  </data>
+  <data name="admin_no_found" xml:space="preserve">
+    <value>管理员帐号未设置！</value>
+  </data>
+  <data name="create_new" xml:space="preserve">
+    <value>创建一个新的</value>
+  </data>
+  <data name="name" xml:space="preserve">
+    <value>名字：</value>
+  </data>
+  <data name="use_now" xml:space="preserve">
+    <value>使用现有的</value>
+  </data>
+  <data name="volume" xml:space="preserve">
+    <value>磁盘：</value>
   </data>
 </root>

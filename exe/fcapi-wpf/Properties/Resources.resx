@@ -124,7 +124,7 @@
     <value>Clear</value>
   </data>
   <data name="close" xml:space="preserve">
-    <value>Close program!</value>
+    <value>Logout!</value>
   </data>
   <data name="del_user" xml:space="preserve">
     <value>Delete User:</value>
@@ -204,5 +204,20 @@
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\res\icon-32.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="admin_no_found" xml:space="preserve">
+    <value>Admin No Found!</value>
+  </data>
+  <data name="create_new" xml:space="preserve">
+    <value>Create a new Admin.</value>
+  </data>
+  <data name="name" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+  <data name="use_now" xml:space="preserve">
+    <value>Use exisit Admin.</value>
+  </data>
+  <data name="volume" xml:space="preserve">
+    <value>Volume:</value>
   </data>
 </root>

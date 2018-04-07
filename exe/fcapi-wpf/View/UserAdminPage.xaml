@@ -30,10 +30,6 @@
         <v:MsgLine x:Name="msg" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,30,0"/>
 
         <DockPanel Grid.Row="0">
-            <Button Command="{Binding exitCmd}" Style="{StaticResource IconButton}" Content="" 
-                HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="Firebrick" 
-                ToolTip="{x:Static p:Resources.close}" BorderBrush="Firebrick"
-                Margin="10,6,6,0" DockPanel.Dock="Right"/>
 
             <Button Command="{Binding unloadCmd}" Style="{StaticResource IconButton}" 
                     Content="" Margin="0,6,6,0" DockPanel.Dock="Right" HorizontalAlignment="Right"/>

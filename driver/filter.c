@@ -56,10 +56,10 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		// work root path
 		//
 		retlen = 0; // we dont know the size
+		gWorkRoot.MaximumLength = sizeof(gKeyRoot_Buffer);
 		status = IUtil->getConfig(gRegistry, L"WorkRoot", &gWorkRoot.Buffer, &retlen);
-		if (retlen > 0){
+		if (retlen > 2){
 			gWorkRoot.Length = (USHORT)retlen;
-			gWorkRoot.MaximumLength = sizeof(gKeyRoot_Buffer);
 			log((NAME"work root dir: %wZ \n", &gWorkRoot));
 		}
 
@@ -77,13 +77,18 @@ NTSTATUS oninit(PUNICODE_STRING _regPath){
 		// read admin key
 		//
 		retlen = 0;
-		status = IUtil->getConfig(gRegistry, L"Module", (PVOID*)&gAdmin.sys.modulus, &retlen);
-		if (!NT_SUCCESS(status)){ loge((NAME"read admin key failed. %x", status)); leave; }
-		retlen = 0;
-		status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdmin.sys.exponent, &retlen);
-		if (!NT_SUCCESS(status)){ loge((NAME"read admin key failed. %x", status)); leave; }
-		log((NAME"admin key: %x .. %x", gAdmin.sys.modulus, gAdmin.sys.exponent));
-		gAdmin.state |= Admin_Valid;
+		status = IUtil->getConfig(gRegistry, L"Module", (PVOID*)&gAdmin.key.modulus, &retlen);
+		if (NT_SUCCESS(status) && gAdmin.key.modulus > 0){
+			logw((NAME"read admin key mod. %x", gAdmin.key.modulus));
+
+			retlen = 0;
+			status = IUtil->getConfig(gRegistry, L"Exponent", (PVOID*)&gAdmin.key.exponent, &retlen);
+			if (NT_SUCCESS(status)){
+				loge((NAME"read admin key exp. %x", gAdmin.key.exponent));
+				SetFlag(gAdmin.state, Admin_Valid);
+			}
+		}
+
 
 		//
 		// setup aes key
@@ -159,6 +164,15 @@ static PLIST_ENTRY createVolumeList(PVolumeContext ctx, PFLT_INSTANCE instance){
 		}
 		else
 			vl_setRemove(list);
+
+		//
+		// try load admin key
+		//
+		memset(&list->adminKey, 0, sizeof(AdminKey));
+		status = IAdminKey->read(list->instance, &list->GUID, &list->adminKey);
+		if (NT_SUCCESS(status)){
+			logw((NAME"find admin !!"));
+		}
 	}
 	else{
 		//

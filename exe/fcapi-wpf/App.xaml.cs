@@ -22,6 +22,10 @@ namespace fcapi_wpf {
 
         private void Application_Startup ( object sender, StartupEventArgs e ) {
             try {
+
+                // set language
+                Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo ("zh-CN");
+
                 string root = Path.GetDirectoryName (Environment.GetCommandLineArgs ()[0]);
                 Environment.CurrentDirectory = root;
 

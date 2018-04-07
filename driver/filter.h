@@ -38,6 +38,11 @@ typedef struct _VolumeList
 	// volume state: (N:normal, W:work root, U:has user, K:user login root, R:removealbe) 
 	//
 	WCHAR state;
+
+	//
+	// admin key data
+	//
+	AdminKey adminKey;
 }VolumeList, *PVolumeList;
 
 

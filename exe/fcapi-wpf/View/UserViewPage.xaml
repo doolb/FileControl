@@ -4,26 +4,32 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:t="clr-namespace:Tool"
+      xmlns:p="clr-namespace:fcapi_wpf.Properties"
       xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
       mc:Ignorable="d" 
-      d:DesignHeight="300" d:DesignWidth="300"
+      d:DesignHeight="300" d:DesignWidth="540"
 	Title="UserViewPage">
 
     <Grid>
 
-        <DockPanel t:MarginSetter.Margin="12" VerticalAlignment="Center">
+        <DockPanel t:MarginSetter.Margin="12" VerticalAlignment="Center" HorizontalAlignment="Stretch">
             <metro:Tile Width="150" Height="150" DockPanel.Dock="Left" Margin="10,0,0,0">
-                <TextBlock Text="{Binding img}" FontSize="120" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding name}" HorizontalAlignment="Center"/>
             </metro:Tile>
 
-            <TextBlock Text="{Binding name}"    DockPanel.Dock="Top"/>
+            <StackPanel VerticalAlignment="Center" t:MarginSetter.Margin="10">
+                <DockPanel>
+                    <TextBlock Text="{x:Static p:Resources.name}"/>
+                    <TextBlock Text="{Binding name}"    DockPanel.Dock="Top"/>
+                </DockPanel>
+                <TextBlock Text="{Binding uid}"     DockPanel.Dock="Top"/>
 
-            <TextBlock Text="{Binding group}"   DockPanel.Dock="Top"/>
-
-            <TextBlock Text="{Binding uid}"     DockPanel.Dock="Top"/>
-
-            <TextBlock Text="{Binding gid}"     DockPanel.Dock="Top"/>
+                <DockPanel>
+                    <TextBlock Text="{x:Static p:Resources.group}"/>
+                    <TextBlock Text="{Binding group}"   DockPanel.Dock="Top"/>
+                </DockPanel>
+                <TextBlock Text="{Binding gid}"     DockPanel.Dock="Top"/>
+            </StackPanel>
         </DockPanel>
-
     </Grid>
 </Page>

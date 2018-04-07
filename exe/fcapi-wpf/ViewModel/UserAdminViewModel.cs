@@ -18,12 +18,6 @@ namespace fcapi_wpf.ViewModel {
         public View.MsgLine msg;
 
         /// <summary>
-        /// exit
-        /// </summary>
-        public Command exitCmd { get { return _exitCmd ?? (_exitCmd = new Command { ExecuteDelegate = _ => Application.Current.Shutdown () }); } }
-        private Command _exitCmd;
-
-        /// <summary>
         /// driver work root
         /// </summary>
         public string workRoot { get { return _workRoot; } set { _workRoot = value; RaisePropertyChanged (); } }

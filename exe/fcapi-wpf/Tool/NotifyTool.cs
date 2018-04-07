@@ -16,7 +16,7 @@ namespace Tool {
         public NotifyTool () {
             icon ();
 
-            win.Closing +=win_Closing;
+            //win.Closing +=win_Closing;
         }
 
         void win_Closing ( object sender, System.ComponentModel.CancelEventArgs e ) {

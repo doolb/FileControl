@@ -9,19 +9,44 @@ using fcapi_wpf.View;
 using System.Windows.Navigation;
 using System.Windows.Controls;
 using FCApi;
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace fcapi_wpf.ViewModel {
     class UserWindowViewModel : MVVM.ViewModel {
-        public MsgLine msg;
+        public View.MsgLine msg { get { return _msg; } set { _msg = value; RaisePropertyChanged (); } }
+        private View.MsgLine _msg;
         public Page page { get { return _page; } set { _page = value; RaisePropertyChanged (); } }
         private Page _page;
 
         Dictionary<Type, Page> pages = new Dictionary<Type, Page> ();
 
-        public UserViewModel[] userVms { get { return _userVms; } set { _userVms = value; RaisePropertyChanged (); } }
-        private UserViewModel[] _userVms;
+        public ObservableCollection<UserViewModel> userVms { get { return _userVms; } set { _userVms = value; RaisePropertyChanged (); } }
+        private ObservableCollection<UserViewModel> _userVms = new ObservableCollection<UserViewModel> ();
+
 
         private User[] users;
+        /// <summary>
+        /// 当前登录的用户
+        /// </summary>
+        public User loginUser;
+
+        public bool islogin { get { return _islogin; } set { _islogin = value; RaisePropertyChanged (); } }
+        private bool _islogin;
+
+        public ICommand exitCmd {
+            get {
+                return _exitCmd ?? (_exitCmd = new Command {
+
+                    ExecuteDelegate = _ => {
+                        FC.LoginOut (loginUser);
+                        refresh ();
+                    },
+                    CanExecuteDelegate = _ => islogin
+                });
+            }
+        }
+        private ICommand _exitCmd;
 
         /// <summary>
         /// is no user in system
@@ -29,28 +54,16 @@ namespace fcapi_wpf.ViewModel {
         public string status { get { return _status; } set { _status = value; RaisePropertyChanged (); } }
         private string _status;
 
-        private Page lastPage;
-        public Command adminCmd {
-            get {
-                return _adminCmd ?? (_adminCmd = new Command {
-                    ExecuteDelegate = _ => {
-                        if (!FC.CheckAdmin ()) { msg.Show ("fail"); return; }
-                        if (!inAdmin) { lastPage = page; Show<UserAdminPage> (null); inAdmin = true; status = ""; }
-                        else { inAdmin = false; page = lastPage; refresh (); }
-                    }
-                });
-            }
-        }
-        private Command _adminCmd;
-
-        public bool inAdmin { get { return _inAdmin; } set { _inAdmin = value; RaisePropertyChanged (); } }
-        private bool _inAdmin;
-
         public UserWindowViewModel () {
+            this.msg = new MsgLine ();
             refresh ();
         }
 
         public void refresh () {
+            status = "";
+            islogin = false;
+            bool need_admin = false;
+
             if (!IsAdministrator ()) { status = Language ("admin"); return; }
 
             // is driver installed
@@ -61,11 +74,15 @@ namespace fcapi_wpf.ViewModel {
 
             //if (FC.onMsging == null) { FC.onMsging += }
 
-            if (FC.WorkRoot == null) { status = Language ("no_work_dir"); this.page = null; return; }
+            if (!FC.hasAdmin) { Show<AdminCreate> (new AdminCreateViewModel () { vm = this }); return; }
+
+            if (FC.WorkRoot == null) { status = Language ("no_work_dir"); need_admin = true; }
 
             // is user already login
             User user = FC.Get<User> (MsgCode.User_Login_Get);
             if (!user.Equals (default (User))) {
+                loginUser = user;
+                islogin = true;
                 Show<UserViewPage> (new UserViewModel (this, user));
                 return;
             }
@@ -73,8 +90,13 @@ namespace fcapi_wpf.ViewModel {
             // query all user
             users = FC.QueryUser ();
             if (users != null) {
-                userVms = new UserViewModel[users.Length];
-                for (int i=0; i<users.Length; i++) { userVms[i] = new UserViewModel (this, users[i]); }
+                userVms.Clear ();
+                for (int i=0; i<users.Length; i++) {
+                    if (!need_admin)
+                        userVms.Add (new UserViewModel (this, users[i]));
+                    else if (users[i].isAdmin ())
+                        userVms.Add (new UserViewModel (this, users[i]));
+                }
 
                 // is only one user
                 if (users.Length == 1)
@@ -114,14 +136,7 @@ namespace fcapi_wpf.ViewModel {
                 group = user.group;
                 uid = user.uid;
                 gid = user.gid;
-                img = name[0].ToString ();
             }
-
-            /// <summary>
-            /// user image
-            /// </summary>
-            public string img { get { return _img; } set { _img = value; RaisePropertyChanged (); } }
-            private string _img;
 
             /// <summary>
             /// user name
@@ -161,7 +176,12 @@ namespace fcapi_wpf.ViewModel {
                             string pass = (p as PasswordBox).Password;
                             if (string.IsNullOrEmpty (pass)) { logFail = true; msgFail = Language ("null_password"); return; }
                             if (!FCApi.FC.Login (user, pass)) { logFail = true; msgFail = Language ("login_fail"); return; }
-                            vm.Show<UserViewPage> (this);
+                            if (user.isAdmin ())
+                                vm.Show<UserAdminPage> (new UserAdminViewModel () { msg = vm.msg });
+                            else
+                                vm.Show<UserViewPage> (this);
+                            vm.islogin = true;
+                            vm.loginUser = user;
                         }
                     });
                 }
@@ -172,7 +192,7 @@ namespace fcapi_wpf.ViewModel {
                 get {
                     return _showUserCmd ?? (_showUserCmd = new Command {
                         ExecuteDelegate = _ => vm.ShowAllUser (),
-                        CanExecuteDelegate = _ => vm.users.Length > 1
+                        CanExecuteDelegate = _ => vm.users != null && vm.users.Length > 1
                     });
                 }
             }

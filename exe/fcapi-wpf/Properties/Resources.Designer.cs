@@ -70,6 +70,15 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Admin No Found!.
+        /// </summary>
+        public static string admin_no_found {
+            get {
+                return ResourceManager.GetString("admin_no_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear.
         /// </summary>
         public static string clear {
@@ -79,11 +88,20 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Close program!.
+        ///   Looks up a localized string similar to Logout!.
         /// </summary>
         public static string close {
             get {
                 return ResourceManager.GetString("close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a new Admin..
+        /// </summary>
+        public static string create_new {
+            get {
+                return ResourceManager.GetString("create_new", resourceCulture);
             }
         }
         
@@ -142,6 +160,16 @@ namespace fcapi_wpf.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        public static System.Drawing.Icon icon {
+            get {
+                object obj = ResourceManager.GetObject("icon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Login.
         /// </summary>
         public static string login {
@@ -156,6 +184,15 @@ namespace fcapi_wpf.Properties {
         public static string login_fail {
             get {
                 return ResourceManager.GetString("login_fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name:.
+        /// </summary>
+        public static string name {
+            get {
+                return ResourceManager.GetString("name", resourceCulture);
             }
         }
         
@@ -300,6 +337,24 @@ namespace fcapi_wpf.Properties {
         public static string success {
             get {
                 return ResourceManager.GetString("success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use exisit Admin..
+        /// </summary>
+        public static string use_now {
+            get {
+                return ResourceManager.GetString("use_now", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume:.
+        /// </summary>
+        public static string volume {
+            get {
+                return ResourceManager.GetString("volume", resourceCulture);
             }
         }
         

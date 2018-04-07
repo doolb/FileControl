@@ -2,7 +2,7 @@
 #include <guiddef.h>
 #include "util.h"
 #include "msg.h"
-
+#include "rsa.h"
 
 #define PM_TAG 'Pmtg'
 
@@ -55,6 +55,17 @@ typedef struct _UserKey{
 	UINT32	crc;					// check sum
 }UserKey, *PUserKey;
 
+#define ADMIN_KEY_FILE	L"\\admin.key"
+
+typedef struct _AdminKey{
+	User		user;				// user identify data
+	UINT8	passwd[HASH_SIZE];	// user password hash
+	struct public_key_class pub;// admin pub key
+	struct public_key_class pri;// admin pri key
+	UINT32	crc;					// check sum
+	ULONG	valid;
+}AdminKey, *PAdminKey;
+
 struct _IUserKey
 {
 	// read user from file
@@ -67,6 +78,18 @@ struct _IUserKey
 	NTSTATUS(*delete)(PFLT_INSTANCE instance, PUNICODE_STRING path);
 };
 
+struct _IAdminKey
+{
+	// read user from file
+	NTSTATUS(*read)(PFLT_INSTANCE instance, PUNICODE_STRING path, PAdminKey key);
+	// write a user data to file
+	NTSTATUS(*write)(PFLT_INSTANCE instance, PUNICODE_STRING path, PAdminKey key);
+	// registry a user
+	NTSTATUS(*registry)(PUNICODE_STRING path, PMsg_Admin_Registry reg, PAdminKey key);
+	// delete user
+	NTSTATUS(*delete)(PFLT_INSTANCE instance, PUNICODE_STRING path);
+};
 extern struct _IUserKey IUserKey[1];
+extern struct _IAdminKey IAdminKey[1];
 
 #pragma endregion

@@ -26,6 +26,9 @@
     <Filter Include="Source Files\util">
       <UniqueIdentifier>{8f635c2f-8cfe-4aca-a34f-b48d00d36e7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\msg">
+      <UniqueIdentifier>{d7712e38-e492-4529-8c5b-811c8c528c45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="minidirver.c">
@@ -105,6 +108,18 @@
     </ClCompile>
     <ClCompile Include="..\utils\librsa\rsa.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msg_admin.c">
+      <Filter>Source Files\msg</Filter>
+    </ClCompile>
+    <ClCompile Include="msg_user.c">
+      <Filter>Source Files\msg</Filter>
+    </ClCompile>
+    <ClCompile Include="msg_file.c">
+      <Filter>Source Files\msg</Filter>
+    </ClCompile>
+    <ClCompile Include="msg_volume.c">
+      <Filter>Source Files\msg</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

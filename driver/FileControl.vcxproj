@@ -69,6 +69,10 @@
     <ClCompile Include="instance.c" />
     <ClCompile Include="minidirver.c" />
     <ClCompile Include="msg.c" />
+    <ClCompile Include="msg_admin.c" />
+    <ClCompile Include="msg_file.c" />
+    <ClCompile Include="msg_user.c" />
+    <ClCompile Include="msg_volume.c" />
     <ClCompile Include="op.c" />
     <ClCompile Include="pageio.c" />
     <ClCompile Include="permission.c" />

@@ -1,0 +1,70 @@
+﻿<Page x:Class="fcapi_wpf.View.AdminCreate"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+      xmlns:p="clr-namespace:fcapi_wpf.Properties"
+      xmlns:t="clr-namespace:Tool"
+      mc:Ignorable="d" 
+      d:DesignHeight="300" d:DesignWidth="540"
+	Title="AdminSelect">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height=".15*"/>
+            <RowDefinition Height=".25*"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{x:Static p:Resources.admin_no_found}" HorizontalAlignment="Center"
+                   Grid.ColumnSpan="2"
+                   FontSize="12" Foreground="Firebrick"/>
+
+
+        <TextBlock Text="{x:Static p:Resources.use_now}" HorizontalAlignment="Center"
+                   Grid.Row="1" Grid.Column="0"
+                   FontSize="15"/>
+
+        <metro:Tile Grid.Row="2" Grid.Column="0"
+                    Command="{Binding selectCmd}">
+            <TextBlock Text="{Binding admin}"/>
+        </metro:Tile>
+
+        <TextBlock Text="{x:Static p:Resources.create_new}" HorizontalAlignment="Center"
+                   Grid.Row="1" Grid.Column="1"/>
+        <StackPanel Grid.Row="2" Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Margin="4"
+                    t:MarginSetter.Margin="3">
+
+            <DockPanel>
+                <TextBlock Text="{x:Static p:Resources.volume}" />
+                <metro:SplitButton ItemsSource="{Binding volumes}"
+                                   SelectedItem="{Binding volume}"
+                                   Width="150" HorizontalAlignment="Right"/>
+            </DockPanel>
+
+            <DockPanel>
+                <TextBlock Text="{x:Static p:Resources.name}"/>
+                <TextBox Text="{Binding name}"
+                         Width="150" HorizontalAlignment="Right"/>
+            </DockPanel>
+
+            <DockPanel>
+                <TextBlock Text="{x:Static p:Resources.password}"/>
+                <PasswordBox x:Name="passwd"
+                             Width="150" HorizontalAlignment="Right"/>
+            </DockPanel>
+
+            <Button Content="{x:Static p:Resources.ok}"
+                    Command="{Binding newCmd}"
+                    CommandParameter="{Binding ElementName=passwd}"/>
+        </StackPanel>
+
+    </Grid>
+</Page>

@@ -26,9 +26,9 @@ typedef enum {
 	MsgCode_WorkRoot_Set,
 
 	// admin rsa key
-	MsgCode_Admin_Init,
-	MsgCode_Admin_Check,
-	MsgCode_Admin_Exit,
+	MsgCode_Admin_New,
+	MsgCode_Admin_Qeury,
+	MsgCode_Admin_Set,
 
 	MsgCode_Max
 
@@ -74,10 +74,7 @@ typedef struct
 	// admin user key data
 	//
 	User admin;
-	struct public_key_class pub;
-	struct public_key_class pri;
-
-	struct public_key_class sys; // the key for current system
+	struct public_key_class key; // the key for current system
 
 	AdminUserState state;
 }AdminUser, *PAdminUser;
@@ -88,6 +85,17 @@ typedef struct
 	WCHAR  password[PM_NAME_MAX];	// password
 	WCHAR  letter;					// volume letter
 }Msg_User_Registry, *PMsg_User_Registry;
+
+typedef struct
+{
+	User user;
+	WCHAR  password[PM_NAME_MAX];	// password
+	WCHAR  letter;					// volume letter
+	long long mod;
+	long long pri;
+	long long pub;
+}Msg_Admin_Registry, *PMsg_Admin_Registry;
+
 
 typedef struct{
 	User		user;					// user
@@ -100,3 +108,16 @@ typedef struct
 	User		user;					// the user which whole the file
 	PermissionCode pmCode;			// permission code
 }Msg_File, *PMsg_File;
+
+
+extern UNICODE_STRING gWorkRoot;
+extern UNICODE_STRING gKeyRoot;
+extern PFLT_INSTANCE gInstance;
+extern LIST_ENTRY gVolumeList;
+extern WCHAR gWorkRootLetter;
+extern PFLT_FILTER gFilter;
+extern MsgCode currentMsg;
+extern HANDLE gRegistry;
+extern User gUser;
+
+extern AdminUser gAdmin;

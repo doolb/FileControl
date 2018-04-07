@@ -578,3 +578,240 @@ struct _IUserKey IUserKey[1] = {
 	deleteUserKey
 };
 #pragma endregion
+
+#pragma region admin key
+
+static NTSTATUS read_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAdminKey key){
+	ASSERT(path);
+	ASSERT(key);
+	ASSERT(gFilter);
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+	HANDLE hand = NULL;
+	PFILE_OBJECT obj = NULL;
+	IO_STATUS_BLOCK iostatus = null;
+
+	ULONG retlen = 0;
+	LARGE_INTEGER offset = null;
+
+
+	UNICODE_STRING name;
+	short size = path->Length + sizeof(ADMIN_KEY_FILE);
+	PWCHAR name_buffer = NULL;
+
+	try{
+		//
+		// file name
+		//
+		name_buffer = ExAllocatePoolWithTag(NonPagedPool, size, PM_TAG);
+		if (!name_buffer){ loge((NAME"allocate memory failed.")); leave; }
+		RtlInitEmptyUnicodeString(&name, name_buffer, size);
+		RtlCopyUnicodeString(&name, path);
+		RtlAppendUnicodeToString(&name, ADMIN_KEY_FILE);
+		OBJECT_ATTRIBUTES oa;
+		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+		//
+		// open file
+		//
+		status = FltCreateFileEx(gFilter, instance, &hand, &obj, FILE_GENERIC_READ, &oa, &iostatus, NULL,
+			FILE_ATTRIBUTE_HIDDEN, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
+		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
+
+		//
+		// read file
+		//
+		status = FltReadFile(instance, obj, &offset, sizeof(AdminKey), key,
+			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+		if (!NT_SUCCESS(status) || retlen != sizeof(AdminKey)){ loge((NAME"read file failed. %x.%wZ", status, &name)); leave; }
+
+	}
+	finally{
+		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+
+		if (!NT_SUCCESS(status) && retlen > 0){
+			loge((NAME"read user key failed. clear it : %wZ \n", &name));
+			FILE_END_OF_FILE_INFORMATION info = { 0 };
+			status = FltSetInformationFile(instance, obj, &info, sizeof(info), FileEndOfFileInformation);
+			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
+		}
+
+		FltClose(hand);
+	}
+
+	return status;
+}
+static NTSTATUS write_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAdminKey key){
+	ASSERT(path);
+	ASSERT(key);
+
+	ASSERT(gFilter);
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+
+	HANDLE hand = NULL;
+	PFILE_OBJECT obj = NULL;
+	IO_STATUS_BLOCK iostatus = null;
+
+	ULONG retlen = 0;
+	LARGE_INTEGER offset = null;
+	LARGE_INTEGER allocate = null;
+	UNICODE_STRING name;
+	short size = path->Length + sizeof(ADMIN_KEY_FILE);
+	PWCHAR name_buffer = NULL;
+
+	try{
+		//
+		// file name
+		//
+		name_buffer = ExAllocatePoolWithTag(NonPagedPool, size, PM_TAG);
+		if (!name_buffer){ loge((NAME"allocate memory failed.")); leave; }
+		RtlInitEmptyUnicodeString(&name, name_buffer, size);
+		RtlCopyUnicodeString(&name, path);
+		RtlAppendUnicodeToString(&name, ADMIN_KEY_FILE);
+		OBJECT_ATTRIBUTES oa;
+		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+		//
+		// open file
+		//
+		allocate.QuadPart = 4096;
+		status = FltCreateFileEx(gFilter, instance, &hand, &obj, FILE_GENERIC_WRITE, &oa, &iostatus, &allocate,
+			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
+		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
+
+		//
+		// write file
+		//
+		status = FltWriteFile(instance, obj, &offset, sizeof(AdminKey), key,
+			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
+		if (!NT_SUCCESS(status) || retlen != sizeof(AdminKey)){ loge((NAME"write file failed. %x.%wZ", status, &name)); leave; }
+
+	}
+	finally{
+		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+
+		if (!NT_SUCCESS(status) && retlen > 0){
+			loge((NAME"read user key failed. clear it : %wZ \n", &name));
+			FILE_END_OF_FILE_INFORMATION info = { 0 };
+			status = FltSetInformationFile(instance, obj, &info, sizeof(info), FileEndOfFileInformation);
+			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
+		}
+
+		FltClose(hand);
+	}
+
+	return status;
+}
+static NTSTATUS registry_admin_key(PUNICODE_STRING path, PMsg_Admin_Registry reg, PAdminKey key){
+	ASSERT(path);
+	ASSERT(reg);
+	ASSERT(key);
+
+	try{
+
+		//
+		// test key
+		//
+		char msg[4] = { "abc" };
+		long long en[3];
+		char out[4] = { 0 };
+		struct public_key_class pub;
+		struct private_key_class pri;
+		pub.modulus = pri.modulus = reg->mod;
+		pri.exponent = reg->pri;
+		pub.exponent = reg->pub;
+		rsa_encrypt(msg, 3, en, 3 * sizeof(long long), &pub);
+		rsa_decrypt(out, 3, en, 3 * sizeof(long long), &pri);
+		//if (msg[0] != out[0]){ return STATUS_ACCESS_DENIED; }
+
+		memset(key, 0, sizeof(AdminKey));
+		// name
+		memcpy_s(key->user.user, PM_NAME_MAX * sizeof(WCHAR), reg->user.user, PM_NAME_MAX * sizeof(WCHAR));
+		// group name
+		memcpy_s(key->user.group, PM_NAME_MAX * sizeof(WCHAR), L"admin", sizeof(L"admin"));
+		// uid
+		memcpy_s(&key->user.uid, sizeof(GUID), &reg->user.uid, sizeof(GUID));
+		// gid
+		key->user.gid.Data4[7] = 1;
+
+		// password
+		IUtil->hash((uint8_t*)reg->password, wcsnlen(reg->password, PM_NAME_MAX) * sizeof(WCHAR), key->passwd);
+
+		// key
+		key->pri.modulus = reg->mod;
+		key->pub.modulus = reg->mod;
+		key->pri.exponent = reg->pri;
+		key->pub.exponent = reg->pub;
+
+		key->valid = 1;
+	}
+	finally{
+
+	}
+
+	return STATUS_SUCCESS;
+}
+static NTSTATUS delete_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path){
+	ASSERT(instance);
+	ASSERT(gFilter);
+	ASSERT(path);
+
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+
+	HANDLE hand = NULL;
+	PFILE_OBJECT obj = NULL;
+	IO_STATUS_BLOCK iostatus = null;
+
+	LARGE_INTEGER allocate = null;
+	UNICODE_STRING name;
+	short size = path->Length + sizeof(ADMIN_KEY_FILE);
+	PWCHAR name_buffer = NULL;
+
+	try{
+		//
+		// file name
+		//
+		name_buffer = ExAllocatePoolWithTag(NonPagedPool, size, PM_TAG);
+		if (!name_buffer){ loge((NAME"allocate memory failed.")); leave; }
+		RtlInitEmptyUnicodeString(&name, name_buffer, size);
+		RtlCopyUnicodeString(&name, path);
+		RtlAppendUnicodeToString(&name, ADMIN_KEY_FILE);
+		OBJECT_ATTRIBUTES oa;
+		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+		//
+		// open file
+		//
+		allocate.QuadPart = 4096;
+		status = FltCreateFileEx(gFilter, instance, &hand, &obj, FILE_GENERIC_WRITE, &oa, &iostatus, &allocate,
+			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
+		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
+
+		//
+		// clear file
+		//
+		loge((NAME"read user key failed. clear it : %wZ \n", &name));
+		FILE_END_OF_FILE_INFORMATION info = { 0 };
+		status = FltSetInformationFile(instance, obj, &info, sizeof(info), FileEndOfFileInformation);
+		if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
+	}
+	finally{
+		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+		FltClose(hand);
+	}
+
+	return status;
+}
+
+struct _IAdminKey IAdminKey[1] = {
+	read_admin_key,
+	write_admin_key,
+	registry_admin_key,
+	delete_admin_key
+};
+#pragma endregion
