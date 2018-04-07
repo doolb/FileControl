@@ -23,7 +23,7 @@
             <RowDefinition Height=".1*"/>
         </Grid.RowDefinitions>
 
-        <v:MsgLine x:Name="msg" Grid.Row="0" Grid.RowSpan="5" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="-1,0,60,30"/>
+        <v:MsgLine x:Name="msg" Grid.Row="0" Grid.RowSpan="5" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="-1,0,60,30"/>
 
         <TextBlock Text="{Binding file}" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="0"/>
 

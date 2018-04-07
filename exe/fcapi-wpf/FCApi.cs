@@ -491,14 +491,15 @@ namespace FCApi {
             if (!Port.valid ()) { return; }
 
             StringBuilder sbd = new StringBuilder (1024);
+            sbd.Clear ();
             MsgCode msg = MsgCode.WorkRoot_Get;
             int retlen = 0;
             uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, sbd.Capacity, ref retlen);
             Check (ret);
-            if (sbd.Length == 0) { return; }
+            if (retlen == 0) { return; }
 
             workRootLetter = sbd[0];
-            workRoot = sbd.ToString ().Substring (1, sbd.Length - 1);
+            workRoot = sbd.ToString ().Substring (1, retlen / 2 - 1);
         }
         public static bool setWorkRoot ( char letter ) {
             if (!Port.valid ()) { return false; }
@@ -547,7 +548,8 @@ namespace FCApi {
             if (!isopen) { return false; }
 
             var retlen = 0;
-            return (bool)Send<Msg_File> (MsgCode.Permission_Set, mf, ref retlen);
+            Send<Msg_File> (MsgCode.Permission_Set, mf, ref retlen);
+            return exception.NativeErrorCode == 0;
         }
     }
 

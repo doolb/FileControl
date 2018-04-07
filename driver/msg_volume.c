@@ -41,6 +41,7 @@ NTSTATUS workroot_get(void* buffer, unsigned long size, unsigned long *retlen){
 	ptr[0] = gWorkRootLetter;
 	// guid
 	memcpy_s(ptr + 1, size, gWorkRoot.Buffer, gWorkRoot.Length);
+	*retlen = gWorkRoot.Length + sizeof(WCHAR);
 	return STATUS_SUCCESS;
 }
 
