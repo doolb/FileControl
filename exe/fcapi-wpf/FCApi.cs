@@ -496,7 +496,7 @@ namespace FCApi {
             int retlen = 0;
             uint ret = FilterSendMessage (Port, ref msg, sizeof (MsgCode), sbd, sbd.Capacity, ref retlen);
             Check (ret);
-            if (retlen == 0) { return; }
+            if (retlen == 0 || sbd.Length == 0) { return; }
 
             workRootLetter = sbd[0];
             workRoot = sbd.ToString ().Substring (1, retlen / 2 - 1);

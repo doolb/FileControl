@@ -53,6 +53,7 @@ typedef struct _UserKey{
 	User		user;				// user identify data
 	UINT8	passwd[HASH_SIZE];	// user password hash
 	UINT32	crc;					// check sum
+	UINT8   padding[12];			// padding for aes
 }UserKey, *PUserKey;
 
 #define ADMIN_KEY_FILE	L"\\admin.key"
@@ -64,6 +65,7 @@ typedef struct _AdminKey{
 	struct public_key_class pri;// admin pri key
 	UINT32	crc;					// check sum
 	ULONG	valid;
+	UINT8   padding[8];			// padding for aes
 }AdminKey, *PAdminKey;
 
 struct _IUserKey

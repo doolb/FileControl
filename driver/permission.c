@@ -3,7 +3,7 @@
 #include "checksum.h"
 #include "filter.h"
 #include "util.h"
-
+#include "checksum.h"
 
 User gUser = {
 	L"test user",
@@ -382,6 +382,7 @@ static NTSTATUS readUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserK
 	UNICODE_STRING name;
 	short size = path->Length + sizeof(USER_KEY_FILE);
 	PWCHAR name_buffer = NULL;
+	PVOID aes_buf = NULL;
 
 	try{
 		//
@@ -402,16 +403,37 @@ static NTSTATUS readUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserK
 			FILE_ATTRIBUTE_HIDDEN, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
 		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
 
+		// allocate decrypt buffer
+		aes_buf = FltAllocatePoolAlignedWithTag(instance, NonPagedPool, sizeof(UserKey), PM_TAG);
+		if (!aes_buf){ loge((NAME"allocate buffer failed.")); status = STATUS_INSUFFICIENT_RESOURCES; leave; }
+
 		//
 		// read file
 		//
-		status = FltReadFile(instance, obj, &offset, sizeof(UserKey), key,
+		status = FltReadFile(instance, obj, &offset, sizeof(UserKey), aes_buf,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(UserKey)){ loge((NAME"read file failed. %x.%wZ", status, &name)); leave; }
 
+		// decrypt data
+		if (!IUtil->decrypt(aes_buf, key, sizeof(UserKey), gAesKey)){
+			loge((NAME"decrypt user key failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
+
+		// check crc32
+		UINT32 org_crc = key->crc;
+		key->crc = 0;
+		UINT32 new_crc = crc_32((PUCHAR)key, sizeof(UserKey));
+		if (org_crc != new_crc){
+			loge((NAME"user key checksum failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+		if (aes_buf) FltFreePoolAlignedWithTag(instance, aes_buf, PM_TAG);
 
 		if (!NT_SUCCESS(status) && retlen > 0){
 			loge((NAME"read user key failed. clear it : %wZ \n", &name));
@@ -420,7 +442,7 @@ static NTSTATUS readUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUserK
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
@@ -444,6 +466,7 @@ static NTSTATUS writeUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUser
 	UNICODE_STRING name;
 	short size = path->Length + sizeof(USER_KEY_FILE);
 	PWCHAR name_buffer = NULL;
+	PVOID aes_buf = NULL;
 
 	try{
 		//
@@ -465,16 +488,36 @@ static NTSTATUS writeUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUser
 			FILE_ATTRIBUTE_HIDDEN, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE, NULL, 0, 0);
 		if (!NT_SUCCESS(status)){ loge((NAME"open file failed. %x.%wZ", status, &name)); leave; }
 
+		// allocate decrypt buffer
+		aes_buf = FltAllocatePoolAlignedWithTag(instance, NonPagedPool, sizeof(UserKey), PM_TAG);
+		if (!aes_buf){ loge((NAME"allocate buffer failed.")); status = STATUS_INSUFFICIENT_RESOURCES; leave; }
+
+		//
+		// calc crc-32
+		//
+		key->crc = 0;
+		key->crc = crc_32((PUCHAR)key, sizeof(UserKey));
+
+		//
+		// encrypt data
+		//
+		if (!IUtil->encrypt(key, aes_buf, sizeof(UserKey), gAesKey)){
+			loge((NAME"encrypt user key failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
+
 		//
 		// write file
 		//
-		status = FltWriteFile(instance, obj, &offset, sizeof(UserKey), key,
+		status = FltWriteFile(instance, obj, &offset, sizeof(UserKey), aes_buf,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(UserKey)){ loge((NAME"write file failed. %x.%wZ", status, &name)); leave; }
 
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+		if (aes_buf) FltFreePoolAlignedWithTag(instance, aes_buf, PM_TAG);
 
 		if (!NT_SUCCESS(status) && retlen > 0){
 			loge((NAME"read user key failed. clear it : %wZ \n", &name));
@@ -483,7 +526,7 @@ static NTSTATUS writeUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path, PUser
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
@@ -565,7 +608,7 @@ NTSTATUS deleteUserKey(PFLT_INSTANCE instance, PUNICODE_STRING path){
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
@@ -599,6 +642,7 @@ static NTSTATUS read_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAd
 	UNICODE_STRING name;
 	short size = path->Length + sizeof(ADMIN_KEY_FILE);
 	PWCHAR name_buffer = NULL;
+	PVOID aes_buf = NULL;
 
 	try{
 		//
@@ -612,6 +656,10 @@ static NTSTATUS read_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAd
 		OBJECT_ATTRIBUTES oa;
 		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
+		// allocate decrypt buffer
+		aes_buf = FltAllocatePoolAlignedWithTag(instance, NonPagedPool, sizeof(AdminKey), PM_TAG);
+		if (!aes_buf){ loge((NAME"allocate buffer failed.")); status = STATUS_INSUFFICIENT_RESOURCES; leave; }
+
 		//
 		// open file
 		//
@@ -622,13 +670,31 @@ static NTSTATUS read_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAd
 		//
 		// read file
 		//
-		status = FltReadFile(instance, obj, &offset, sizeof(AdminKey), key,
+		status = FltReadFile(instance, obj, &offset, sizeof(AdminKey), aes_buf,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(AdminKey)){ loge((NAME"read file failed. %x.%wZ", status, &name)); leave; }
+
+		// decrypt data
+		if (!IUtil->decrypt(aes_buf, key, sizeof(AdminKey), gAesKey)){
+			loge((NAME"decrypt admin key failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
+
+		// check crc32
+		UINT32 org_crc = key->crc;
+		key->crc = 0;
+		UINT32 new_crc = crc_32((PUCHAR)key, sizeof(AdminKey));
+		if (org_crc != new_crc){
+			loge((NAME"admin key checksum failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
 
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+		if (aes_buf) FltFreePoolAlignedWithTag(instance, aes_buf, PM_TAG);
 
 		if (!NT_SUCCESS(status) && retlen > 0){
 			loge((NAME"read user key failed. clear it : %wZ \n", &name));
@@ -637,7 +703,7 @@ static NTSTATUS read_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PAd
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
@@ -661,6 +727,7 @@ static NTSTATUS write_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PA
 	UNICODE_STRING name;
 	short size = path->Length + sizeof(ADMIN_KEY_FILE);
 	PWCHAR name_buffer = NULL;
+	PVOID aes_buf = NULL;
 
 	try{
 		//
@@ -674,6 +741,25 @@ static NTSTATUS write_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PA
 		OBJECT_ATTRIBUTES oa;
 		InitializeObjectAttributes(&oa, &name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
+		// allocate decrypt buffer
+		aes_buf = FltAllocatePoolAlignedWithTag(instance, NonPagedPool, sizeof(AdminKey), PM_TAG);
+		if (!aes_buf){ loge((NAME"allocate buffer failed.")); status = STATUS_INSUFFICIENT_RESOURCES; leave; }
+
+		//
+		// calc crc-32
+		//
+		key->crc = 0;
+		key->crc = crc_32((PUCHAR)key, sizeof(AdminKey));
+
+		//
+		// encrypt data
+		//
+		if (!IUtil->encrypt(key, aes_buf, sizeof(AdminKey), gAesKey)){
+			loge((NAME"encrypt admin key failed."));
+			status = STATUS_ACCESS_DENIED;
+			leave;
+		}
+
 		//
 		// open file
 		//
@@ -685,13 +771,14 @@ static NTSTATUS write_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PA
 		//
 		// write file
 		//
-		status = FltWriteFile(instance, obj, &offset, sizeof(AdminKey), key,
+		status = FltWriteFile(instance, obj, &offset, sizeof(AdminKey), aes_buf,
 			FLTFL_IO_OPERATION_NON_CACHED | FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET, &retlen, NULL, NULL);
 		if (!NT_SUCCESS(status) || retlen != sizeof(AdminKey)){ loge((NAME"write file failed. %x.%wZ", status, &name)); leave; }
 
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
+		if (aes_buf) FltFreePoolAlignedWithTag(instance, aes_buf, PM_TAG);
 
 		if (!NT_SUCCESS(status) && retlen > 0){
 			loge((NAME"read user key failed. clear it : %wZ \n", &name));
@@ -700,7 +787,7 @@ static NTSTATUS write_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path, PA
 			if (!NT_SUCCESS(status)){ loge((NAME"clear file failed. %x.%wZ", status, &name)); }
 		}
 
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
@@ -802,7 +889,7 @@ static NTSTATUS delete_admin_key(PFLT_INSTANCE instance, PUNICODE_STRING path){
 	}
 	finally{
 		if (name_buffer) ExFreePoolWithTag(name_buffer, PM_TAG); name_buffer = NULL;
-		FltClose(hand);
+		if (hand) FltClose(hand);
 	}
 
 	return status;
