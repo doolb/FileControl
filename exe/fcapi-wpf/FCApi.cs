@@ -327,8 +327,15 @@ namespace FCApi {
 
             int retlen = 0;
             object r = Send<User> (MsgCode.User_Query, default (User), ref retlen, 25);
-            if (r is User[])
-                return (User[])r;
+            if (r is User[]){
+                List<User> users = new List<User> ();
+                foreach (var u in (r as User[])) {
+                    if (users.FindIndex (i => i.uid == u.uid) == -1) {
+                        users.Add (u);
+                    }
+                }
+                return users.ToArray ();
+            }
             else
                 return null;
         }
