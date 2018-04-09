@@ -88,9 +88,9 @@ namespace fcapi_wpf.ViewModel {
             }
 
             // query all user
+            userVms.Clear ();
             users = FC.QueryUser ();
             if (users != null) {
-                userVms.Clear ();
                 for (int i=0; i<users.Length; i++) {
                     if (!need_admin)
                         userVms.Add (new UserViewModel (this, users[i]));
@@ -136,6 +136,8 @@ namespace fcapi_wpf.ViewModel {
                 group = user.group;
                 uid = user.uid;
                 gid = user.gid;
+
+                isAdmin = user.isAdmin ();
             }
 
             /// <summary>
@@ -162,6 +164,8 @@ namespace fcapi_wpf.ViewModel {
             public Guid gid { get { return _gid; } set { _gid = value; RaisePropertyChanged (); } }
             private Guid _gid;
 
+            public bool isAdmin { get { return _isAdmin; } set { _isAdmin = value; RaisePropertyChanged (); } }
+            private bool _isAdmin;
             public bool logFail { get { return _logFail; } set { _logFail = value; RaisePropertyChanged (); } }
             private bool _logFail;
 

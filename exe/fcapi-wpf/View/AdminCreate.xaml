@@ -31,6 +31,7 @@
                    FontSize="15"/>
 
         <metro:Tile Grid.Row="2" Grid.Column="0"
+                    Background="Firebrick"
                     Command="{Binding selectCmd}">
             <TextBlock Text="{Binding admin}"/>
         </metro:Tile>
