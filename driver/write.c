@@ -21,7 +21,7 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 		//
 		// check user permission
 		//
-		status = checkPermission(_data, _fltObjects, FALSE);
+		status = checkPermission(_data, _fltObjects, TRUE);
 		if (!NT_SUCCESS(status)){ loge((NAME"check file permision failed. %x \n", status)); leave; }
 		if (status == FLT_NO_NEED || status == FLT_ON_DIR) leave;
 
@@ -32,6 +32,8 @@ FLT_PREOP_CALLBACK_STATUS miniPreWrite(_Inout_ PFLT_CALLBACK_DATA _data, _In_ PC
 	}
 	finally	{
 	}
+
+	if (!NT_SUCCESS(status)) { _data->IoStatus.Status = status; _data->IoStatus.Information = 0; return FLT_PREOP_COMPLETE; }
 
 	logfo;
 	return FLT_PREOP_SUCCESS_WITH_CALLBACK;
