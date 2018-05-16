@@ -48,7 +48,7 @@ namespace fcapi_wpf.ViewModel {
             hasVolume = false;
             string s = FC.getVolumes ();
             for (int i=0; i<s.Length; i+=2) {
-                if (s[i + 1] == 'U') {
+                if (s[i + 1] == 'R') {
                     volumes.Add (s[i].ToString ());
                     hasVolume = true;
                     break;

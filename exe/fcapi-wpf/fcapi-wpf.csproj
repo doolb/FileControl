@@ -285,7 +285,7 @@
   -->
   <ItemGroup>
     <OutFiles Include="$(OutDir)*.dll;$(OutDir)fc.exe" />
-    <ResFiles Include="$(OutDir)res\icon-32.ico;$(OutDir)res\seguisym.ttf;" />
+    <ResFiles Include="$(OutDir)res\icon-32.ico;$(OutDir)res\seguisym.ttf;$(OutDir)res\primes.txt;" />
   </ItemGroup>
   <Target Name="AfterBuild">
     <Message Text="copy file to install" />
